@@ -25,5 +25,5 @@ jobs:
           protocol: ftp
           port: 21
           security: loose
-          local-dir: ./
+          local-dir: public/
           server-dir: /
