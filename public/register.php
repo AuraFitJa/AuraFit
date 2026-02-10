@@ -68,11 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // 2) Inserisci Utente
                 $hash = password_hash($password, PASSWORD_DEFAULT);
 
+                $emailNormalizzata = mb_strtolower($email, 'UTF-8');
+
                 Database::exec(
-                    "INSERT INTO Utenti (email, passwordHash, nome, cognome, statoAccount)
-                     VALUES (?, ?, ?, ?, ?)",
-                    [$email, $hash, $nome, $cognome, 'attivo']
+                  "INSERT INTO Utenti (email, emailNormalizzata, passwordHash, nome, cognome, statoAccount)
+                   VALUES (?, ?, ?, ?, ?, ?)",
+                  [$email, $emailNormalizzata, $hash, $nome, $cognome, 'attivo']
                 );
+
 
                 $idUtente = (int)Database::pdo()->lastInsertId();
 
