@@ -1,6 +1,6 @@
 # AuraFit
 
-![AuraFit Logo](...)
+![AuraFit Logo]([...](https://i.imgur.com/q8qW3dv.png))
 
 AuraFit è una piattaforma web per **allenamento, nutrizione e coaching** pensata per  
 **Clienti, Personal Trainer e Nutrizionisti**.
