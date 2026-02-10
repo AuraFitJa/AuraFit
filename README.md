@@ -1,2 +1,75 @@
 # AuraFit
-Il sistema software AuraFit è una piattaforma digitale web e mobile destinata alla gestione integrata dei servizi di fitness, allenamento e nutrizione.L’obiettivo del sistema è supportare percorsi strutturati, personalizzati e monitorabili di benessere fisico, facilitando la collaborazione tra professionisti e clienti.
+
+![AuraFit Logo](...)
+
+AuraFit è una piattaforma web per **allenamento, nutrizione e coaching** pensata per  
+**Clienti, Personal Trainer e Nutrizionisti**.
+
+Un unico hub per gestire programmi di allenamento, diario alimentare, comunicazione e monitoraggio dei progressi in modo semplice e strutturato.
+
+---
+
+## 🔖 Badge
+
+![PHP](...)
+![MySQL](...)
+![Status](...)
+![Deploy](...)
+
+---
+
+## ✨ Funzionalità principali
+
+### 👤 Clienti
+- Registrazione e gestione profilo
+- Diario allenamenti
+- Diario alimentare (con supporto AI opzionale)
+- Monitoraggio progressi con grafici e report
+- Chat con PT e/o Nutrizionista
+
+### 🧑‍🏫 Personal Trainer / Nutrizionisti
+- Registrazione con ruolo
+- Gestione clienti tramite **ID-Key**
+- Creazione programmi di allenamento e piani nutrizionali
+- Monitoraggio aderenza
+- Chat, notifiche e report automatici
+
+### 🔐 Sicurezza & Privacy
+- Autenticazione sicura
+- Gestione ruoli e permessi
+- Protezione dei dati sensibili
+- Progettato per essere **GDPR-ready**
+
+---
+
+## 🛠️ Stack tecnologico
+
+- **Backend:** PHP (PDO)
+- **Database:** MySQL / MariaDB
+- **Frontend:** HTML5, CSS3
+- **Autenticazione:** password_hash / password_verify
+- **Deploy:** AlterVista
+- **Versionamento:** Git + GitHub
+
+---
+
+## 📁 Struttura del progetto
+
+```text
+/
+├── config/
+│   ├── database.sample.php
+│   └── database.php
+│
+├── public/
+│   ├── index.php
+│   ├── login.php
+│   ├── register.php
+│   ├── dashboard_cliente.php
+│   └── dashboard_professionista.php
+│
+├── sql/
+│   └── my_aurafit.sql
+│
+├── .gitignore
+└── README.md
