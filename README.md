@@ -12,7 +12,7 @@ Un unico hub per gestire programmi di allenamento, diario alimentare, comunicazi
 ## 🔖 Badge
 
 ![PHP](https://raw.githubusercontent.com/bablubambal/All_logo_and_pictures/refs/heads/main/social%20icons/php.svg)
-![MySQL](https://raw.githubusercontent.com/bablubambal/All_logo_and_pictures/refs/heads/main/social%20icons/php.svg)
+![MySQL](https://raw.githubusercontent.com/bablubambal/All_logo_and_pictures/refs/heads/main/databases/mysql.svg)
 ![Status]📊
 ![Deploy]🚀
 
