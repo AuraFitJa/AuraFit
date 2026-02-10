@@ -61,6 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$email]
             )->fetch();
 
+            $exists = Database::exec(
+              "SELECT idUtente FROM Utenti WHERE emailNormalizzata = ? LIMIT 1",
+              [$emailNormalizzata]
+            )->fetch();
+
+
             if ($exists) {
                 $errors[] = "Email già registrata.";
             } else {
