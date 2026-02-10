@@ -13,8 +13,8 @@ Un unico hub per gestire programmi di allenamento, diario alimentare, comunicazi
 
 ![PHP](https://cdn-icons-png.flaticon.com/128/919/919830.png)
 ![MySQL](https://cdn-icons-png.flaticon.com/128/919/919836.png)
-![Status]📊(https://cdn-icons-png.flaticon.com/128/3022/3022148.png)
-![Deploy]🚀(https://cdn-icons-png.flaticon.com/128/18565/18565727.png)
+![Status](https://cdn-icons-png.flaticon.com/128/3022/3022148.png)
+![Deploy](https://cdn-icons-png.flaticon.com/128/18565/18565727.png)
 
 ---
 
