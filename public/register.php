@@ -55,16 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         try {
+            $email   = trim($_POST['email'] ?? '');
+            $emailNormalizzata = mb_strtolower($email, 'UTF-8'); // <-- subito qui
+
             // 1) Email unica
             $exists = Database::exec(
-                "SELECT idUtente FROM Utenti WHERE email = ? LIMIT 1",
-                [$email]
+              "SELECT idUtente FROM Utenti WHERE email = ? OR emailNormalizzata = ? LIMIT 1",
+              [$email, $emailNormalizzata]
             )->fetch();
 
-            $exists = Database::exec(
-              "SELECT idUtente FROM Utenti WHERE emailNormalizzata = ? LIMIT 1",
-              [$emailNormalizzata]
-            )->fetch();
 
 
             if ($exists) {
@@ -104,15 +103,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // ProfiloCliente (facoltativo)
                     Database::exec(
-                        "INSERT INTO ProfiloCliente (idCliente, altezza, peso, eta)
-                         VALUES (?, ?, ?, ?)",
-                        [
-                            $idCliente,
-                            ($altezza !== '' ? (int)$altezza : null),
-                            ($peso !== '' ? (float)$peso : null),
-                            ($eta !== '' ? (int)$eta : null),
-                        ]
+                      "INSERT INTO ProfiloCliente (idCliente, altezzaCm, pesoKg, eta)
+                       VALUES (?, ?, ?, ?)",
+                      [
+                        $idCliente,
+                        ($altezza !== '' ? (int)$altezza : null),
+                        ($peso !== '' ? (float)$peso : null),
+                        ($eta !== '' ? (int)$eta : null),
+                      ]
                     );
+
 
                     $success = "Registrazione cliente completata. Ora puoi fare login.";
 
