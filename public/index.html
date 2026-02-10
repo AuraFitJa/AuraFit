@@ -103,11 +103,12 @@ body::after{
     position:relative;
     overflow:hidden;
   }
-  .logo:after{
-    content:""; position:absolute; inset:-30%;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 55%);
-    transform: rotate(20deg);
-  }
+    .logo-img{
+  height: 34px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 6px 20px rgba(109,94,243,.35));
+}
 
   .navlinks{display:flex; align-items:center; gap:16px}
   .navlinks a{
@@ -889,7 +890,11 @@ body::after{
       <div class="footGrid">
         <div>
           <div class="brand" style="margin-bottom:10px;">
-            <span class="logo" aria-hidden="true"></span>
+            <img
+            src="https://i.imgur.com/q8qW3dv.png"
+            alt="AuraFit"
+            class="logo-img"
+            />
             <span>AuraFit</span>
           </div>
           <div style="color: rgba(234,240,255,.72); line-height:1.6;">
