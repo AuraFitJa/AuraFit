@@ -5,3 +5,4 @@ echo "<h1>Dashboard Cliente</h1>";
 echo "<p>Utente: " . htmlspecialchars($_SESSION['email']) . "</p>";
 echo "<p>Ruoli: " . htmlspecialchars(implode(", ", $_SESSION['roles'] ?? [])) . "</p>";
 echo '<p><a href="logout.php">Logout</a></p>';
+?>
