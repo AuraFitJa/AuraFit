@@ -32,11 +32,11 @@ function load_user_roles(int $idUtente): array {
 function decide_redirect(array $roles): string {
   // Se ha ruoli professionali -> professionista
   if (in_array('pt', $roles, true) || in_array('nutrizionista', $roles, true)) {
-    return '/professionista/dashboard.php';
+    return '/public/dashboard_professionista.php';
   }
   // Se cliente -> cliente
   if (in_array('cliente', $roles, true)) {
-    return '/cliente/dashboard.php';
+    return '/public/dashboard_cliente.php';
   }
   // fallback
   return '/index.php';
