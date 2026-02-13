@@ -7,7 +7,7 @@ AuraFit è una piattaforma web per **allenamento, nutrizione e coaching** pensat
 
 Un unico hub per gestire programmi di allenamento, diario alimentare, comunicazione e monitoraggio dei progressi in modo semplice e strutturato.
 
-Test Commit pc 19
+Test Commit pc 20
 ---
 
 ## 🔖 Badge
