@@ -18,6 +18,7 @@ Test Commit
 ![Status](https://cdn-icons-png.flaticon.com/128/3022/3022148.png)
 ![Deploy](https://cdn-icons-png.flaticon.com/128/18565/18565727.png)
 
+
 ---
 
 ## ✨ Funzionalità principali
