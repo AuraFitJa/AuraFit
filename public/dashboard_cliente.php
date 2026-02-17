@@ -15,6 +15,11 @@ if (!$user || empty($user['idUtente'])) {
   exit;
 }
 
+if($user['idUtente'] !== 0 && !in_array('cliente', $user['roles'], true)) {
+  header('Location: login.php');
+  exit;
+}
+
 echo '<h1>Dashboard Cliente</h1>';
 echo '<p>Utente: ' . htmlspecialchars((string)($user['email'] ?? '')) . '</p>';
 echo '<p>Ruoli: ' . htmlspecialchars(implode(', ', (array)($user['roles'] ?? []))) . '</p>';
