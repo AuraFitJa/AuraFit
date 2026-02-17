@@ -145,6 +145,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               'roles' => $roles,
             ];
 
+            // Backward compatibility per pagine che leggono ancora chiavi flat in sessione
+            $_SESSION['idUtente'] = $idUtente;
+            $_SESSION['email'] = (string)$user['email'];
+            $_SESSION['roles'] = $roles;
+
             redirect_to(decide_redirect($roles));
           }
         }
