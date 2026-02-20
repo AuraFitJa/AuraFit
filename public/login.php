@@ -287,9 +287,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <main class="auth-shell">
   <div class="brand">
-    <div class="logo"></div>
+    <div class="logo"><img src="https://i.imgur.com/q8qW3dv.png" alt="AuraFit" class="logo-img"></div>
     <span>AuraFit</span>
-    <img src="https://i.imgur.com/q8qW3dv.png" alt="AuraFit" class="logo-img">
   </div>
 
   <div class="box">
