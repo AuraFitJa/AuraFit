@@ -232,6 +232,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .auth-shell { width: 100%; max-width: 780px; }
     .brand { display:inline-flex; align-items:center; gap:10px; margin-bottom:18px; font-weight:700; }
+
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-link:hover {
+      opacity: 0.85;
+    }
+
     .logo-img {
       width: 40px;
       height: 40px;
@@ -338,14 +351,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <main class="auth-shell">
-  <div class="brand">
-  <img 
-    src="https://i.imgur.com/q8qW3dv.png"
-    alt="AuraFit"
-    class="logo-img"
-  />
-  <span>AuraFit</span>
-</div>  
+    <div class="brand">
+      <a href="/index.html" class="brand-link">
+        <img 
+          src="https://i.imgur.com/q8qW3dv.png"
+          alt="AuraFit"
+          class="logo-img"
+        />
+        <span>AuraFit</span>
+      </a>
+    </div>
 
   <div class="box">
     <h1>Crea il tuo account</h1>

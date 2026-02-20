@@ -263,6 +263,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     .footer-link a { color: var(--text); text-decoration: underline; }
 
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-link:hover {
+      opacity: 0.85;
+    }
+
     .error, .success {
       margin-bottom: 14px;
       border-radius: 12px;
@@ -285,9 +297,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <main class="auth-shell">
-  <div class="brand">
-    <div class="logo"><img src="https://i.imgur.com/q8qW3dv.png" alt="AuraFit" class="logo-img"></div>
-    <span>AuraFit</span>
+    <div class="brand">
+    <a href="/index.html" class="brand-link">
+      <img 
+        src="https://i.imgur.com/q8qW3dv.png"
+        alt="AuraFit"
+        class="logo-img"
+      />
+      <span>AuraFit</span>
+    </a>
   </div>
 
   <div class="box">
