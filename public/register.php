@@ -234,7 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     input, select {
       width: 100%;
       padding: 11px 12px;
-      background-color: #081118;
       border-radius: 12px;
       border: 1px solid var(--line);
       background: rgba(255,255,255,.03);
@@ -245,6 +244,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       border-color: rgba(109,94,243,.65);
       box-shadow: 0 0 0 3px rgba(109,94,243,.2);
     }
+
+    select {
+      appearance: none;
+      background: linear-gradient(135deg, rgba(109,94,243,.15), rgba(46,225,165,.1));
+      color: var(--text);
+    }
+
+    select option {
+      background: #0b1220;
+      color: #EAF0FF;
+    }
+
     .btn {
       margin-top: 14px;
       width: 100%;
