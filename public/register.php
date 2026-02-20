@@ -234,6 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     input, select {
       width: 100%;
       padding: 11px 12px;
+      background-color: #081118;
       border-radius: 12px;
       border: 1px solid var(--line);
       background: rgba(255,255,255,.03);
@@ -293,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     class="logo-img"
   />
   <span>AuraFit</span>
-</div>
+</div>  
 
   <div class="box">
     <h1>Crea il tuo account</h1>
