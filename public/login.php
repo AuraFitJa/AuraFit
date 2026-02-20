@@ -167,48 +167,162 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>AuraFit - Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
-    .box { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-top: 16px; }
-    label { display: block; margin: 10px 0 6px; }
-    input { width: 100%; padding: 10px; }
-    button { padding: 10px 14px; cursor: pointer; }
-    .error { background: #ffe8e8; border: 1px solid #ffb2b2; padding: 10px; border-radius: 6px; }
-    .success { background: #e8fff0; border: 1px solid #9de2b3; padding: 10px; border-radius: 6px; }
+    :root{
+      --bg:#070A12;
+      --text:#EAF0FF;
+      --muted: rgba(234,240,255,.68);
+      --line: rgba(234,240,255,.12);
+      --brand1:#6D5EF3;
+      --brand2:#2EE1A5;
+      --brand3:#4CC9F0;
+      --danger:#ff7f97;
+      --success:#63e6b8;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    * { box-sizing:border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--text);
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+      position: relative;
+    }
+    body::before{
+      content:"";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(109,94,243,.35), transparent 55%),
+        radial-gradient(1100px 700px at 90% 10%, rgba(46,225,165,.22), transparent 55%),
+        radial-gradient(900px 700px at 55% 95%, rgba(76,201,240,.18), transparent 55%);
+    }
+
+    .auth-shell { width: 100%; max-width: 500px; }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--brand1), var(--brand2));
+      box-shadow: 0 10px 30px rgba(109,94,243,.35);
+    }
+
+    .box {
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: 0 18px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05);
+      border-radius: 24px;
+      padding: 26px;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    .subtitle { margin: 0 0 18px; color: var(--muted); }
+    label { display:block; margin: 12px 0 6px; font-weight: 600; }
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      outline: none;
+    }
+    input:focus {
+      border-color: rgba(109,94,243,.65);
+      box-shadow: 0 0 0 3px rgba(109,94,243,.2);
+    }
+    .btn {
+      margin-top: 14px;
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #081118;
+      background: linear-gradient(135deg, rgba(109,94,243,.95), rgba(46,225,165,.75));
+      box-shadow: 0 10px 30px rgba(109,94,243,.25);
+    }
+    .footer-link {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    .footer-link a { color: var(--text); text-decoration: underline; }
+
+    .error, .success {
+      margin-bottom: 14px;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid;
+      font-size: 14px;
+    }
+    .error {
+      background: rgba(255,127,151,.12);
+      border-color: rgba(255,127,151,.5);
+      color: #ffd7e1;
+    }
+    .success {
+      background: rgba(99,230,184,.14);
+      border-color: rgba(99,230,184,.5);
+      color: #d8ffef;
+    }
+    .error ul { margin: 8px 0 0 18px; padding: 0; }
   </style>
 </head>
 <body>
-
-<h1>Login AuraFit</h1>
-
-<?php if (!empty($errors)): ?>
-  <div class="error">
-    <strong>Errore:</strong>
-    <ul>
-      <?php foreach ($errors as $err): ?>
-        <li><?= htmlspecialchars($err) ?></li>
-      <?php endforeach; ?>
-    </ul>
+<main class="auth-shell">
+  <div class="brand">
+    <div class="logo"></div>
+    <span>AuraFit</span>
   </div>
-<?php endif; ?>
 
-<?php if ($success): ?>
-  <div class="success"><?= htmlspecialchars($success) ?></div>
-<?php endif; ?>
+  <div class="box">
+    <h1>Bentornato</h1>
+    <p class="subtitle">Accedi per continuare il tuo percorso su AuraFit.</p>
 
-<div class="box">
-  <form method="post" action="">
-    <label>Email</label>
-    <input type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+    <?php if (!empty($errors)): ?>
+      <div class="error">
+        <strong>Errore:</strong>
+        <ul>
+          <?php foreach ($errors as $err): ?>
+            <li><?= htmlspecialchars($err) ?></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endif; ?>
 
-    <label>Password</label>
-    <input type="password" name="password" required>
+    <?php if ($success): ?>
+      <div class="success"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
 
-    <div style="margin-top:12px;">
-      <button type="submit">Accedi</button>
-      <a href="register.php" style="margin-left:10px;">Non hai un account? Registrati</a>
-    </div>
-  </form>
-</div>
+    <form method="post" action="">
+      <label for="email">Email</label>
+      <input id="email" type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+
+      <label for="password">Password</label>
+      <input id="password" type="password" name="password" required>
+
+      <button class="btn" type="submit">Accedi</button>
+    </form>
+
+    <p class="footer-link">Non hai un account? <a href="register.php">Registrati</a></p>
+  </div>
+</main>
 
 </body>
 </html>
