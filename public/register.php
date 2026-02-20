@@ -43,6 +43,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Email non valida.";
     if (strlen($password) < 8) $errors[] = "La password deve essere di almeno 8 caratteri.";
 
+    
+    
+    
+    $nome = trim($_POST['nome'] ?? '');
+    $cognome = trim($_POST['cognome'] ?? '');
+
+    $regexNome = "/^[\p{L}' -]+$/u";
+
+    if (!preg_match($regexNome, $nome)) {
+        $errors[] = "Il nome può contenere solo lettere.";
+    }
+
+    if (!preg_match($regexNome, $cognome)) {
+        $errors[] = "Il cognome può contenere solo lettere.";
+    }
+
     if ($tipo !== 'cliente' && $tipo !== 'professionista') {
         $errors[] = "Tipo registrazione non valido.";
     }
@@ -257,6 +273,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow: 0 0 0 3px rgba(109,94,243,.2);
     }
 
+    /* Chrome, Edge, Safari */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
     select {
       appearance: none;
       background: linear-gradient(135deg, rgba(109,94,243,.15), rgba(46,225,165,.1));
@@ -342,11 +370,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="row">
         <div>
           <label for="nome">Nome</label>
-          <input id="nome" name="nome" required value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
+          <input id="nome" name="nome" pattern="^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$" title="Il nome può contenere solo lettere" required value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
         </div>
         <div>
           <label for="cognome">Cognome</label>
-          <input id="cognome" name="cognome" required value="<?= htmlspecialchars($_POST['cognome'] ?? '') ?>">
+          <input id="cognome" name="cognome" pattern="^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$" title="Il cognome può contenere solo lettere" required value="<?= htmlspecialchars($_POST['cognome'] ?? '') ?>">
         </div>
       </div>
 
