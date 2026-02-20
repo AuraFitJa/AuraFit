@@ -289,6 +289,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="brand">
     <div class="logo"></div>
     <span>AuraFit</span>
+    <img src="https://i.imgur.com/q8qW3dv.png" alt="AuraFit" class="logo-img">
   </div>
 
   <div class="box">
