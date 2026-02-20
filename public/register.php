@@ -352,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <main class="auth-shell">
     <div class="brand">
-      <a href="/index.html" class="brand-link">
+      <a href="../public/" class="brand-link"> 
         <img 
           src="https://i.imgur.com/q8qW3dv.png"
           alt="AuraFit"
