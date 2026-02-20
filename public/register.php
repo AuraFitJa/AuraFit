@@ -168,13 +168,112 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>AuraFit - Registrazione</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
-    .box { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-top: 16px; }
+    :root{
+      --bg:#070A12;
+      --text:#EAF0FF;
+      --muted: rgba(234,240,255,.68);
+      --line: rgba(234,240,255,.12);
+      --brand1:#6D5EF3;
+      --brand2:#2EE1A5;
+      --danger:#ff7f97;
+      --success:#63e6b8;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--text);
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+      position: relative;
+    }
+    body::before{
+      content:"";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(109,94,243,.35), transparent 55%),
+        radial-gradient(1100px 700px at 90% 10%, rgba(46,225,165,.22), transparent 55%),
+        radial-gradient(900px 700px at 55% 95%, rgba(76,201,240,.18), transparent 55%);
+    }
+
+    .auth-shell { width: 100%; max-width: 780px; }
+    .brand { display:inline-flex; align-items:center; gap:10px; margin-bottom:18px; font-weight:700; }
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--brand1), var(--brand2));
+      box-shadow: 0 10px 30px rgba(109,94,243,.35);
+    }
+
+    .box {
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: 0 18px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05);
+      border-radius: 24px;
+      padding: 26px;
+      backdrop-filter: blur(10px);
+    }
+    .inner-box {
+      margin-top: 16px;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    h3 { margin: 0 0 10px; }
+    .subtitle { margin: 0 0 18px; color: var(--muted); }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { display: block; margin: 8px 0 4px; }
-    input, select { width: 100%; padding: 10px; }
-    .error { background: #ffe8e8; border: 1px solid #ffb2b2; padding: 10px; border-radius: 6px; }
-    .success { background: #e8fff0; border: 1px solid #9de2b3; padding: 10px; border-radius: 6px; }
+    label { display:block; margin: 12px 0 6px; font-weight: 600; }
+    input, select {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: rgba(109,94,243,.65);
+      box-shadow: 0 0 0 3px rgba(109,94,243,.2);
+    }
+    .btn {
+      margin-top: 14px;
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #081118;
+      background: linear-gradient(135deg, rgba(109,94,243,.95), rgba(46,225,165,.75));
+      box-shadow: 0 10px 30px rgba(109,94,243,.25);
+    }
+    .footer-link { margin-top: 12px; color: var(--muted); font-size: 14px; text-align: center; }
+    .footer-link a { color: var(--text); text-decoration: underline; }
+
+    .error, .success {
+      margin-bottom: 14px;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid;
+      font-size: 14px;
+    }
+    .error { background: rgba(255,127,151,.12); border-color: rgba(255,127,151,.5); color: #ffd7e1; }
+    .success { background: rgba(99,230,184,.14); border-color: rgba(99,230,184,.5); color: #d8ffef; }
+    .error ul { margin: 8px 0 0 18px; padding: 0; }
+
+    @media (max-width: 760px) {
+      .row { grid-template-columns: 1fr; }
+      .box { padding: 20px; }
+    }
   </style>
   <script>
     function toggleSections() {
@@ -186,82 +285,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </script>
 </head>
 <body>
-
-<h1>Registrazione AuraFit</h1>
-
-<?php if (!empty($errors)): ?>
-  <div class="error">
-    <strong>Errore:</strong>
-    <ul>
-      <?php foreach ($errors as $err): ?>
-        <li><?= htmlspecialchars($err) ?></li>
-      <?php endforeach; ?>
-    </ul>
+<main class="auth-shell">
+  <div class="brand">
+    <div class="logo"></div>
+    <span>AuraFit</span>
   </div>
-<?php endif; ?>
 
-<?php if ($success): ?>
-  <div class="success"><?= htmlspecialchars($success) ?></div>
-<?php endif; ?>
+  <div class="box">
+    <h1>Crea il tuo account</h1>
+    <p class="subtitle">Inizia il tuo percorso fitness personalizzato su AuraFit.</p>
 
-<div class="box">
-  <form method="post" action="">
-    <div class="row">
-      <div>
-        <label>Nome</label>
-        <input name="nome" required value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
+    <?php if (!empty($errors)): ?>
+      <div class="error">
+        <strong>Errore:</strong>
+        <ul>
+          <?php foreach ($errors as $err): ?>
+            <li><?= htmlspecialchars($err) ?></li>
+          <?php endforeach; ?>
+        </ul>
       </div>
-      <div>
-        <label>Cognome</label>
-        <input name="cognome" required value="<?= htmlspecialchars($_POST['cognome'] ?? '') ?>">
-      </div>
-    </div>
+    <?php endif; ?>
 
-    <label>Email</label>
-    <input type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+    <?php if ($success): ?>
+      <div class="success"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
 
-    <label>Password (min 8 caratteri)</label>
-    <input type="password" name="password" required>
-
-    <label>Tipo registrazione</label>
-    <select id="tipo" name="tipo" onchange="toggleSections()">
-      <option value="cliente" <?= (($_POST['tipo'] ?? 'cliente') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
-      <option value="professionista" <?= (($_POST['tipo'] ?? '') === 'professionista') ? 'selected' : '' ?>>Professionista</option>
-    </select>
-
-    <div id="cliente-section" class="box">
-      <h3>Dati Cliente (facoltativi)</h3>
+    <form method="post" action="">
       <div class="row">
         <div>
-          <label>Altezza (cm)</label>
-          <input type="number" name="altezza" value="<?= htmlspecialchars($_POST['altezza'] ?? '') ?>">
+          <label for="nome">Nome</label>
+          <input id="nome" name="nome" required value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>">
         </div>
         <div>
-          <label>Peso (kg)</label>
-          <input type="number" step="0.1" name="peso" value="<?= htmlspecialchars($_POST['peso'] ?? '') ?>">
+          <label for="cognome">Cognome</label>
+          <input id="cognome" name="cognome" required value="<?= htmlspecialchars($_POST['cognome'] ?? '') ?>">
         </div>
       </div>
-      <label>Età</label>
-      <input type="number" name="eta" value="<?= htmlspecialchars($_POST['eta'] ?? '') ?>">
-    </div>
 
-    <div id="professionista-section" class="box">
-      <h3>Dati Professionista</h3>
-      <label>Ruolo professionista</label>
-      <select name="ruolo_professionista">
-        <option value="pt" <?= (($_POST['ruolo_professionista'] ?? 'pt') === 'pt') ? 'selected' : '' ?>>PT</option>
-        <option value="nutrizionista" <?= (($_POST['ruolo_professionista'] ?? '') === 'nutrizionista') ? 'selected' : '' ?>>Nutrizionista</option>
-        <option value="entrambi" <?= (($_POST['ruolo_professionista'] ?? '') === 'entrambi') ? 'selected' : '' ?>>Entrambi</option>
+      <label for="email">Email</label>
+      <input id="email" type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
+
+      <label for="password">Password (min 8 caratteri)</label>
+      <input id="password" type="password" name="password" required>
+
+      <label for="tipo">Tipo registrazione</label>
+      <select id="tipo" name="tipo" onchange="toggleSections()">
+        <option value="cliente" <?= (($_POST['tipo'] ?? 'cliente') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
+        <option value="professionista" <?= (($_POST['tipo'] ?? '') === 'professionista') ? 'selected' : '' ?>>Professionista</option>
       </select>
-    </div>
 
-    <div style="margin-top:12px;">
-      <button type="submit">Crea account</button>
-      <a href="login.php" style="margin-left:10px;">Hai già un account? Login</a>
-    </div>
-  </form>
-</div>
+      <div id="cliente-section" class="inner-box">
+        <h3>Dati Cliente (facoltativi)</h3>
+        <div class="row">
+          <div>
+            <label for="altezza">Altezza (cm)</label>
+            <input id="altezza" type="number" name="altezza" value="<?= htmlspecialchars($_POST['altezza'] ?? '') ?>">
+          </div>
+          <div>
+            <label for="peso">Peso (kg)</label>
+            <input id="peso" type="number" step="0.1" name="peso" value="<?= htmlspecialchars($_POST['peso'] ?? '') ?>">
+          </div>
+        </div>
+        <label for="eta">Età</label>
+        <input id="eta" type="number" name="eta" value="<?= htmlspecialchars($_POST['eta'] ?? '') ?>">
+      </div>
 
+      <div id="professionista-section" class="inner-box">
+        <h3>Dati Professionista</h3>
+        <label for="ruolo_professionista">Ruolo professionista</label>
+        <select id="ruolo_professionista" name="ruolo_professionista">
+          <option value="pt" <?= (($_POST['ruolo_professionista'] ?? 'pt') === 'pt') ? 'selected' : '' ?>>PT</option>
+          <option value="nutrizionista" <?= (($_POST['ruolo_professionista'] ?? '') === 'nutrizionista') ? 'selected' : '' ?>>Nutrizionista</option>
+          <option value="entrambi" <?= (($_POST['ruolo_professionista'] ?? '') === 'entrambi') ? 'selected' : '' ?>>Entrambi</option>
+        </select>
+      </div>
+
+      <button class="btn" type="submit">Crea account</button>
+    </form>
+
+    <p class="footer-link">Hai già un account? <a href="login.php">Accedi</a></p>
+  </div>
+</main>
 </body>
 </html>
-
