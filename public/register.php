@@ -47,6 +47,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Tipo registrazione non valido.";
     }
 
+    if ($altezza < 50 || $altezza > 260) {
+  $errors[] = "Altezza non valida (max 260 cm).";
+    }
+
+    if ($eta < 1 || $eta > 130) {
+      $errors[] = "Età non valida (max 130 anni).";
+    }
+
+    if ($peso < 20 || $peso > 700) {
+      $errors[] = "Peso non valido (max 700 kg).";
+    }
+
     if ($tipo === 'professionista') {
         if (!in_array($ruoloProfessionista, ['pt', 'nutrizionista', 'entrambi'], true)) {
             $errors[] = "Ruolo professionista non valido.";
@@ -355,15 +367,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="row">
           <div>
             <label for="altezza">Altezza (cm)</label>
-            <input id="altezza" type="number" name="altezza" value="<?= htmlspecialchars($_POST['altezza'] ?? '') ?>">
+            <input id="altezza" type="number" name="altezza" min="50" max="260" step="1" value="<?= htmlspecialchars($_POST['altezza'] ?? '') ?>">
           </div>
           <div>
             <label for="peso">Peso (kg)</label>
-            <input id="peso" type="number" step="0.1" name="peso" value="<?= htmlspecialchars($_POST['peso'] ?? '') ?>">
+            <input id="peso" type="number" step="0.1" name="peso" min="20" max="700" value="<?= htmlspecialchars($_POST['peso'] ?? '') ?>">
           </div>
         </div>
         <label for="eta">Età</label>
-        <input id="eta" type="number" name="eta" value="<?= htmlspecialchars($_POST['eta'] ?? '') ?>">
+        <input id="eta" type="number" name="eta" min="1" max="130" value="<?= htmlspecialchars($_POST['eta'] ?? '') ?>">
       </div>
 
       <div id="professionista-section" class="inner-box">
