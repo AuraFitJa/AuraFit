@@ -212,14 +212,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-weight: 700;
       letter-spacing: .2px;
     }
-    .logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--brand1), var(--brand2));
+    .logo-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      object-fit: cover;
       box-shadow: 0 10px 30px rgba(109,94,243,.35);
     }
-
     .box {
       background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
       box-shadow: 0 18px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05);
