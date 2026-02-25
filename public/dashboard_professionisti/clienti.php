@@ -30,11 +30,21 @@ if (!$dbAvailable) {
           $pdo->beginTransaction();
           try {
             $assocRow = Database::exec(
-              'SELECT idAssociazione, idKeyOrigine FROM Associazioni WHERE idAssociazione = ? AND professionista = ? AND attivaFlag = 1 LIMIT 1 FOR UPDATE',
+              'SELECT idAssociazione, idKeyOrigine, cliente, tipoAssociazione FROM Associazioni WHERE idAssociazione = ? AND professionista = ? AND attivaFlag = 1 LIMIT 1 FOR UPDATE',
               [$idAssociazione, $professionistaId]
             )->fetch();
 
             if ($assocRow) {
+              Database::exec(
+                'UPDATE Associazioni
+                 SET attivaFlag = NULL
+                 WHERE cliente = ?
+                   AND tipoAssociazione = ?
+                   AND attivaFlag = 0
+                   AND idAssociazione <> ?',
+                [(int)$assocRow['cliente'], (string)$assocRow['tipoAssociazione'], $idAssociazione]
+              );
+
               Database::exec(
                 "UPDATE Associazioni
                  SET attivaFlag = 0,

@@ -50,6 +50,25 @@ class SupportoModel
 
     public static function terminateAssociazione(int $idAssociazione): void
     {
+        $assoc = Database::exec(
+            'SELECT cliente, tipoAssociazione FROM Associazioni WHERE idAssociazione = ? LIMIT 1 FOR UPDATE',
+            [$idAssociazione]
+        )->fetch();
+
+        if (!$assoc) {
+            return;
+        }
+
+        Database::exec(
+            'UPDATE Associazioni
+             SET attivaFlag = NULL
+             WHERE cliente = ?
+               AND tipoAssociazione = ?
+               AND attivaFlag = 0
+               AND idAssociazione <> ?',
+            [(int)$assoc['cliente'], (string)$assoc['tipoAssociazione'], $idAssociazione]
+        );
+
         Database::exec(
             "UPDATE Associazioni
              SET attivaFlag = 0,
