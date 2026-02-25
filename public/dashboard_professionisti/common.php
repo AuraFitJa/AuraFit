@@ -24,8 +24,8 @@ if (!$isPt && !$isNutrizionista) {
   exit;
 }
 
-function h(string $value): string {
-  return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+function h(?string $value): string {
+  return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 $email = h((string)($user['email'] ?? ''));
