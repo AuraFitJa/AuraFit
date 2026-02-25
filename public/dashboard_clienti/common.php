@@ -22,8 +22,8 @@ if (!$isCliente) {
   exit;
 }
 
-function h(string $value): string {
-  return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+function h($value): string {
+  return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
 }
 
 $nome = trim((string)($user['nome'] ?? ''));
@@ -106,7 +106,7 @@ if (file_exists(__DIR__ . '/../../config/database.php')) {
   }
 }
 
-function renderStart(string $title, string $activeTab, string $email): void {
+function renderStart(string $title, string $activeTab, ?string $email): void {
   $tabs = [
     'overview' => ['label' => 'Overview', 'href' => 'overview.php'],
     'allenamenti' => ['label' => 'Allenamenti', 'href' => 'allenamenti.php'],
