@@ -70,16 +70,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Tipo registrazione non valido.";
     }
 
-    if ($altezza < 50 || $altezza > 260) {
-  $errors[] = "Altezza non valida (max 260 cm).";
-    }
+    if ($tipo === 'cliente') {
+        if ($altezza !== '' && (!is_numeric($altezza) || $altezza < 50 || $altezza > 260)) {
+            $errors[] = "Altezza non valida (max 260 cm).";
+        }
 
-    if ($eta < 1 || $eta > 130) {
-      $errors[] = "Età non valida (max 130 anni).";
-    }
+        if ($eta !== '' && (!is_numeric($eta) || $eta < 1 || $eta > 130)) {
+            $errors[] = "Età non valida (max 130 anni).";
+        }
 
-    if ($peso < 20 || $peso > 700) {
-      $errors[] = "Peso non valido (max 700 kg).";
+        if ($peso !== '' && (!is_numeric($peso) || $peso < 20 || $peso > 700)) {
+            $errors[] = "Peso non valido (max 700 kg).";
+        }
     }
 
     if ($tipo === 'professionista') {
