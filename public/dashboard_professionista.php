@@ -15,7 +15,7 @@ if (!$user || empty($user['idUtente'])) {
   exit;
 }
 
-if (!in_array('pt', $user['roles'], true)) {
+if (!in_array('pt', $user['roles'], true) && !in_array('nutrizionista', $user['roles'], true)) {
   header('Location: login.php');
   exit;
 }
