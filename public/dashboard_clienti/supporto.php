@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/common.php';
-require_once __DIR__ . '/../../app/Models/SupportoModel.php';
+require_once __DIR__ . '../app/Models/SupportoModel.php';
 
 $errors = [];
 $messages = [];
