@@ -83,7 +83,8 @@ try {
         exit;
     }
 
-    if (!empty($idKey['clienteUtilizzatore'])) {
+    $clienteUtilizzatore = isset($idKey['clienteUtilizzatore']) ? (int)$idKey['clienteUtilizzatore'] : 0;
+    if ($clienteUtilizzatore > 0 && $clienteUtilizzatore !== (int)$clienteId) {
         $pdo->rollBack();
         http_response_code(409);
         echo json_encode(['ok' => false, 'message' => 'Questa ID-Key risulta già utilizzata da un altro cliente.']);

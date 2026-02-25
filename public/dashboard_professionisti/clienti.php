@@ -35,23 +35,30 @@ if (!$dbAvailable) {
             )->fetch();
 
             if ($assocRow) {
-              Database::exec(
-                'UPDATE Associazioni
-                 SET attivaFlag = 2
-                 WHERE cliente = ?
-                   AND tipoAssociazione = ?
-                   AND attivaFlag = 0
-                   AND idAssociazione <> ?',
+              $attivaFlagTarget = 0;
+              $usedFlagsStmt = Database::exec(
+                'SELECT attivaFlag FROM Associazioni WHERE cliente = ? AND tipoAssociazione = ? AND idAssociazione <> ? FOR UPDATE',
                 [(int)$assocRow['cliente'], (string)$assocRow['tipoAssociazione'], $idAssociazione]
               );
+              $usedFlags = [];
+              while ($flagRow = $usedFlagsStmt->fetch()) {
+                $usedFlags[(int)$flagRow['attivaFlag']] = true;
+              }
+
+              if (isset($usedFlags[$attivaFlagTarget])) {
+                $attivaFlagTarget = 2;
+                while (isset($usedFlags[$attivaFlagTarget])) {
+                  $attivaFlagTarget++;
+                }
+              }
 
               Database::exec(
                 "UPDATE Associazioni
-                 SET attivaFlag = 0,
+                 SET attivaFlag = ?,
                      stato = 'terminata',
                      terminataIl = NOW()
                  WHERE idAssociazione = ?",
-                [$idAssociazione]
+                [$attivaFlagTarget, $idAssociazione]
               );
 
               if (!empty($assocRow['idKeyOrigine'])) {

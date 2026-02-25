@@ -50,13 +50,39 @@ class SupportoModel
 
     public static function terminateAssociazione(int $idAssociazione): void
     {
+        $assoc = Database::exec(
+            'SELECT cliente, tipoAssociazione FROM Associazioni WHERE idAssociazione = ? LIMIT 1 FOR UPDATE',
+            [$idAssociazione]
+        )->fetch();
+
+        if (!$assoc) {
+            return;
+        }
+
+        $attivaFlagTarget = 0;
+        $usedFlagsStmt = Database::exec(
+            'SELECT attivaFlag FROM Associazioni WHERE cliente = ? AND tipoAssociazione = ? AND idAssociazione <> ? FOR UPDATE',
+            [(int)$assoc['cliente'], (string)$assoc['tipoAssociazione'], $idAssociazione]
+        );
+        $usedFlags = [];
+        while ($flagRow = $usedFlagsStmt->fetch()) {
+            $usedFlags[(int)$flagRow['attivaFlag']] = true;
+        }
+
+        if (isset($usedFlags[$attivaFlagTarget])) {
+            $attivaFlagTarget = 2;
+            while (isset($usedFlags[$attivaFlagTarget])) {
+                $attivaFlagTarget++;
+            }
+        }
+
         Database::exec(
             "UPDATE Associazioni
-             SET attivaFlag = 0,
+             SET attivaFlag = ?,
                  stato = 'terminata',
                  terminataIl = NOW()
              WHERE idAssociazione = ?",
-            [$idAssociazione]
+            [$attivaFlagTarget, $idAssociazione]
         );
     }
 

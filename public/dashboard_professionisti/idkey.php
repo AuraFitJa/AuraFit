@@ -46,40 +46,88 @@ if (!$dbAvailable) {
         if ($idKeyInput <= 0) {
           $errors[] = 'ID-Key non valida.';
         } else {
-          $keyRow = Database::exec(
-            'SELECT idKey, stato FROM IdKey WHERE idKey = ? AND professionista = ? LIMIT 1',
-            [$idKeyInput, $professionistaId]
-          )->fetch();
+          $pdo = Database::pdo();
+          $pdo->beginTransaction();
+          try {
+            $keyRow = Database::exec(
+              'SELECT idKey, stato FROM IdKey WHERE idKey = ? AND professionista = ? LIMIT 1 FOR UPDATE',
+              [$idKeyInput, $professionistaId]
+            )->fetch();
 
-          if (!$keyRow) {
-            $errors[] = 'ID-Key non trovata per questo professionista.';
-          } else {
-            $currentState = strtolower((string)$keyRow['stato']);
-            if ($actionInput === 'reactivate_idkey') {
-              if ($currentState === 'eliminata') {
-                $errors[] = 'Una ID-Key eliminata non può essere riattivata.';
-              } elseif ($currentState === 'attiva') {
-                $messages[] = 'La ID-Key è già attiva.';
-              } else {
-                Database::exec(
-                  "UPDATE IdKey SET stato = 'attiva' WHERE idKey = ? AND professionista = ?",
-                  [$idKeyInput, $professionistaId]
-                );
-                $messages[] = 'ID-Key riattivata con successo.';
+            if (!$keyRow) {
+              $pdo->rollBack();
+              $errors[] = 'ID-Key non trovata per questo professionista.';
+            } else {
+              $currentState = strtolower((string)$keyRow['stato']);
+              if ($actionInput === 'reactivate_idkey') {
+                if ($currentState === 'eliminata') {
+                  $pdo->rollBack();
+                  $errors[] = 'Una ID-Key eliminata non può essere riattivata.';
+                } elseif ($currentState === 'attiva') {
+                  $pdo->rollBack();
+                  $messages[] = 'La ID-Key è già attiva.';
+                } else {
+                  Database::exec(
+                    "UPDATE IdKey SET stato = 'attiva' WHERE idKey = ? AND professionista = ?",
+                    [$idKeyInput, $professionistaId]
+                  );
+                  $pdo->commit();
+                  $messages[] = 'ID-Key riattivata con successo.';
+                }
+              }
+
+              if ($actionInput === 'delete_idkey') {
+                if ($currentState === 'eliminata') {
+                  $pdo->rollBack();
+                  $messages[] = 'La ID-Key è già eliminata.';
+                } else {
+                  $activeAssocStmt = Database::exec(
+                    'SELECT idAssociazione, cliente, tipoAssociazione FROM Associazioni WHERE idKeyOrigine = ? AND professionista = ? AND attivaFlag = 1 FOR UPDATE',
+                    [$idKeyInput, $professionistaId]
+                  );
+
+                  while ($assocRow = $activeAssocStmt->fetch()) {
+                    $attivaFlagTarget = 0;
+                    $usedFlagsStmt = Database::exec(
+                      'SELECT attivaFlag FROM Associazioni WHERE cliente = ? AND tipoAssociazione = ? AND idAssociazione <> ? FOR UPDATE',
+                      [(int)$assocRow['cliente'], (string)$assocRow['tipoAssociazione'], (int)$assocRow['idAssociazione']]
+                    );
+                    $usedFlags = [];
+                    while ($flagRow = $usedFlagsStmt->fetch()) {
+                      $usedFlags[(int)$flagRow['attivaFlag']] = true;
+                    }
+
+                    if (isset($usedFlags[$attivaFlagTarget])) {
+                      $attivaFlagTarget = 2;
+                      while (isset($usedFlags[$attivaFlagTarget])) {
+                        $attivaFlagTarget++;
+                      }
+                    }
+
+                    Database::exec(
+                      "UPDATE Associazioni
+                       SET attivaFlag = ?,
+                           stato = 'terminata',
+                           terminataIl = NOW()
+                       WHERE idAssociazione = ?",
+                      [$attivaFlagTarget, (int)$assocRow['idAssociazione']]
+                    );
+                  }
+
+                  Database::exec(
+                    "UPDATE IdKey SET stato = 'eliminata' WHERE idKey = ? AND professionista = ?",
+                    [$idKeyInput, $professionistaId]
+                  );
+                  $pdo->commit();
+                  $messages[] = 'ID-Key eliminata con successo. Eventuali associazioni attive collegate sono state terminate.';
+                }
               }
             }
-
-            if ($actionInput === 'delete_idkey') {
-              if ($currentState === 'eliminata') {
-                $messages[] = 'La ID-Key è già eliminata.';
-              } else {
-                Database::exec(
-                  "UPDATE IdKey SET stato = 'eliminata' WHERE idKey = ? AND professionista = ?",
-                  [$idKeyInput, $professionistaId]
-                );
-                $messages[] = 'ID-Key eliminata con successo.';
-              }
+          } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+              $pdo->rollBack();
             }
+            throw $e;
           }
         }
       }
