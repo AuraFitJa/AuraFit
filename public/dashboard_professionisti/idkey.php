@@ -32,7 +32,7 @@ if (!$dbAvailable) {
       }
 
       $countRow = Database::exec(
-        'SELECT COUNT(*) AS c FROM Associazioni WHERE professionista = ? AND attiva = 1',
+        'SELECT COUNT(*) AS c FROM Associazioni WHERE professionista = ? AND attivaFlag = 1',
         [$professionistaId]
       )->fetch();
       $clientiAttiviCount = (int)($countRow['c'] ?? 0);
@@ -58,7 +58,7 @@ if (!$dbAvailable) {
           $generated = null;
           for ($i = 0; $i < 10; $i++) {
             $candidate = 'AF-' . $prefix . '-' . strtoupper(bin2hex(random_bytes(3)));
-            $exists = Database::exec('SELECT idKey FROM IDKey WHERE codice = ? LIMIT 1', [$candidate])->fetch();
+            $exists = Database::exec('SELECT idKey FROM IdKey WHERE codice = ? LIMIT 1', [$candidate])->fetch();
             if (!$exists) {
               $generated = $candidate;
               break;
@@ -69,7 +69,7 @@ if (!$dbAvailable) {
             $errors[] = 'Impossibile generare un codice univoco. Riprova.';
           } else {
             Database::exec(
-              'INSERT INTO IDKey (codice, professionista, tipo, stato) VALUES (?, ?, ?, ?)',
+              'INSERT INTO IdKey (codice, professionista, tipoKey, stato) VALUES (?, ?, ?, ?)',
               [$generated, $professionistaId, $tipoInput, 'attiva']
             );
             $messages[] = 'Nuova ID-Key generata: ' . $generated;
@@ -78,7 +78,7 @@ if (!$dbAvailable) {
       }
 
       $keysStmt = Database::exec(
-        'SELECT idKey, codice, stato, tipo FROM IDKey WHERE professionista = ? ORDER BY idKey DESC',
+        'SELECT idKey, codice, stato, tipoKey FROM IdKey WHERE professionista = ? ORDER BY idKey DESC',
         [$professionistaId]
       );
       while ($row = $keysStmt->fetch()) {
@@ -86,7 +86,7 @@ if (!$dbAvailable) {
           'idKey' => (int)$row['idKey'],
           'key' => (string)$row['codice'],
           'stato' => (string)$row['stato'],
-          'tipo' => (string)$row['tipo'],
+          'tipo' => (string)$row['tipoKey'],
         ];
       }
     }
