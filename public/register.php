@@ -201,7 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <title>AuraFit - Registrazione</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AuraFit">
+  <link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
   <style>
     :root{
       --bg:#070A12;
@@ -224,6 +229,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       display: grid;
       place-items: center;
       padding: 24px 16px;
+      padding-top: calc(24px + env(safe-area-inset-top));
+      padding-right: calc(16px + env(safe-area-inset-right));
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      padding-left: calc(16px + env(safe-area-inset-left));
       position: relative;
     }
     body::before{

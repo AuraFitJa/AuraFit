@@ -99,11 +99,11 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
     'report' => ['label' => 'Monitoraggio & Report', 'href' => 'report.php', 'visible' => true],
   ];
 
-  echo '<!doctype html><html lang="it"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />';
-  echo '<title>' . h($title) . ' — AuraFit</title><meta name="theme-color" content="#0B0F19" />';
+  echo '<!doctype html><html lang="it"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />';
+  echo '<title>' . h($title) . ' — AuraFit</title><meta name="theme-color" content="#0B0F19" /><meta name="apple-mobile-web-app-capable" content="yes" /><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /><meta name="apple-mobile-web-app-title" content="AuraFit" /><link rel="apple-touch-icon" href="/media/apple-touch-icon.png" /><link rel="manifest" href="/manifest.json" />';
   echo '<style>';
   echo ':root{--bg:#070A12;--text:#EAF0FF;--muted:rgba(234,240,255,.68);--line:rgba(234,240,255,.12);--brand1:#6D5EF3;--brand2:#2EE1A5;--brand3:#4CC9F0;--danger:#ff6f89;--warn:#ffd166;--ok:#2EE1A5;--max:1200px;--radius:18px;--sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}';
-  echo '*{box-sizing:border-box}body{margin:0;color:var(--text);font-family:var(--sans);background:var(--bg);min-height:100vh;position:relative}';
+  echo '*{box-sizing:border-box}body{margin:0;color:var(--text);font-family:var(--sans);background:var(--bg);min-height:100vh;position:relative;padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left)}';
   echo 'body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 800px at 18% -12%, rgba(109,94,243,.28), transparent 58%),radial-gradient(1100px 700px at 92% 12%, rgba(76,201,240,.16), transparent 58%),radial-gradient(900px 700px at 55% 98%, rgba(46,225,165,.12), transparent 60%)}';
   echo '.container{max-width:var(--max);margin:0 auto;padding:0 18px}.topbar{position:sticky;top:0;z-index:30;border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(16px);background:rgba(7,10,18,.66)}';
   echo '.nav{display:flex;align-items:center;justify-content:space-between;min-height:74px;gap:12px}.brand{display:flex;align-items:center;gap:10px;font-weight:700}.logo{width:34px;height:34px;border-radius:10px;object-fit:cover;box-shadow:0 10px 30px rgba(109,94,243,.2)}';
