@@ -83,7 +83,6 @@ try {
         exit;
     }
 
-    if (!empty($idKey['clienteUtilizzatore'])) {
     $clienteUtilizzatore = isset($idKey['clienteUtilizzatore']) ? (int)$idKey['clienteUtilizzatore'] : 0;
     if ($clienteUtilizzatore > 0 && $clienteUtilizzatore !== (int)$clienteId) {
         $pdo->rollBack();
