@@ -39,6 +39,51 @@ if (!$dbAvailable) {
 
       $canGenerateIdKey = $limiteClienti === null || $clientiAttiviCount < $limiteClienti;
 
+      if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array((string)($_POST['action'] ?? ''), ['reactivate_idkey', 'delete_idkey'], true)) {
+        $idKeyInput = (int)($_POST['idKey'] ?? 0);
+        $actionInput = (string)($_POST['action'] ?? '');
+
+        if ($idKeyInput <= 0) {
+          $errors[] = 'ID-Key non valida.';
+        } else {
+          $keyRow = Database::exec(
+            'SELECT idKey, stato FROM IdKey WHERE idKey = ? AND professionista = ? LIMIT 1',
+            [$idKeyInput, $professionistaId]
+          )->fetch();
+
+          if (!$keyRow) {
+            $errors[] = 'ID-Key non trovata per questo professionista.';
+          } else {
+            $currentState = strtolower((string)$keyRow['stato']);
+            if ($actionInput === 'reactivate_idkey') {
+              if ($currentState === 'eliminata') {
+                $errors[] = 'Una ID-Key eliminata non può essere riattivata.';
+              } elseif ($currentState === 'attiva') {
+                $messages[] = 'La ID-Key è già attiva.';
+              } else {
+                Database::exec(
+                  "UPDATE IdKey SET stato = 'attiva' WHERE idKey = ? AND professionista = ?",
+                  [$idKeyInput, $professionistaId]
+                );
+                $messages[] = 'ID-Key riattivata con successo.';
+              }
+            }
+
+            if ($actionInput === 'delete_idkey') {
+              if ($currentState === 'eliminata') {
+                $messages[] = 'La ID-Key è già eliminata.';
+              } else {
+                Database::exec(
+                  "UPDATE IdKey SET stato = 'eliminata' WHERE idKey = ? AND professionista = ?",
+                  [$idKeyInput, $professionistaId]
+                );
+                $messages[] = 'ID-Key eliminata con successo.';
+              }
+            }
+          }
+        }
+      }
+
       if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'generate_idkey') {
         $tipoInput = strtolower((string)($_POST['tipo'] ?? ''));
         $allowedTypes = [];
@@ -135,10 +180,10 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 
   <table>
-    <thead><tr><th>ID-Key</th><th>Tipo</th><th>Stato</th></tr></thead>
+    <thead><tr><th>ID-Key</th><th>Tipo</th><th>Stato</th><th>Azioni</th></tr></thead>
     <tbody>
       <?php if (!$idKeys): ?>
-        <tr><td colspan="3" class="muted">Nessuna ID-Key presente.</td></tr>
+        <tr><td colspan="4" class="muted">Nessuna ID-Key presente.</td></tr>
       <?php endif; ?>
       <?php foreach ($idKeys as $key): ?>
         <?php
@@ -149,6 +194,24 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
           <td><code><?= h($key['key']) ?></code></td>
           <td><?= h($key['tipo']) ?></td>
           <td><span class="status <?= $statusClass ?>"><?= h($key['stato']) ?></span></td>
+          <td>
+            <?php if ($status !== 'eliminata'): ?>
+              <?php if ($status !== 'attiva'): ?>
+                <form method="post" style="display:inline">
+                  <input type="hidden" name="action" value="reactivate_idkey" />
+                  <input type="hidden" name="idKey" value="<?= (int)$key['idKey'] ?>" />
+                  <button class="btn" type="submit">Riattiva</button>
+                </form>
+              <?php endif; ?>
+              <form method="post" style="display:inline">
+                <input type="hidden" name="action" value="delete_idkey" />
+                <input type="hidden" name="idKey" value="<?= (int)$key['idKey'] ?>" />
+                <button class="btn danger" type="submit">Elimina</button>
+              </form>
+            <?php else: ?>
+              <span class="muted">—</span>
+            <?php endif; ?>
+          </td>
         </tr>
       <?php endforeach; ?>
     </tbody>

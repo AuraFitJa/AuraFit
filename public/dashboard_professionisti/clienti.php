@@ -26,15 +26,45 @@ if (!$dbAvailable) {
       if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'terminate_association') {
         $idAssociazione = (int)($_POST['idAssociazione'] ?? 0);
         if ($idAssociazione > 0) {
-          Database::exec(
-            "UPDATE Associazioni
-             SET attivaFlag = 0,
-                 stato = 'terminata',
-                 terminataIl = NOW()
-             WHERE idAssociazione = ? AND professionista = ? AND attivaFlag = 1",
-            [$idAssociazione, $professionistaId]
-          );
-          $messages[] = 'Associazione terminata con successo. La chat verrà bloccata automaticamente (RF-016).';
+          $pdo = Database::pdo();
+          $pdo->beginTransaction();
+          try {
+            $assocRow = Database::exec(
+              'SELECT idAssociazione, idKeyOrigine FROM Associazioni WHERE idAssociazione = ? AND professionista = ? AND attivaFlag = 1 LIMIT 1 FOR UPDATE',
+              [$idAssociazione, $professionistaId]
+            )->fetch();
+
+            if ($assocRow) {
+              Database::exec(
+                "UPDATE Associazioni
+                 SET attivaFlag = 0,
+                     stato = 'terminata',
+                     terminataIl = NOW()
+                 WHERE idAssociazione = ?",
+                [$idAssociazione]
+              );
+
+              if (!empty($assocRow['idKeyOrigine'])) {
+                Database::exec(
+                  "UPDATE IdKey
+                   SET stato = 'sospesa'
+                   WHERE idKey = ? AND professionista = ? AND stato = 'attiva'",
+                  [(int)$assocRow['idKeyOrigine'], $professionistaId]
+                );
+              }
+
+              $pdo->commit();
+              $messages[] = 'Associazione terminata con successo. Chat bloccata e ID-Key origine sospesa.';
+            } else {
+              $pdo->rollBack();
+              $errors[] = 'Associazione non trovata o già terminata.';
+            }
+          } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+              $pdo->rollBack();
+            }
+            throw $e;
+          }
         }
       }
 
