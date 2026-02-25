@@ -15,6 +15,14 @@ if (!$dbAvailable) {
     if (!$professionistaId) {
       $errors[] = 'Profilo professionista non trovato per questo account.';
     } else {
+      $tipiConsentiti = [];
+      if ($isPt) {
+        $tipiConsentiti[] = 'pt';
+      }
+      if ($isNutrizionista) {
+        $tipiConsentiti[] = 'nutrizionista';
+      }
+
       if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'terminate_association') {
         $idAssociazione = (int)($_POST['idAssociazione'] ?? 0);
         if ($idAssociazione > 0) {
@@ -30,19 +38,25 @@ if (!$dbAvailable) {
         }
       }
 
+      $placeholders = implode(',', array_fill(0, count($tipiConsentiti), '?'));
+      $paramsAttivi = array_merge([$professionistaId], $tipiConsentiti);
       $attiviStmt = Database::exec(
-        "SELECT a.idAssociazione, a.iniziataIl, c.idCliente, u.nome, u.cognome
+        "SELECT a.idAssociazione, a.iniziataIl, a.tipoAssociazione, c.idCliente, u.nome, u.cognome, u.email
          FROM Associazioni a
          INNER JOIN Clienti c ON c.idCliente = a.cliente
          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-         WHERE a.professionista = ? AND a.attivaFlag = 1
+         WHERE a.professionista = ?
+           AND a.attivaFlag = 1
+           AND a.tipoAssociazione IN ($placeholders)
          ORDER BY a.iniziataIl DESC",
-        [$professionistaId]
+        $paramsAttivi
       );
       while ($row = $attiviStmt->fetch()) {
         $clientiAttivi[] = [
           'idAssociazione' => (int)$row['idAssociazione'],
           'nome' => trim((string)$row['nome'] . ' ' . (string)$row['cognome']),
+          'email' => (string)$row['email'],
+          'tipo' => (string)$row['tipoAssociazione'],
           'stato' => 'Attiva',
           'associazione' => (string)$row['iniziataIl'],
           'ultimoUpdate' => '—',
@@ -50,18 +64,23 @@ if (!$dbAvailable) {
         ];
       }
 
+      $paramsTerminati = array_merge([$professionistaId], $tipiConsentiti);
       $terminatiStmt = Database::exec(
-        "SELECT a.terminataIl, u.nome, u.cognome
+        "SELECT a.terminataIl, a.tipoAssociazione, u.nome, u.cognome, u.email
          FROM Associazioni a
          INNER JOIN Clienti c ON c.idCliente = a.cliente
          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-         WHERE a.professionista = ? AND a.attivaFlag = 0
+         WHERE a.professionista = ?
+           AND a.attivaFlag = 0
+           AND a.tipoAssociazione IN ($placeholders)
          ORDER BY a.terminataIl DESC",
-        [$professionistaId]
+        $paramsTerminati
       );
       while ($row = $terminatiStmt->fetch()) {
         $clientiTerminati[] = [
           'nome' => trim((string)$row['nome'] . ' ' . (string)$row['cognome']),
+          'email' => (string)$row['email'],
+          'tipo' => (string)$row['tipoAssociazione'],
           'stato' => 'Terminata',
           'chiusura' => (string)$row['terminataIl'],
           'nota' => 'Storico disponibile lato cliente (RF-015)',
@@ -91,15 +110,17 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
   </div>
 
   <table>
-    <thead><tr><th>Cliente</th><th>Stato associazione</th><th>Data associazione</th><th>Ultimo aggiornamento</th><th>Azioni</th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato associazione</th><th>Data associazione</th><th>Ultimo aggiornamento</th><th>Azioni</th></tr></thead>
     <tbody>
       <?php if (!$clientiAttivi): ?>
-        <tr><td colspan="5" class="muted">Nessun cliente attivo associato.</td></tr>
+        <tr><td colspan="7" class="muted">Nessun cliente attivo associato.</td></tr>
       <?php endif; ?>
 
       <?php foreach ($clientiAttivi as $cliente): ?>
         <tr>
           <td><?= h($cliente['nome']) ?></td>
+          <td><?= h($cliente['email']) ?></td>
+          <td><?= h($cliente['tipo']) ?></td>
           <td><span class="status ok"><?= h($cliente['stato']) ?></span></td>
           <td><?= h($cliente['associazione']) ?></td>
           <td><?= h($cliente['ultimoUpdate']) ?></td>
@@ -120,14 +141,16 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
 
   <h3>Storico clienti terminati</h3>
   <table>
-    <thead><tr><th>Cliente</th><th>Stato</th><th>Data chiusura</th><th>Nota</th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato</th><th>Data chiusura</th><th>Nota</th></tr></thead>
     <tbody>
       <?php if (!$clientiTerminati): ?>
-        <tr><td colspan="4" class="muted">Nessuna associazione terminata.</td></tr>
+        <tr><td colspan="6" class="muted">Nessuna associazione terminata.</td></tr>
       <?php endif; ?>
       <?php foreach ($clientiTerminati as $cliente): ?>
         <tr>
           <td><?= h($cliente['nome']) ?></td>
+          <td><?= h($cliente['email']) ?></td>
+          <td><?= h($cliente['tipo']) ?></td>
           <td><span class="status warn"><?= h($cliente['stato']) ?></span></td>
           <td><?= h($cliente['chiusura']) ?></td>
           <td><?= h($cliente['nota']) ?></td>
