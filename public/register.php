@@ -2,6 +2,13 @@
 session_start();
 require_once __DIR__ . '/../config/database.php';
 
+$tipoFromGet = $_GET['tipo'] ?? null;
+if ($tipoFromGet === 'cliente' || $tipoFromGet === 'professionista') {
+    $tipoDefault = $tipoFromGet;
+} else {
+    $tipoDefault = 'cliente';
+}
+
 $errors = [];
 $success = null;
 
@@ -401,8 +408,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <label for="tipo">Tipo registrazione</label>
       <select id="tipo" name="tipo" onchange="toggleSections()">
-        <option value="cliente" <?= (($_POST['tipo'] ?? 'cliente') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
-        <option value="professionista" <?= (($_POST['tipo'] ?? '') === 'professionista') ? 'selected' : '' ?>>Professionista</option>
+        <option value="cliente" <?= (($tipoDefault === 'cliente') ? 'selected' : '') ?>>Cliente</option>
+        <option value="professionista" <?= (($tipoDefault === 'professionista') ? 'selected' : '') ?>>Professionista</option>
       </select>
 
       <div id="cliente-section" class="inner-box">
