@@ -28,7 +28,7 @@ function h(?string $value): string {
   return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-$email = h((string)($user['email'] ?? ''));
+$email = (string)($user['email'] ?? '');
 $roleBadge = $isPt && $isNutrizionista ? 'PT + Nutrizionista' : ($isPt ? 'Personal Trainer' : 'Nutrizionista');
 $userId = (int)$user['idUtente'];
 
@@ -43,6 +43,47 @@ if (file_exists(__DIR__ . '/../../config/database.php')) {
   }
 } else {
   $dbError = 'Config DB mancante: crea config/database.php partendo da config/database.sample.php.';
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['profileScope'] ?? '') === 'professionista')) {
+  header('Content-Type: application/json; charset=utf-8');
+
+  if (!$dbAvailable) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => $dbError ?? 'Database non disponibile.']);
+    exit;
+  }
+
+  $nomeInput = trim((string)($_POST['nome'] ?? ''));
+  $cognomeInput = trim((string)($_POST['cognome'] ?? ''));
+  $emailInput = trim((string)($_POST['email'] ?? ''));
+
+  if ($emailInput === '' || !filter_var($emailInput, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'message' => 'Email non valida.']);
+    exit;
+  }
+
+  try {
+    Database::exec(
+      'UPDATE Utenti
+       SET nome = ?, cognome = ?, email = ?, aggiornatoIl = NOW()
+       WHERE idUtente = ?',
+      [$nomeInput, $cognomeInput, $emailInput, $userId]
+    );
+
+    $_SESSION['user']['nome'] = $nomeInput;
+    $_SESSION['user']['cognome'] = $cognomeInput;
+    $_SESSION['user']['email'] = $emailInput;
+
+    echo json_encode(['ok' => true, 'message' => 'Profilo aggiornato nel database.']);
+    exit;
+  } catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => 'Salvataggio non riuscito. Riprova.']);
+    exit;
+  }
 }
 
 function getProfessionistaId(int $idUtente): ?int {
@@ -115,7 +156,11 @@ if ($dbAvailable) {
   }
 }
 
+$email = h($professionistaProfileForm['email']);
+
 function renderStart(string $title, string $activeTab, string $email, string $roleBadge, bool $isPt, bool $isNutrizionista): void {
+  global $professionistaProfileForm;
+
   $tabs = [
     'overview' => ['label' => 'Overview', 'href' => 'overview.php', 'visible' => true],
     'clienti' => ['label' => 'Gestione clienti', 'href' => 'clienti.php', 'visible' => true],
@@ -146,7 +191,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
   echo '@media (max-width:760px){.profile-modal{padding:10px}.profile-modal-card{padding:14px;border-radius:16px}.profile-modal-grid{grid-template-columns:1fr}}';
   echo '</style></head><body>';
 
-  echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="../media/logo.png" alt="AuraFit" class="logo" />AuraFit Professionista</div><div class="nav-actions"><button type="button" class="pill role-btn" data-profile-modal-open>' . h($roleBadge) . '</button><a class="btn" href="../logout.php">Logout</a></div></div></header><div class="profile-modal" data-profile-modal aria-hidden="true"><div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-title"><div class="profile-modal-head"><div><h2 id="profile-title" class="section-title">Modifica profilo professionista</h2><p class="muted" style="margin:0">Aggiorna i tuoi dati visibili ai clienti.</p></div><button type="button" class="profile-modal-close" data-profile-modal-close>Chiudi</button></div><form data-profile-form><div class="profile-modal-grid"><label class="field"><span>Nome</span><input name="nome" type="text" autocomplete="given-name" value="' . h($professionistaProfileForm['nome']) . '" /></label><label class="field"><span>Cognome</span><input name="cognome" type="text" autocomplete="family-name" value="' . h($professionistaProfileForm['cognome']) . '" /></label><label class="field full"><span>Email</span><input name="email" type="email" value="' . h($professionistaProfileForm['email']) . '" required autocomplete="email" /></label><label class="field"><span>Telefono</span><input name="telefono" type="tel" autocomplete="tel" value="' . h($professionistaProfileForm['telefono']) . '" /></label><label class="field"><span>Specializzazione</span><input name="specializzazione" type="text" placeholder="Es. Ricomposizione corporea" value="' . h($professionistaProfileForm['specializzazione']) . '" /></label><label class="field full"><span>Biografia breve</span><textarea name="bio" rows="3" placeholder="Presentazione professionale">' . h($professionistaProfileForm['bio']) . '</textarea></label></div><div class="toolbar" style="margin-top:14px"><span class="note">Le modifiche vengono salvate solo su questo dispositivo.</span><button class="btn primary" type="submit">Salva profilo</button></div><div class="okbox profile-feedback" data-profile-feedback>Profilo aggiornato con successo.</div></form></div></div>';
+  echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="../media/logo.png" alt="AuraFit" class="logo" />AuraFit Professionista</div><div class="nav-actions"><button type="button" class="pill role-btn" data-profile-modal-open>' . h($roleBadge) . '</button><a class="btn" href="../logout.php">Logout</a></div></div></header><div class="profile-modal" data-profile-modal aria-hidden="true"><div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-title"><div class="profile-modal-head"><div><h2 id="profile-title" class="section-title">Modifica profilo professionista</h2><p class="muted" style="margin:0">Aggiorna i tuoi dati visibili ai clienti.</p></div><button type="button" class="profile-modal-close" data-profile-modal-close>Chiudi</button></div><form data-profile-form><div class="profile-modal-grid"><label class="field"><span>Nome</span><input name="nome" type="text" autocomplete="given-name" value="' . h($professionistaProfileForm['nome']) . '" /></label><label class="field"><span>Cognome</span><input name="cognome" type="text" autocomplete="family-name" value="' . h($professionistaProfileForm['cognome']) . '" /></label><label class="field full"><span>Email</span><input name="email" type="email" value="' . h($professionistaProfileForm['email']) . '" required autocomplete="email" /></label><label class="field"><span>Telefono</span><input name="telefono" type="tel" autocomplete="tel" value="' . h($professionistaProfileForm['telefono']) . '" /></label><label class="field"><span>Specializzazione</span><input name="specializzazione" type="text" placeholder="Es. Ricomposizione corporea" value="' . h($professionistaProfileForm['specializzazione']) . '" /></label><label class="field full"><span>Biografia breve</span><textarea name="bio" rows="3" placeholder="Presentazione professionale">' . h($professionistaProfileForm['bio']) . '</textarea></label></div><div class="toolbar" style="margin-top:14px"><span class="note">Le modifiche vengono salvate sul browser corrente.</span><button class="btn primary" type="submit">Salva profilo</button></div><div class="okbox profile-feedback" data-profile-feedback>Profilo aggiornato con successo.</div></form></div></div>';
   echo '<div class="container layout"><aside class="side"><div class="menu">';
 
   foreach ($tabs as $key => $tab) {
@@ -162,7 +207,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
 
 function renderEnd(string $scripts = ''): void {
   echo '</main></div>';
-  echo "<script>(function(){const modal=document.querySelector('[data-profile-modal]');const openBtn=document.querySelector('[data-profile-modal-open]');if(!modal||!openBtn){return;}const closeEls=modal.querySelectorAll('[data-profile-modal-close]');const form=modal.querySelector('[data-profile-form]');const feedback=modal.querySelector('[data-profile-feedback]');const storageKey='aurafit_professionista_profile';const fields=['nome','cognome','email','telefono','specializzazione','bio'];function load(){try{return JSON.parse(localStorage.getItem(storageKey)||'{}')||{};}catch(e){return {};}}function save(payload){localStorage.setItem(storageKey,JSON.stringify(payload));}function apply(data){fields.forEach((name)=>{const input=form.elements[name];if(input&&typeof data[name]!=='undefined'){input.value=data[name];}});}function getData(){const payload={};fields.forEach((name)=>{const input=form.elements[name];if(input){payload[name]=String(input.value||'').trim();}});return payload;}function openModal(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}openBtn.addEventListener('click',openModal);closeEls.forEach((el)=>el.addEventListener('click',closeModal));modal.addEventListener('click',(event)=>{if(event.target===modal){closeModal();}});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('open')){closeModal();}});apply(load());form.addEventListener('submit',(event)=>{event.preventDefault();save(getData());if(feedback){feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),2200);}closeModal();});})();</script>";
+  echo "<script>(function(){const modal=document.querySelector('[data-profile-modal]');const openBtn=document.querySelector('[data-profile-modal-open]');if(!modal||!openBtn){return;}const closeEls=modal.querySelectorAll('[data-profile-modal-close]');const form=modal.querySelector('[data-profile-form]');const feedback=modal.querySelector('[data-profile-feedback]');const storageKey='aurafit_professionista_profile';const fields=['nome','cognome','email','telefono','specializzazione','bio'];function save(payload){localStorage.setItem(storageKey,JSON.stringify(payload));}function getData(){const payload={};fields.forEach((name)=>{const input=form.elements[name];if(input){payload[name]=String(input.value||'').trim();}});return payload;}function openModal(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}openBtn.addEventListener('click',openModal);closeEls.forEach((el)=>el.addEventListener('click',closeModal));modal.addEventListener('click',(event)=>{if(event.target===modal){closeModal();}});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('open')){closeModal();}});form.addEventListener('submit',async(event)=>{event.preventDefault();const data=getData();save(data);const formData=new FormData(form);formData.set('profileScope','professionista');try{const response=await fetch(window.location.pathname,{method:'POST',body:formData,headers:{'X-Requested-With':'XMLHttpRequest'}});const payload=await response.json();if(!response.ok||!payload.ok){throw new Error((payload&&payload.message)||'Errore salvataggio');}if(feedback){feedback.textContent=payload.message||'Profilo aggiornato con successo.';feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),2200);}closeModal();window.location.reload();}catch(error){if(feedback){feedback.textContent=error.message||'Errore durante il salvataggio.';feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),3000);}}});})();</script>";
   if ($scripts !== '') {
     echo $scripts;
   }
