@@ -61,7 +61,7 @@ class SupportoModel
 
         Database::exec(
             'UPDATE Associazioni
-             SET attivaFlag = NULL
+             SET attivaFlag = 2
              WHERE cliente = ?
                AND tipoAssociazione = ?
                AND attivaFlag = 0

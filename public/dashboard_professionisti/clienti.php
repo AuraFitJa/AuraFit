@@ -37,7 +37,7 @@ if (!$dbAvailable) {
             if ($assocRow) {
               Database::exec(
                 'UPDATE Associazioni
-                 SET attivaFlag = NULL
+                 SET attivaFlag = 2
                  WHERE cliente = ?
                    AND tipoAssociazione = ?
                    AND attivaFlag = 0
@@ -111,7 +111,7 @@ if (!$dbAvailable) {
          INNER JOIN Clienti c ON c.idCliente = a.cliente
          INNER JOIN Utenti u ON u.idUtente = c.idUtente
          WHERE a.professionista = ?
-           AND a.attivaFlag = 0
+           AND a.attivaFlag <> 1
            AND a.tipoAssociazione IN ($placeholders)
          ORDER BY a.terminataIl DESC",
         $paramsTerminati
