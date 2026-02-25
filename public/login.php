@@ -32,14 +32,14 @@ function load_user_roles(int $idUtente): array {
 function decide_redirect(array $roles): string {
   // Se ha ruoli professionali -> professionista
   if (in_array('pt', $roles, true) || in_array('nutrizionista', $roles, true)) {
-    return '/public/dashboard_professionista.php';
+    return '/dashboard_professionista.php';
   }
   // Se cliente -> cliente
   if (in_array('cliente', $roles, true)) {
-    return '/public/dashboard_cliente.php';
+    return '/dashboard_cliente.php';
   }
   // fallback
-  return '/index.php';
+  return '/index.html';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -165,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <title>AuraFit - Login</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AuraFit">
@@ -186,6 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     * { box-sizing:border-box; }
+    html, body { width:100%; max-width:100%; overflow-x:hidden; }
     body {
       margin: 0;
       min-height: 100vh;
