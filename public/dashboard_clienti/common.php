@@ -88,7 +88,9 @@ function renderStart(string $title, string $activeTab, string $email): void {
   echo '.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}.kpi{font-size:32px;font-weight:800;margin:6px 0 4px}.muted{color:var(--muted)}.section-title{margin:0 0 10px;font-size:20px}.list{margin:10px 0 0;padding-left:16px;color:var(--muted);line-height:1.6}';
   echo 'table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08)}th{color:var(--muted);font-weight:600}.status{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line);padding:4px 9px;font-size:12px}.status.ok{color:var(--ok)}.status.warn{color:var(--warn)}';
   echo '.toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.field{display:grid;gap:6px}.field input,.field textarea,.field select{width:100%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.note{font-size:12px;color:var(--muted);margin-top:6px}.chart-wrap{height:280px}.okbox{border:1px solid rgba(99,230,184,.45);background:rgba(99,230,184,.12);padding:10px 12px;border-radius:12px;color:#d8ffef}';
+  echo '.mobile-tabs{display:none}';
   echo '@media (max-width:1050px){.layout{grid-template-columns:1fr}.side{position:static}.span-3,.span-4,.span-6,.span-8{grid-column:span 12}.two,.three{grid-template-columns:1fr}}';
+  echo '@media (max-width:820px){body{background:linear-gradient(180deg,#0b0f19 0%,#080b14 44%,#060810 100%)}body::before{background:radial-gradient(480px 300px at 50% -8%,rgba(109,94,243,.36),transparent 65%),radial-gradient(400px 220px at 50% 100%,rgba(76,201,240,.12),transparent 72%)}.topbar{background:rgba(8,10,16,.78);border-bottom-color:rgba(255,255,255,.06)}.container{padding:0 14px}.nav{min-height:64px}.brand{font-size:17px;letter-spacing:.01em}.logo{width:28px;height:28px;border-radius:8px}.nav-actions{gap:6px}.nav-actions .pill:nth-child(2){display:none}.nav-actions .btn{padding:8px 11px;font-size:12px;border-radius:11px}.layout{display:block;padding:10px 0 calc(104px + env(safe-area-inset-bottom))}.side{display:none}.main{gap:12px}.card{border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:0 20px 34px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.06)}.card h3,.card h2{margin:0 0 8px;font-size:16px}.hero{padding:18px;background:linear-gradient(145deg,rgba(109,94,243,.34),rgba(76,201,240,.16) 58%,rgba(8,12,20,.65));}.hero h1{font-size:clamp(27px,8.4vw,34px);margin:6px 0}.hero .lead{font-size:14px;line-height:1.45}.pill{padding:6px 10px;font-size:11px}.card{padding:15px}.grid{gap:10px}.kpi{font-size:30px;line-height:1.1}th,td{padding:10px 4px;font-size:13px}table{display:block;overflow-x:auto;white-space:nowrap}.toolbar{margin-bottom:8px}.mobile-tabs{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:50;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:8px;border-radius:22px;background:rgba(18,21,32,.92);border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,255,255,.04);backdrop-filter:blur(16px)}.mobile-tabs a{display:grid;justify-items:center;gap:5px;text-decoration:none;color:rgba(234,240,255,.72);font-size:10px;font-weight:600;letter-spacing:.02em;padding:7px 2px;border-radius:14px}.mobile-tabs a::before{font-size:16px;line-height:1}.mobile-tabs a[data-tab="overview"]::before{content:"⌂"}.mobile-tabs a[data-tab="allenamenti"]::before{content:"🏋️"}.mobile-tabs a[data-tab="nutrizione"]::before{content:"🍽️"}.mobile-tabs a[data-tab="progressi"]::before{content:"📈"}.mobile-tabs a[data-tab="supporto"]::before{content:"💬"}.mobile-tabs a.active{color:#fff;background:linear-gradient(135deg,rgba(109,94,243,.9),rgba(76,201,240,.68));box-shadow:0 10px 20px rgba(90,100,255,.42)}.mobile-tabs a.active::before{transform:translateY(-1px)}}';
   echo '</style></head><body>';
 
   echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="../media/logo.png" alt="AuraFit" class="logo" />AuraFit Cliente</div><div class="nav-actions"><span class="pill">Cliente</span><span class="pill">' . h($email) . '</span><a class="btn" href="../logout.php">Logout</a></div></div></header>';
@@ -103,7 +105,21 @@ function renderStart(string $title, string $activeTab, string $email): void {
 }
 
 function renderEnd(string $scripts = ''): void {
-  echo '</main></div>';
+  $tabs = [
+    'overview' => ['label' => 'Home', 'href' => 'overview.php'],
+    'allenamenti' => ['label' => 'Workout', 'href' => 'allenamenti.php'],
+    'nutrizione' => ['label' => 'Pasti', 'href' => 'nutrizione.php'],
+    'progressi' => ['label' => 'Progress', 'href' => 'progressi.php'],
+    'supporto' => ['label' => 'Chat', 'href' => 'supporto.php'],
+  ];
+  $current = basename(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '');
+
+  echo '</main></div><nav class="mobile-tabs" aria-label="Navigazione mobile">';
+  foreach ($tabs as $key => $tab) {
+    $isActive = $current === $tab['href'] ? 'active' : '';
+    echo '<a class="' . $isActive . '" data-tab="' . h($key) . '" href="' . h($tab['href']) . '">' . h($tab['label']) . '</a>';
+  }
+  echo '</nav>';
   if ($scripts !== '') {
     echo $scripts;
   }
