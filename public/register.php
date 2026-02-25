@@ -361,7 +361,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="brand">
       <a href="../public/" class="brand-link"> 
         <img 
-          src="https://i.imgur.com/q8qW3dv.png"
+          src="media/logo.png"
           alt="AuraFit"
           class="logo-img"
         />
