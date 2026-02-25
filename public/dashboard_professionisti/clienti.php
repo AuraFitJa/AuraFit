@@ -19,7 +19,11 @@ if (!$dbAvailable) {
         $idAssociazione = (int)($_POST['idAssociazione'] ?? 0);
         if ($idAssociazione > 0) {
           Database::exec(
-            'UPDATE Associazioni SET attiva = 0, dataFine = NOW() WHERE idAssociazione = ? AND professionista = ? AND attiva = 1',
+            "UPDATE Associazioni
+             SET attivaFlag = 0,
+                 stato = 'terminata',
+                 terminataIl = NOW()
+             WHERE idAssociazione = ? AND professionista = ? AND attivaFlag = 1",
             [$idAssociazione, $professionistaId]
           );
           $messages[] = 'Associazione terminata con successo. La chat verrà bloccata automaticamente (RF-016).';
@@ -27,12 +31,12 @@ if (!$dbAvailable) {
       }
 
       $attiviStmt = Database::exec(
-        "SELECT a.idAssociazione, a.dataInizio, c.idCliente, u.nome, u.cognome
+        "SELECT a.idAssociazione, a.iniziataIl, c.idCliente, u.nome, u.cognome
          FROM Associazioni a
          INNER JOIN Clienti c ON c.idCliente = a.cliente
          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-         WHERE a.professionista = ? AND a.attiva = 1
-         ORDER BY a.dataInizio DESC",
+         WHERE a.professionista = ? AND a.attivaFlag = 1
+         ORDER BY a.iniziataIl DESC",
         [$professionistaId]
       );
       while ($row = $attiviStmt->fetch()) {
@@ -40,26 +44,26 @@ if (!$dbAvailable) {
           'idAssociazione' => (int)$row['idAssociazione'],
           'nome' => trim((string)$row['nome'] . ' ' . (string)$row['cognome']),
           'stato' => 'Attiva',
-          'associazione' => (string)$row['dataInizio'],
+          'associazione' => (string)$row['iniziataIl'],
           'ultimoUpdate' => '—',
           'idCliente' => (int)$row['idCliente'],
         ];
       }
 
       $terminatiStmt = Database::exec(
-        "SELECT a.dataFine, u.nome, u.cognome
+        "SELECT a.terminataIl, u.nome, u.cognome
          FROM Associazioni a
          INNER JOIN Clienti c ON c.idCliente = a.cliente
          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-         WHERE a.professionista = ? AND a.attiva = 0
-         ORDER BY a.dataFine DESC",
+         WHERE a.professionista = ? AND a.attivaFlag = 0
+         ORDER BY a.terminataIl DESC",
         [$professionistaId]
       );
       while ($row = $terminatiStmt->fetch()) {
         $clientiTerminati[] = [
           'nome' => trim((string)$row['nome'] . ' ' . (string)$row['cognome']),
           'stato' => 'Terminata',
-          'chiusura' => (string)$row['dataFine'],
+          'chiusura' => (string)$row['terminataIl'],
           'nota' => 'Storico disponibile lato cliente (RF-015)',
         ];
       }
