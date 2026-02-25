@@ -88,6 +88,33 @@ $reportMensili = [
   ['mese' => 'Marzo 2026', 'stato' => 'In elaborazione server-side'],
 ];
 
+
+$professionistaProfileForm = [
+  'nome' => trim((string)($user['nome'] ?? '')),
+  'cognome' => trim((string)($user['cognome'] ?? '')),
+  'email' => (string)($user['email'] ?? ''),
+  'telefono' => '',
+  'specializzazione' => '',
+  'bio' => '',
+];
+
+if ($dbAvailable) {
+  try {
+    $row = Database::exec(
+      'SELECT nome, cognome, email FROM Utenti WHERE idUtente = ? LIMIT 1',
+      [$userId]
+    )->fetch();
+
+    if ($row) {
+      $professionistaProfileForm['nome'] = trim((string)($row['nome'] ?? $professionistaProfileForm['nome']));
+      $professionistaProfileForm['cognome'] = trim((string)($row['cognome'] ?? $professionistaProfileForm['cognome']));
+      $professionistaProfileForm['email'] = (string)($row['email'] ?? $professionistaProfileForm['email']);
+    }
+  } catch (Throwable $e) {
+    // Fallback ai dati sessione quando il DB non è disponibile.
+  }
+}
+
 function renderStart(string $title, string $activeTab, string $email, string $roleBadge, bool $isPt, bool $isNutrizionista): void {
   $tabs = [
     'overview' => ['label' => 'Overview', 'href' => 'overview.php', 'visible' => true],
@@ -119,7 +146,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
   echo '@media (max-width:760px){.profile-modal{padding:10px}.profile-modal-card{padding:14px;border-radius:16px}.profile-modal-grid{grid-template-columns:1fr}}';
   echo '</style></head><body>';
 
-  echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="../media/logo.png" alt="AuraFit" class="logo" />AuraFit Professionista</div><div class="nav-actions"><button type="button" class="pill role-btn" data-profile-modal-open>' . h($roleBadge) . '</button><a class="btn" href="../logout.php">Logout</a></div></div></header><div class="profile-modal" data-profile-modal aria-hidden="true"><div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-title"><div class="profile-modal-head"><div><h2 id="profile-title" class="section-title">Modifica profilo professionista</h2><p class="muted" style="margin:0">Aggiorna i tuoi dati visibili ai clienti.</p></div><button type="button" class="profile-modal-close" data-profile-modal-close>Chiudi</button></div><form data-profile-form><div class="profile-modal-grid"><label class="field"><span>Nome</span><input name="nome" type="text" autocomplete="given-name" /></label><label class="field"><span>Cognome</span><input name="cognome" type="text" autocomplete="family-name" /></label><label class="field full"><span>Email</span><input name="email" type="email" value="' . h($email) . '" required autocomplete="email" /></label><label class="field"><span>Telefono</span><input name="telefono" type="tel" autocomplete="tel" /></label><label class="field"><span>Specializzazione</span><input name="specializzazione" type="text" placeholder="Es. Ricomposizione corporea" /></label><label class="field full"><span>Biografia breve</span><textarea name="bio" rows="3" placeholder="Presentazione professionale"></textarea></label></div><div class="toolbar" style="margin-top:14px"><span class="note">Le modifiche vengono salvate solo su questo dispositivo.</span><button class="btn primary" type="submit">Salva profilo</button></div><div class="okbox profile-feedback" data-profile-feedback>Profilo aggiornato con successo.</div></form></div></div>';
+  echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="../media/logo.png" alt="AuraFit" class="logo" />AuraFit Professionista</div><div class="nav-actions"><button type="button" class="pill role-btn" data-profile-modal-open>' . h($roleBadge) . '</button><a class="btn" href="../logout.php">Logout</a></div></div></header><div class="profile-modal" data-profile-modal aria-hidden="true"><div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-title"><div class="profile-modal-head"><div><h2 id="profile-title" class="section-title">Modifica profilo professionista</h2><p class="muted" style="margin:0">Aggiorna i tuoi dati visibili ai clienti.</p></div><button type="button" class="profile-modal-close" data-profile-modal-close>Chiudi</button></div><form data-profile-form><div class="profile-modal-grid"><label class="field"><span>Nome</span><input name="nome" type="text" autocomplete="given-name" value="' . h($professionistaProfileForm['nome']) . '" /></label><label class="field"><span>Cognome</span><input name="cognome" type="text" autocomplete="family-name" value="' . h($professionistaProfileForm['cognome']) . '" /></label><label class="field full"><span>Email</span><input name="email" type="email" value="' . h($professionistaProfileForm['email']) . '" required autocomplete="email" /></label><label class="field"><span>Telefono</span><input name="telefono" type="tel" autocomplete="tel" value="' . h($professionistaProfileForm['telefono']) . '" /></label><label class="field"><span>Specializzazione</span><input name="specializzazione" type="text" placeholder="Es. Ricomposizione corporea" value="' . h($professionistaProfileForm['specializzazione']) . '" /></label><label class="field full"><span>Biografia breve</span><textarea name="bio" rows="3" placeholder="Presentazione professionale">' . h($professionistaProfileForm['bio']) . '</textarea></label></div><div class="toolbar" style="margin-top:14px"><span class="note">Le modifiche vengono salvate solo su questo dispositivo.</span><button class="btn primary" type="submit">Salva profilo</button></div><div class="okbox profile-feedback" data-profile-feedback>Profilo aggiornato con successo.</div></form></div></div>';
   echo '<div class="container layout"><aside class="side"><div class="menu">';
 
   foreach ($tabs as $key => $tab) {
