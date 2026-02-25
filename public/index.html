@@ -2,7 +2,12 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="AuraFit" />
+  <link rel="apple-touch-icon" href="/media/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
   <title>AuraFit — Web app premium per gestire i clienti di PT e Nutrizionisti</title>
   <meta name="description" content="AuraFit è la web app per Personal Trainer e Nutrizionisti: gestione clienti, programmi, piani alimentari, chat e report. Sicura e GDPR-ready." />
   <meta property="og:title" content="AuraFit — Web app premium per gestire i clienti di PT e Nutrizionisti" />
@@ -34,6 +39,10 @@
 
   body{
     margin:0;
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
     font-family: var(--sans);
     color: var(--text);
     background: var(--bg);
