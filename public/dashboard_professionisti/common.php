@@ -118,7 +118,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
   echo '@media (max-width:1050px){.layout{grid-template-columns:1fr}.side{position:static}.span-3,.span-4,.span-6,.span-8{grid-column:span 12}.two,.three{grid-template-columns:1fr}}';
   echo '</style></head><body>';
 
-  echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="/media/logo.png" alt="AuraFit" class="logo" />AuraFit Professionista</div><div class="nav-actions"><span class="pill">' . h($roleBadge) . '</span><a class="btn" href="../logout.php">Logout</a></div></div></header>';
+  echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="../media/logo.png" alt="AuraFit" class="logo" />AuraFit Professionista</div><div class="nav-actions"><span class="pill">' . h($roleBadge) . '</span><a class="btn" href="../logout.php">Logout</a></div></div></header>';
   echo '<div class="container layout"><aside class="side"><div class="menu">';
 
   foreach ($tabs as $key => $tab) {
