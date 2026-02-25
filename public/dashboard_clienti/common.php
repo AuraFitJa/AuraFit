@@ -112,6 +112,8 @@ $email = h((string)$clienteProfileForm['email']);
 $saluto = h($nome !== '' ? $nome : $clienteProfileForm['email']);
 
 function renderStart(string $title, string $activeTab, ?string $email): void {
+  global $clienteProfileForm;
+
   $tabs = [
     'overview' => ['label' => 'Overview', 'href' => 'overview.php'],
     'allenamenti' => ['label' => 'Allenamenti', 'href' => 'allenamenti.php'],

@@ -118,6 +118,8 @@ if ($dbAvailable) {
 $email = h($professionistaProfileForm['email']);
 
 function renderStart(string $title, string $activeTab, string $email, string $roleBadge, bool $isPt, bool $isNutrizionista): void {
+  global $professionistaProfileForm;
+
   $tabs = [
     'overview' => ['label' => 'Overview', 'href' => 'overview.php', 'visible' => true],
     'clienti' => ['label' => 'Gestione clienti', 'href' => 'clienti.php', 'visible' => true],
