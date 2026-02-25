@@ -78,31 +78,110 @@ $clienteProfileForm = [
   'fianchi' => '',
 ];
 
+$dbAvailable = false;
+$dbError = null;
 if (file_exists(__DIR__ . '/../../config/database.php')) {
   require_once __DIR__ . '/../../config/database.php';
   if (class_exists('Database')) {
-    try {
-      $row = Database::exec(
-        'SELECT u.nome, u.cognome, u.email, pc.altezzaCm, pc.pesoKg, pc.eta
-         FROM Utenti u
-         LEFT JOIN Clienti c ON c.idUtente = u.idUtente
-         LEFT JOIN ProfiloCliente pc ON pc.idCliente = c.idCliente
-         WHERE u.idUtente = ?
-         LIMIT 1',
-        [(int)$user['idUtente']]
-      )->fetch();
+    $dbAvailable = true;
+  } else {
+    $dbError = 'Classe Database non disponibile.';
+  }
+} else {
+  $dbError = 'Config DB mancante: crea config/database.php partendo da config/database.sample.php.';
+}
 
-      if ($row) {
-        $clienteProfileForm['nome'] = trim((string)($row['nome'] ?? $clienteProfileForm['nome']));
-        $clienteProfileForm['cognome'] = trim((string)($row['cognome'] ?? $clienteProfileForm['cognome']));
-        $clienteProfileForm['email'] = (string)($row['email'] ?? $clienteProfileForm['email']);
-        $clienteProfileForm['eta'] = isset($row['eta']) ? (string)$row['eta'] : '';
-        $clienteProfileForm['altezza'] = isset($row['altezzaCm']) ? (string)$row['altezzaCm'] : '';
-        $clienteProfileForm['peso'] = isset($row['pesoKg']) ? (string)$row['pesoKg'] : '';
-      }
-    } catch (Throwable $e) {
-      // Fallback ai dati sessione quando il DB non è disponibile.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['profileScope'] ?? '') === 'cliente')) {
+  header('Content-Type: application/json; charset=utf-8');
+
+  if (!$dbAvailable) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => $dbError ?? 'Database non disponibile.']);
+    exit;
+  }
+
+  $nomeInput = trim((string)($_POST['nome'] ?? ''));
+  $cognomeInput = trim((string)($_POST['cognome'] ?? ''));
+  $emailInput = trim((string)($_POST['email'] ?? ''));
+  $etaInput = trim((string)($_POST['eta'] ?? ''));
+  $altezzaInput = trim((string)($_POST['altezza'] ?? ''));
+  $pesoInput = trim((string)($_POST['peso'] ?? ''));
+
+  if ($emailInput === '' || !filter_var($emailInput, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'message' => 'Email non valida.']);
+    exit;
+  }
+
+  $etaValue = $etaInput === '' ? null : (int)$etaInput;
+  $altezzaValue = $altezzaInput === '' ? null : (float)$altezzaInput;
+  $pesoValue = $pesoInput === '' ? null : (float)$pesoInput;
+
+  try {
+    Database::exec(
+      'UPDATE Utenti
+       SET nome = ?, cognome = ?, email = ?, aggiornatoIl = NOW()
+       WHERE idUtente = ?',
+      [$nomeInput, $cognomeInput, $emailInput, (int)$user['idUtente']]
+    );
+
+    $cliente = Database::exec(
+      'SELECT idCliente FROM Clienti WHERE idUtente = ? LIMIT 1',
+      [(int)$user['idUtente']]
+    )->fetch();
+
+    if (!$cliente) {
+      http_response_code(409);
+      echo json_encode(['ok' => false, 'message' => 'Profilo cliente non collegato all\'utente.']);
+      exit;
     }
+
+    Database::exec(
+      'INSERT INTO ProfiloCliente (idCliente, altezzaCm, pesoKg, eta, creatoIl, aggiornatoIl)
+       VALUES (?, ?, ?, ?, NOW(), NOW())
+       ON DUPLICATE KEY UPDATE
+         altezzaCm = VALUES(altezzaCm),
+         pesoKg = VALUES(pesoKg),
+         eta = VALUES(eta),
+         aggiornatoIl = NOW()',
+      [(int)$cliente['idCliente'], $altezzaValue, $pesoValue, $etaValue]
+    );
+
+    $_SESSION['user']['nome'] = $nomeInput;
+    $_SESSION['user']['cognome'] = $cognomeInput;
+    $_SESSION['user']['email'] = $emailInput;
+
+    echo json_encode(['ok' => true, 'message' => 'Profilo aggiornato nel database.']);
+    exit;
+  } catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => 'Salvataggio non riuscito. Riprova.']);
+    exit;
+  }
+}
+
+if ($dbAvailable) {
+  try {
+    $row = Database::exec(
+      'SELECT u.nome, u.cognome, u.email, pc.altezzaCm, pc.pesoKg, pc.eta
+       FROM Utenti u
+       LEFT JOIN Clienti c ON c.idUtente = u.idUtente
+       LEFT JOIN ProfiloCliente pc ON pc.idCliente = c.idCliente
+       WHERE u.idUtente = ?
+       LIMIT 1',
+      [(int)$user['idUtente']]
+    )->fetch();
+
+    if ($row) {
+      $clienteProfileForm['nome'] = trim((string)($row['nome'] ?? $clienteProfileForm['nome']));
+      $clienteProfileForm['cognome'] = trim((string)($row['cognome'] ?? $clienteProfileForm['cognome']));
+      $clienteProfileForm['email'] = (string)($row['email'] ?? $clienteProfileForm['email']);
+      $clienteProfileForm['eta'] = isset($row['eta']) ? (string)$row['eta'] : '';
+      $clienteProfileForm['altezza'] = isset($row['altezzaCm']) ? (string)$row['altezzaCm'] : '';
+      $clienteProfileForm['peso'] = isset($row['pesoKg']) ? (string)$row['pesoKg'] : '';
+    }
+  } catch (Throwable $e) {
+    // Fallback ai dati sessione quando il DB non è disponibile.
   }
 }
 
@@ -170,7 +249,7 @@ function renderEnd(string $scripts = ''): void {
     echo '<a class="' . $isActive . '" data-tab="' . h($key) . '" href="' . h($tab['href']) . '">' . h($tab['label']) . '</a>';
   }
   echo '</nav>';
-  echo "<script>(function(){const modal=document.querySelector('[data-profile-modal]');const openBtn=document.querySelector('[data-profile-modal-open]');if(!modal||!openBtn){return;}const closeEls=modal.querySelectorAll('[data-profile-modal-close]');const form=modal.querySelector('[data-profile-form]');const emailLabel=document.querySelector('[data-profile-email-label]');const feedback=modal.querySelector('[data-profile-feedback]');const storageKey='aurafit_cliente_profile';const fields=['nome','cognome','email','telefono','obiettivo','eta','sesso','altezza','peso','vita','fianchi'];function save(payload){localStorage.setItem(storageKey,JSON.stringify(payload));}function apply(data){fields.forEach((name)=>{const input=form.elements[name];if(input&&typeof data[name]!=='undefined'){input.value=data[name];}});if(form.elements.email.value&&emailLabel){emailLabel.textContent=form.elements.email.value;}}function getData(){const payload={};fields.forEach((name)=>{const input=form.elements[name];if(input){payload[name]=String(input.value||'').trim();}});return payload;}function openModal(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}openBtn.addEventListener('click',openModal);closeEls.forEach((el)=>el.addEventListener('click',closeModal));modal.addEventListener('click',(event)=>{if(event.target===modal){closeModal();}});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('open')){closeModal();}});form.addEventListener('submit',(event)=>{event.preventDefault();const data=getData();save(data);apply(data);if(feedback){feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),2200);}closeModal();});})();</script>";
+  echo "<script>(function(){const modal=document.querySelector('[data-profile-modal]');const openBtn=document.querySelector('[data-profile-modal-open]');if(!modal||!openBtn){return;}const closeEls=modal.querySelectorAll('[data-profile-modal-close]');const form=modal.querySelector('[data-profile-form]');const emailLabel=document.querySelector('[data-profile-email-label]');const feedback=modal.querySelector('[data-profile-feedback]');const storageKey='aurafit_cliente_profile';const fields=['nome','cognome','email','telefono','obiettivo','eta','sesso','altezza','peso','vita','fianchi'];function save(payload){localStorage.setItem(storageKey,JSON.stringify(payload));}function apply(data){fields.forEach((name)=>{const input=form.elements[name];if(input&&typeof data[name]!=='undefined'){input.value=data[name];}});if(form.elements.email.value&&emailLabel){emailLabel.textContent=form.elements.email.value;}}function getData(){const payload={};fields.forEach((name)=>{const input=form.elements[name];if(input){payload[name]=String(input.value||'').trim();}});return payload;}function openModal(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}openBtn.addEventListener('click',openModal);closeEls.forEach((el)=>el.addEventListener('click',closeModal));modal.addEventListener('click',(event)=>{if(event.target===modal){closeModal();}});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('open')){closeModal();}});form.addEventListener('submit',async(event)=>{event.preventDefault();const data=getData();save(data);const formData=new FormData(form);formData.set('profileScope','cliente');try{const response=await fetch(window.location.pathname,{method:'POST',body:formData,headers:{'X-Requested-With':'XMLHttpRequest'}});const payload=await response.json();if(!response.ok||!payload.ok){throw new Error((payload&&payload.message)||'Errore salvataggio');}apply(data);if(feedback){feedback.textContent=payload.message||'Profilo aggiornato con successo.';feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),2200);}closeModal();window.location.reload();}catch(error){if(feedback){feedback.textContent=error.message||'Errore durante il salvataggio.';feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),3000);}}});})();</script>";
 
   if ($scripts !== '') {
     echo $scripts;

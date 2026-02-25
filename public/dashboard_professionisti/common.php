@@ -45,6 +45,47 @@ if (file_exists(__DIR__ . '/../../config/database.php')) {
   $dbError = 'Config DB mancante: crea config/database.php partendo da config/database.sample.php.';
 }
 
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['profileScope'] ?? '') === 'professionista')) {
+  header('Content-Type: application/json; charset=utf-8');
+
+  if (!$dbAvailable) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => $dbError ?? 'Database non disponibile.']);
+    exit;
+  }
+
+  $nomeInput = trim((string)($_POST['nome'] ?? ''));
+  $cognomeInput = trim((string)($_POST['cognome'] ?? ''));
+  $emailInput = trim((string)($_POST['email'] ?? ''));
+
+  if ($emailInput === '' || !filter_var($emailInput, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'message' => 'Email non valida.']);
+    exit;
+  }
+
+  try {
+    Database::exec(
+      'UPDATE Utenti
+       SET nome = ?, cognome = ?, email = ?, aggiornatoIl = NOW()
+       WHERE idUtente = ?',
+      [$nomeInput, $cognomeInput, $emailInput, $userId]
+    );
+
+    $_SESSION['user']['nome'] = $nomeInput;
+    $_SESSION['user']['cognome'] = $cognomeInput;
+    $_SESSION['user']['email'] = $emailInput;
+
+    echo json_encode(['ok' => true, 'message' => 'Profilo aggiornato nel database.']);
+    exit;
+  } catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => 'Salvataggio non riuscito. Riprova.']);
+    exit;
+  }
+}
+
 function getProfessionistaId(int $idUtente): ?int {
   $row = Database::exec(
     'SELECT idProfessionista FROM Professionisti WHERE idUtente = ? LIMIT 1',
@@ -166,7 +207,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
 
 function renderEnd(string $scripts = ''): void {
   echo '</main></div>';
-  echo "<script>(function(){const modal=document.querySelector('[data-profile-modal]');const openBtn=document.querySelector('[data-profile-modal-open]');if(!modal||!openBtn){return;}const closeEls=modal.querySelectorAll('[data-profile-modal-close]');const form=modal.querySelector('[data-profile-form]');const feedback=modal.querySelector('[data-profile-feedback]');const storageKey='aurafit_professionista_profile';const fields=['nome','cognome','email','telefono','specializzazione','bio'];function save(payload){localStorage.setItem(storageKey,JSON.stringify(payload));}function getData(){const payload={};fields.forEach((name)=>{const input=form.elements[name];if(input){payload[name]=String(input.value||'').trim();}});return payload;}function openModal(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}openBtn.addEventListener('click',openModal);closeEls.forEach((el)=>el.addEventListener('click',closeModal));modal.addEventListener('click',(event)=>{if(event.target===modal){closeModal();}});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('open')){closeModal();}});form.addEventListener('submit',(event)=>{event.preventDefault();save(getData());if(feedback){feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),2200);}closeModal();});})();</script>";
+  echo "<script>(function(){const modal=document.querySelector('[data-profile-modal]');const openBtn=document.querySelector('[data-profile-modal-open]');if(!modal||!openBtn){return;}const closeEls=modal.querySelectorAll('[data-profile-modal-close]');const form=modal.querySelector('[data-profile-form]');const feedback=modal.querySelector('[data-profile-feedback]');const storageKey='aurafit_professionista_profile';const fields=['nome','cognome','email','telefono','specializzazione','bio'];function save(payload){localStorage.setItem(storageKey,JSON.stringify(payload));}function getData(){const payload={};fields.forEach((name)=>{const input=form.elements[name];if(input){payload[name]=String(input.value||'').trim();}});return payload;}function openModal(){modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';}openBtn.addEventListener('click',openModal);closeEls.forEach((el)=>el.addEventListener('click',closeModal));modal.addEventListener('click',(event)=>{if(event.target===modal){closeModal();}});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('open')){closeModal();}});form.addEventListener('submit',async(event)=>{event.preventDefault();const data=getData();save(data);const formData=new FormData(form);formData.set('profileScope','professionista');try{const response=await fetch(window.location.pathname,{method:'POST',body:formData,headers:{'X-Requested-With':'XMLHttpRequest'}});const payload=await response.json();if(!response.ok||!payload.ok){throw new Error((payload&&payload.message)||'Errore salvataggio');}if(feedback){feedback.textContent=payload.message||'Profilo aggiornato con successo.';feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),2200);}closeModal();window.location.reload();}catch(error){if(feedback){feedback.textContent=error.message||'Errore durante il salvataggio.';feedback.classList.add('visible');setTimeout(()=>feedback.classList.remove('visible'),3000);}}});})();</script>";
   if ($scripts !== '') {
     echo $scripts;
   }
