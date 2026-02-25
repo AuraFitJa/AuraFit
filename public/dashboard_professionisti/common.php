@@ -30,6 +30,32 @@ function h(string $value): string {
 
 $email = h((string)($user['email'] ?? ''));
 $roleBadge = $isPt && $isNutrizionista ? 'PT + Nutrizionista' : ($isPt ? 'Personal Trainer' : 'Nutrizionista');
+$userId = (int)$user['idUtente'];
+
+$dbAvailable = false;
+$dbError = null;
+if (file_exists(__DIR__ . '/../../config/database.php')) {
+  require_once __DIR__ . '/../../config/database.php';
+  if (class_exists('Database')) {
+    $dbAvailable = true;
+  } else {
+    $dbError = 'Classe Database non disponibile.';
+  }
+} else {
+  $dbError = 'Config DB mancante: crea config/database.php partendo da config/database.sample.php.';
+}
+
+function getProfessionistaId(int $idUtente): ?int {
+  $row = Database::exec(
+    'SELECT idProfessionista FROM Professionisti WHERE idUtente = ? LIMIT 1',
+    [$idUtente]
+  )->fetch();
+
+  if (!$row) {
+    return null;
+  }
+  return (int)$row['idProfessionista'];
+}
 
 $overview = [
   'clientiAttivi' => 24,
@@ -53,25 +79,6 @@ $notifiche = [
   'Report mensile di marzo pronto al download',
 ];
 
-$clientiAttivi = [
-  ['nome' => 'Giulia Rinaldi', 'stato' => 'Attiva', 'associazione' => '2025-11-14', 'ultimoUpdate' => 'Peso aggiornato 2h fa'],
-  ['nome' => 'Marco Testa', 'stato' => 'Attiva', 'associazione' => '2025-09-02', 'ultimoUpdate' => 'Workout completato oggi'],
-  ['nome' => 'Silvia Martini', 'stato' => 'Attiva', 'associazione' => '2025-12-10', 'ultimoUpdate' => 'Diario alimentare ieri'],
-];
-
-$clientiTerminati = [
-  ['nome' => 'Francesco L.', 'stato' => 'Terminata', 'chiusura' => '2026-01-20', 'nota' => 'Chat bloccata automaticamente (RF-016)'],
-  ['nome' => 'Valeria G.', 'stato' => 'Terminata', 'chiusura' => '2025-12-08', 'nota' => 'Storico mantenuto per visibilità cliente (RF-015)'],
-];
-
-$idKeys = [
-  ['key' => 'AF-PT-9821', 'stato' => 'Attiva', 'creata' => '2026-01-11'],
-  ['key' => 'AF-PT-9822', 'stato' => 'Sospesa', 'creata' => '2026-01-12'],
-  ['key' => 'AF-PT-9823', 'stato' => 'Eliminata', 'creata' => '2026-01-14'],
-  ['key' => 'AF-PT-9824', 'stato' => 'Attiva', 'creata' => '2026-01-21'],
-];
-
-$canGenerateIdKey = $overview['clientiAttivi'] < $overview['idKeyTotaliPiano'];
 $mesi = ['Ott', 'Nov', 'Dic', 'Gen', 'Feb', 'Mar'];
 $pesoSerie = [77.4, 76.9, 76.7, 76.1, 75.8, 75.5];
 $performanceSerie = [62, 66, 68, 71, 74, 78];
@@ -107,7 +114,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
   echo '.main{display:grid;gap:14px}.card{padding:18px}.hero{padding:22px}h1{margin:8px 0 10px;font-size:clamp(30px,4vw,44px);letter-spacing:-.02em}.lead{margin:0;color:var(--muted)}';
   echo '.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}.kpi{font-size:32px;font-weight:800;margin:6px 0 4px}.muted{color:var(--muted)}.section-title{margin:0 0 10px;font-size:20px}.list{margin:10px 0 0;padding-left:16px;color:var(--muted);line-height:1.6}';
   echo 'table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08)}th{color:var(--muted);font-weight:600}.status{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line);padding:4px 9px;font-size:12px}.status.ok{color:var(--ok)}.status.warn{color:var(--warn)}.status.danger{color:var(--danger)}';
-  echo '.toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.field{display:grid;gap:6px}.field input,.field textarea,.field select{width:100%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.note{font-size:12px;color:var(--muted);margin-top:6px}.divider{height:1px;background:rgba(255,255,255,.08);margin:14px 0}.chart-wrap{height:280px}';
+  echo '.toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.field{display:grid;gap:6px}.field input,.field textarea,.field select{width:100%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit}.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.note{font-size:12px;color:var(--muted);margin-top:6px}.divider{height:1px;background:rgba(255,255,255,.08);margin:14px 0}.chart-wrap{height:280px}.alert{border:1px solid rgba(255,127,151,.45);background:rgba(255,127,151,.12);padding:10px 12px;border-radius:12px;color:#ffd7e1}.okbox{border:1px solid rgba(99,230,184,.45);background:rgba(99,230,184,.12);padding:10px 12px;border-radius:12px;color:#d8ffef}';
   echo '@media (max-width:1050px){.layout{grid-template-columns:1fr}.side{position:static}.span-3,.span-4,.span-6,.span-8{grid-column:span 12}.two,.three{grid-template-columns:1fr}}';
   echo '</style></head><body>';
 
