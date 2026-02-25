@@ -106,7 +106,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
   echo '*{box-sizing:border-box}body{margin:0;color:var(--text);font-family:var(--sans);background:var(--bg);min-height:100vh;position:relative}';
   echo 'body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 800px at 18% -12%, rgba(109,94,243,.28), transparent 58%),radial-gradient(1100px 700px at 92% 12%, rgba(76,201,240,.16), transparent 58%),radial-gradient(900px 700px at 55% 98%, rgba(46,225,165,.12), transparent 60%)}';
   echo '.container{max-width:var(--max);margin:0 auto;padding:0 18px}.topbar{position:sticky;top:0;z-index:30;border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(16px);background:rgba(7,10,18,.66)}';
-  echo '.nav{display:flex;align-items:center;justify-content:space-between;min-height:74px;gap:12px}.brand{display:flex;align-items:center;gap:10px;font-weight:700}.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand1),var(--brand2));box-shadow:0 10px 30px rgba(109,94,243,.2)}';
+  echo '.nav{display:flex;align-items:center;justify-content:space-between;min-height:74px;gap:12px}.brand{display:flex;align-items:center;gap:10px;font-weight:700}.logo{width:34px;height:34px;border-radius:10px;object-fit:cover;box-shadow:0 10px 30px rgba(109,94,243,.2)}';
   echo '.nav-actions{display:flex;gap:8px;align-items:center}.pill{display:inline-flex;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:rgba(255,255,255,.04);font-size:12px}';
   echo '.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 14px;text-decoration:none;color:var(--text);background:rgba(255,255,255,.05);font-weight:650;cursor:pointer}.btn.primary{background:linear-gradient(135deg, rgba(109,94,243,.92), rgba(76,201,240,.72));color:#061018;border-color:rgba(109,94,243,.55)}.btn.warn{border-color:rgba(255,209,102,.4)}.btn.danger{border-color:rgba(255,111,137,.45)}';
   echo '.layout{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:20px 0 34px}.side,.card{background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));border-radius:var(--radius);box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05)}';
@@ -118,7 +118,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
   echo '@media (max-width:1050px){.layout{grid-template-columns:1fr}.side{position:static}.span-3,.span-4,.span-6,.span-8{grid-column:span 12}.two,.three{grid-template-columns:1fr}}';
   echo '</style></head><body>';
 
-  echo '<header class="topbar"><div class="container nav"><div class="brand"><div class="logo" aria-hidden="true"></div>AuraFit Professionista</div><div class="nav-actions"><span class="pill">' . h($roleBadge) . '</span><a class="btn" href="../logout.php">Logout</a></div></div></header>';
+  echo '<header class="topbar"><div class="container nav"><div class="brand"><img src="/media/logo.png" alt="AuraFit" class="logo" />AuraFit Professionista</div><div class="nav-actions"><span class="pill">' . h($roleBadge) . '</span><a class="btn" href="../logout.php">Logout</a></div></div></header>';
   echo '<div class="container layout"><aside class="side"><div class="menu">';
 
   foreach ($tabs as $key => $tab) {
