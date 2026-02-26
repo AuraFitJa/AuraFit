@@ -56,6 +56,14 @@ class RoutineModel
 
     public static function searchExercises(string $query, ?string $equipment, ?string $muscle): array
     {
+        $query = trim($query);
+        if (mb_strlen($query) < 2) {
+            return [];
+        }
+
+        $searchLike = '%' . $query . '%';
+        $prefixLike = $query . '%';
+
         $sql = 'SELECT idEsercizio, nome, categoria, muscoloPrincipale,
                        (
                            SELECT GROUP_CONCAT(m.nome ORDER BY m.nome SEPARATOR ", ")
@@ -65,7 +73,7 @@ class RoutineModel
                        ) AS muscoliSecondari
                 FROM Esercizi
                 WHERE nome LIKE ?';
-        $params = ['%' . $query . '%'];
+        $params = [$searchLike];
 
         if ($equipment !== null && $equipment !== '') {
             $sql .= ' AND categoria = ?';
@@ -77,7 +85,8 @@ class RoutineModel
             $params[] = $muscle;
         }
 
-        $sql .= ' ORDER BY nome ASC LIMIT 30';
+        $sql .= ' ORDER BY (nome LIKE ?) DESC, CHAR_LENGTH(nome) ASC, nome ASC LIMIT 30';
+        $params[] = $prefixLike;
 
         return Database::exec($sql, $params)->fetchAll();
     }

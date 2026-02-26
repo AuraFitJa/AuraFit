@@ -6,9 +6,9 @@
   const searchInput = document.querySelector('[data-exercise-search]');
   const searchResults = document.querySelector('[data-search-results]');
 
-  async function api(action, method, payload) {
+  async function api(action, method, payload, extraOptions = {}) {
     let url = `../controllers/routine_controller.php?action=${encodeURIComponent(action)}`;
-    const options = { method, headers: { 'X-Requested-With': 'XMLHttpRequest' } };
+    const options = { method, headers: { 'X-Requested-With': 'XMLHttpRequest' }, ...extraOptions };
 
     if (method === 'GET') {
       const query = new URLSearchParams(payload || {}).toString();
@@ -90,21 +90,66 @@
     });
   }
 
-  searchInput?.addEventListener('input', async () => {
+  let searchTimer = null;
+  let activeSearchController = null;
+
+  searchInput?.addEventListener('input', () => {
     const query = searchInput.value.trim();
-    const data = await api('searchExercises', 'GET', { query });
-    searchResults.innerHTML = '';
-    (data.items || []).forEach((item) => {
-      const secondaryMuscles = item.muscoliSecondari ? ` • Secondari: ${item.muscoliSecondari}` : '';
-      const row = document.createElement('div');
-      row.className = 'search-item';
-      row.innerHTML = `<div><strong>${item.nome}</strong><div class="muted-sm">${item.muscoloPrincipale || ''}${secondaryMuscles}</div></div><button class="action-mini">+</button>`;
-      row.querySelector('button').addEventListener('click', async () => {
-        await api('addExerciseToDay', 'POST', { giorno, esercizio: item.idEsercizio });
-        await refresh();
-      });
-      searchResults.appendChild(row);
-    });
+
+    if (searchTimer) {
+      clearTimeout(searchTimer);
+    }
+
+    if (activeSearchController) {
+      activeSearchController.abort();
+      activeSearchController = null;
+    }
+
+    if (query.length < 2) {
+      searchResults.innerHTML = '<p class="muted-sm">Digita almeno 2 caratteri…</p>';
+      return;
+    }
+
+    searchResults.innerHTML = '<p class="muted-sm">Ricerca in corso…</p>';
+
+    searchTimer = setTimeout(async () => {
+      const controller = new AbortController();
+      activeSearchController = controller;
+
+      try {
+        const data = await api('searchExercises', 'GET', { query }, { signal: controller.signal });
+        if (activeSearchController !== controller) {
+          return;
+        }
+
+        searchResults.innerHTML = '';
+        if (!data.items || data.items.length === 0) {
+          searchResults.innerHTML = '<p class="muted-sm">Nessun esercizio trovato.</p>';
+          return;
+        }
+
+        (data.items || []).forEach((item) => {
+          const secondaryMuscles = item.muscoliSecondari ? ` • Secondari: ${item.muscoliSecondari}` : '';
+          const row = document.createElement('div');
+          row.className = 'search-item';
+          row.innerHTML = `<div><strong>${item.nome}</strong><div class="muted-sm">${item.muscoloPrincipale || ''}${secondaryMuscles}</div></div><button class="action-mini">+</button>`;
+          row.querySelector('button').addEventListener('click', async () => {
+            await api('addExerciseToDay', 'POST', { giorno, esercizio: item.idEsercizio });
+            await refresh();
+          });
+          searchResults.appendChild(row);
+        });
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        searchResults.innerHTML = '<p class="muted-sm">Errore durante la ricerca.</p>';
+      } finally {
+        if (activeSearchController === controller) {
+          activeSearchController = null;
+        }
+      }
+    }, 250);
   });
 
   document.addEventListener('click', async (e) => {
@@ -182,6 +227,10 @@
       await refresh();
     }
   });
+
+  if (searchResults) {
+    searchResults.innerHTML = '<p class="muted-sm">Digita almeno 2 caratteri…</p>';
+  }
 
   refresh();
 })();
