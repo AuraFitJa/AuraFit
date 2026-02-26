@@ -22,7 +22,13 @@ class RoutineModel
 
         $exercisesStmt = Database::exec(
             'SELECT eg.idEsercizioGiorno, eg.giorno, eg.esercizio, eg.ordine, eg.istruzioni, eg.urlVideo,
-                    e.nome AS esercizioNome, e.categoria, e.muscoloPrincipale
+                    e.nome AS esercizioNome, e.categoria, e.muscoloPrincipale,
+                    (
+                        SELECT GROUP_CONCAT(m.nome ORDER BY m.nome SEPARATOR ", ")
+                        FROM EserciziMuscoliSecondari ems
+                        INNER JOIN Muscoli m ON m.idMuscolo = ems.muscolo
+                        WHERE ems.esercizio = e.idEsercizio
+                    ) AS muscoliSecondari
              FROM EserciziGiorno eg
              INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
              WHERE eg.giorno = ?
@@ -50,10 +56,24 @@ class RoutineModel
 
     public static function searchExercises(string $query, ?string $equipment, ?string $muscle): array
     {
-        $sql = 'SELECT idEsercizio, nome, categoria, muscoloPrincipale
+        $query = trim($query);
+        if (mb_strlen($query) < 2) {
+            return [];
+        }
+
+        $searchLike = '%' . $query . '%';
+        $prefixLike = $query . '%';
+
+        $sql = 'SELECT idEsercizio, nome, categoria, muscoloPrincipale,
+                       (
+                           SELECT GROUP_CONCAT(m.nome ORDER BY m.nome SEPARATOR ", ")
+                           FROM EserciziMuscoliSecondari ems
+                           INNER JOIN Muscoli m ON m.idMuscolo = ems.muscolo
+                           WHERE ems.esercizio = Esercizi.idEsercizio
+                       ) AS muscoliSecondari
                 FROM Esercizi
                 WHERE nome LIKE ?';
-        $params = ['%' . $query . '%'];
+        $params = [$searchLike];
 
         if ($equipment !== null && $equipment !== '') {
             $sql .= ' AND categoria = ?';
@@ -65,7 +85,8 @@ class RoutineModel
             $params[] = $muscle;
         }
 
-        $sql .= ' ORDER BY nome ASC LIMIT 30';
+        $sql .= ' ORDER BY (nome LIKE ?) DESC, CHAR_LENGTH(nome) ASC, nome ASC LIMIT 30';
+        $params[] = $prefixLike;
 
         return Database::exec($sql, $params)->fetchAll();
     }
