@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/common.php';
 require_once __DIR__ . '/../models/programmi_model.php';
+require_once __DIR__ . '/../models/routine_model.php';
 
 if (!$isPt) {
     header('Location: overview.php');
@@ -22,12 +23,34 @@ if (!$program) {
 $professionistaId = ProgrammiModel::getProfessionistaIdByUserId($userId);
 $clients = $professionistaId ? ProgrammiModel::listPtClients($professionistaId) : [];
 
+$programFolderId = (int)($program['cartellaId'] ?? 0);
+$selectedFolderId = (int)($_GET['cartella'] ?? 0);
+if ($selectedFolderId < 1 && $programFolderId > 0) {
+    $selectedFolderId = $programFolderId;
+}
+$selectedGiornoId = (int)($_GET['giorno'] ?? 0);
+$selectedRoutine = null;
+
+if ($selectedGiornoId > 0 && RoutineModel::isDayOwnedByUser($selectedGiornoId, $userId)) {
+    $candidateRoutine = RoutineModel::getRoutineEditorData($selectedGiornoId, $userId);
+    if ($candidateRoutine && (int)$candidateRoutine['programma'] === (int)$program['idProgramma']) {
+        $selectedRoutine = $candidateRoutine;
+    }
+}
+
+if (!$selectedRoutine && !empty($program['giorni'])) {
+    $firstDayId = (int)$program['giorni'][0]['idGiorno'];
+    if ($firstDayId > 0) {
+        $selectedRoutine = RoutineModel::getRoutineEditorData($firstDayId, $userId);
+    }
+}
+
 renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
 <link rel="stylesheet" href="../assets/css/allenamenti.css" />
 <section class="card workout-shell">
   <div class="program-toolbar">
-    <a href="allenamenti.php" class="link-btn">← Libreria</a>
+    <a href="allenamenti.php<?= $selectedFolderId > 0 ? '?cartella=' . $selectedFolderId : '' ?>" class="link-btn">← Libreria</a>
     <h2 class="section-title" style="margin:0"><?= h((string)$program['titolo']) ?></h2>
     <button class="btn" data-duplicate-program="<?= (int)$program['idProgramma'] ?>">Duplica</button>
   </div>
@@ -39,18 +62,39 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
       <article class="day-card">
         <h3><?= h((string)$giorno['nome']) ?></h3>
         <p class="muted-sm"><?= h((string)($giorno['previewEsercizi'] ?? 'Nessun esercizio')) ?></p>
-        <a class="btn" href="routine_edit.php?giorno=<?= (int)$giorno['idGiorno'] ?>">Modifica routine</a>
+        <a class="btn" href="programma.php?id=<?= (int)$program['idProgramma'] ?>&cartella=<?= $selectedFolderId ?>&giorno=<?= (int)$giorno['idGiorno'] ?>">Apri workout builder</a>
       </article>
     <?php endforeach; ?>
-
-    <article class="add-day-card">
-      <form data-add-day-form>
-        <input type="hidden" name="idProgramma" value="<?= (int)$program['idProgramma'] ?>" />
-        <input class="dark-input" name="nome" placeholder="Push / Pull / Legs" />
-        <button type="submit">Aggiungi allenamento</button>
-      </form>
-    </article>
   </div>
+
+  <?php if ($selectedRoutine): ?>
+    <div class="divider"></div>
+
+    <section class="card workout-shell" data-routine-editor data-giorno="<?= (int)$selectedRoutine['idGiorno'] ?>" style="padding:0;border:none;background:transparent;box-shadow:none">
+      <div class="program-toolbar">
+        <h3 class="section-title" style="margin:0">Workout Builder · <?= h((string)$selectedRoutine['nome']) ?></h3>
+      </div>
+
+      <div class="routine-layout">
+        <div>
+          <div class="field">
+            <label>Routine note</label>
+            <textarea class="dark-textarea" data-routine-note placeholder="Aggiungi note per questa routine..."><?= h((string)($selectedRoutine['note'] ?? '')) ?></textarea>
+            <div class="library-toolbar" style="margin-top:.5rem">
+              <button class="action-mini" type="button" data-save-routine-note>Salva note routine</button>
+            </div>
+          </div>
+          <div data-exercise-list></div>
+        </div>
+
+        <aside class="picker">
+          <h3 style="margin-top:0">Exercise Picker</h3>
+          <input class="dark-input" data-exercise-search placeholder="Search exercise" />
+          <div class="exercise-search-results" data-search-results></div>
+        </aside>
+      </div>
+    </section>
+  <?php endif; ?>
 
   <div class="divider"></div>
 
@@ -73,4 +117,4 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
   </ul>
 </section>
 <?php
-renderEnd('<script src="../assets/js/program_library.js"></script>');
+renderEnd('<script src="../assets/js/program_library.js"></script><script src="../assets/js/routine_editor.js"></script>');

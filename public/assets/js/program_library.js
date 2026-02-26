@@ -81,7 +81,12 @@
   document.querySelectorAll('[data-open-program]').forEach((card) => {
     card.addEventListener('click', () => {
       const id = card.getAttribute('data-open-program');
-      window.location.href = `programma.php?id=${id}`;
+      const folderId = card.getAttribute('data-folder-id');
+      const params = new URLSearchParams({ id });
+      if (folderId) {
+        params.set('cartella', folderId);
+      }
+      window.location.href = `programma.php?${params.toString()}`;
     });
   });
 
