@@ -32,11 +32,19 @@ class ProgrammiModel
         $stmt = Database::exec(
             'SELECT p.idProgramma, p.titolo, p.descrizione, p.aggiornatoIl, p.cartellaId,
                     c.nome AS cartellaNome,
-                    (SELECT COUNT(*) FROM GiorniAllenamento g WHERE g.programma = p.idProgramma) AS totaleGiorni
+                    (SELECT COUNT(*) FROM GiorniAllenamento g WHERE g.programma = p.idProgramma) AS totaleGiorni,
+                    (
+                        SELECT GROUP_CONCAT(e.nome ORDER BY g.ordine ASC, eg.ordine ASC SEPARATOR ", ")
+                        FROM GiorniAllenamento g
+                        INNER JOIN EserciziGiorno eg ON eg.giorno = g.idGiorno
+                        INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
+                        WHERE g.programma = p.idProgramma
+                    ) AS previewEsercizi
              FROM ProgrammiAllenamento p
              LEFT JOIN ProgrammiCartelle c ON c.idCartella = p.cartellaId
              WHERE p.creatoreUtente = ?
                AND p.isTemplate = 1
+               AND p.stato <> \'archiviato\'
              ORDER BY p.aggiornatoIl DESC, p.idProgramma DESC',
             [$userId]
         );
@@ -87,7 +95,10 @@ class ProgrammiModel
             [$userId, $titolo, $descrizione, $cartellaId]
         );
 
-        return (int)Database::pdo()->lastInsertId();
+        $idProgramma = (int)Database::pdo()->lastInsertId();
+        self::addGiornoToProgram($idProgramma, 'Nuovo allenamento');
+
+        return $idProgramma;
     }
 
     public static function isProgramOwnedByUser(int $programId, int $userId): bool
@@ -105,7 +116,9 @@ class ProgrammiModel
         $program = Database::exec(
             'SELECT idProgramma, titolo, descrizione, aggiornatoIl, creatoreUtente, isTemplate, cartellaId
              FROM ProgrammiAllenamento
-             WHERE idProgramma = ? AND creatoreUtente = ?
+             WHERE idProgramma = ?
+               AND creatoreUtente = ?
+               AND stato <> \'archiviato\'
              LIMIT 1',
             [$programId, $userId]
         )->fetch();

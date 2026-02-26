@@ -45,6 +45,17 @@ if (!$selectedRoutine && !empty($program['giorni'])) {
     }
 }
 
+$switchableDays = array_values(array_filter(
+    $program['giorni'],
+    static function (array $giorno) use ($selectedRoutine): bool {
+        if (!$selectedRoutine) {
+            return true;
+        }
+
+        return (int)$giorno['idGiorno'] !== (int)$selectedRoutine['idGiorno'];
+    }
+));
+
 renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
 <link rel="stylesheet" href="../assets/css/allenamenti.css" />
@@ -53,19 +64,22 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
     <a href="allenamenti.php<?= $selectedFolderId > 0 ? '?cartella=' . $selectedFolderId : '' ?>" class="link-btn">← Libreria</a>
     <h2 class="section-title" style="margin:0"><?= h((string)$program['titolo']) ?></h2>
     <button class="btn" data-duplicate-program="<?= (int)$program['idProgramma'] ?>">Duplica</button>
+    <button class="btn danger" data-delete-program="<?= (int)$program['idProgramma'] ?>" data-folder-id="<?= (int)$selectedFolderId ?>">Elimina</button>
   </div>
 
   <p class="muted"><?= h((string)($program['descrizione'] ?? '')) ?></p>
 
-  <div class="day-list">
-    <?php foreach ($program['giorni'] as $giorno): ?>
-      <article class="day-card">
-        <h3><?= h((string)$giorno['nome']) ?></h3>
-        <p class="muted-sm"><?= h((string)($giorno['previewEsercizi'] ?? 'Nessun esercizio')) ?></p>
-        <a class="btn" href="programma.php?id=<?= (int)$program['idProgramma'] ?>&cartella=<?= $selectedFolderId ?>&giorno=<?= (int)$giorno['idGiorno'] ?>">Apri workout builder</a>
-      </article>
-    <?php endforeach; ?>
-  </div>
+  <?php if (!empty($switchableDays)): ?>
+    <div class="day-list">
+      <?php foreach ($switchableDays as $giorno): ?>
+        <article class="day-card">
+          <h3><?= h((string)$giorno['nome']) ?></h3>
+          <p class="muted-sm"><?= h((string)($giorno['previewEsercizi'] ?? 'Nessun esercizio')) ?></p>
+          <a class="btn" href="programma.php?id=<?= (int)$program['idProgramma'] ?>&cartella=<?= $selectedFolderId ?>&giorno=<?= (int)$giorno['idGiorno'] ?>">Apri workout builder</a>
+        </article>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
 
   <?php if ($selectedRoutine): ?>
     <div class="divider"></div>

@@ -66,11 +66,19 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
 
     <div class="program-grid">
       <?php foreach ($programs as $program): ?>
+        <?php
+          $exercisePreview = trim((string)($program['previewEsercizi'] ?? ''));
+          if ($exercisePreview === '') {
+            $exercisePreview = 'Nessun esercizio';
+          } elseif (strlen($exercisePreview) > 90) {
+            $exercisePreview = substr($exercisePreview, 0, 89) . '…';
+          }
+        ?>
         <article class="program-card" data-open-program="<?= (int)$program['idProgramma'] ?>" data-folder-id="<?= (int)$selectedFolder['idCartella'] ?>">
           <h4><?= h((string)$program['titolo']) ?></h4>
           <p class="muted-sm"><?= h((string)($program['descrizione'] ?? '')) ?></p>
           <div class="program-meta">
-            <span><?= (int)$program['totaleGiorni'] ?> routine</span>
+            <span><?= h($exercisePreview) ?></span>
           </div>
         </article>
       <?php endforeach; ?>
