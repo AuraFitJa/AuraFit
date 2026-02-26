@@ -73,8 +73,12 @@
       const cartellaId = programForm.querySelector('[name="cartellaId"]').value;
       if (!titolo || !cartellaId) return;
 
-      await postForm('createProgramTemplate', { titolo, descrizione, cartellaId });
-      window.location.reload();
+      const data = await postForm('createProgramTemplate', { titolo, descrizione, cartellaId });
+      const params = new URLSearchParams({ id: data.idProgramma });
+      if (cartellaId) {
+        params.set('cartella', cartellaId);
+      }
+      window.location.href = `programma.php?${params.toString()}`;
     });
   }
 
