@@ -73,8 +73,12 @@
       const cartellaId = programForm.querySelector('[name="cartellaId"]').value;
       if (!titolo || !cartellaId) return;
 
-      await postForm('createProgramTemplate', { titolo, descrizione, cartellaId });
-      window.location.reload();
+      const data = await postForm('createProgramTemplate', { titolo, descrizione, cartellaId });
+      const params = new URLSearchParams({ id: data.idProgramma });
+      if (cartellaId) {
+        params.set('cartella', cartellaId);
+      }
+      window.location.href = `programma.php?${params.toString()}`;
     });
   }
 
@@ -108,6 +112,21 @@
       if (!titolo) return;
       await postForm('duplicateProgram', { idProgramma, titolo });
       window.location.reload();
+    });
+  });
+
+  document.querySelectorAll('[data-delete-program]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const idProgramma = btn.getAttribute('data-delete-program');
+      const folderId = btn.getAttribute('data-folder-id');
+      const confirmed = window.confirm('Eliminare questo programma?');
+      if (!confirmed) return;
+
+      await postForm('deleteProgram', { idProgramma });
+      const target = folderId && Number(folderId) > 0
+        ? `allenamenti.php?cartella=${encodeURIComponent(folderId)}`
+        : 'allenamenti.php';
+      window.location.href = target;
     });
   });
 
