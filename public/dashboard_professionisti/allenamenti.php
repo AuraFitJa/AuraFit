@@ -1,37 +1,71 @@
 <?php
 require __DIR__ . '/common.php';
+require_once __DIR__ . '/../models/programmi_model.php';
+
+if (!$isPt) {
+    renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizionista);
+    echo '<section class="card"><h2 class="section-title">Allenamenti (PT)</h2><p class="muted">Accesso disponibile solo per i Personal Trainer.</p></section>';
+    renderEnd();
+    exit;
+}
+
+$professionistaId = ProgrammiModel::getProfessionistaIdByUserId($userId);
+$folders = $professionistaId ? ProgrammiModel::listFolders($professionistaId) : [];
+$programs = ProgrammiModel::listProgramTemplates($userId);
 
 renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
-<section class="card">
-  <h2 class="section-title">Allenamenti (solo PT) — RF-005</h2>
-  <?php if (!$isPt): ?>
-    <p class="muted">Questa sezione è disponibile solo per il ruolo Personal Trainer.</p>
-  <?php else: ?>
-    <div class="two">
-      <div class="field"><label>Nome programma</label><input type="text" value="Strength Base - 8 settimane" /></div>
-      <div class="field"><label>Assegna a cliente associato</label><select><option>Giulia Rinaldi</option><option>Marco Testa</option></select></div>
-    </div>
+<link rel="stylesheet" href="../assets/css/allenamenti.css" />
+<section class="card workout-shell">
+  <div class="library-toolbar">
+    <h2 class="section-title" style="margin:0">Program Library</h2>
+  </div>
 
-    <div class="divider"></div>
+  <div class="library-toolbar">
+    <form class="inline-form" data-folder-form>
+      <input class="dark-input" name="nome" placeholder="Nuova cartella" required />
+      <button class="btn" type="submit">New Folder</button>
+    </form>
 
-    <h3>Editor esercizi dinamico</h3>
-    <div class="three">
-      <div class="field"><label>Nome esercizio</label><input type="text" value="Squat bilanciere" /></div>
-      <div class="field"><label>Serie</label><input type="number" value="4" /></div>
-      <div class="field"><label>Ripetizioni</label><input type="text" value="6-8" /></div>
-      <div class="field"><label>Carico</label><input type="text" value="80kg" /></div>
-      <div class="field"><label>Recupero</label><input type="text" value="120s" /></div>
-      <div class="field"><label>Media upload</label><input type="text" placeholder="Link video o media" /></div>
-    </div>
-    <div class="field" style="margin-top:10px"><label>Note</label><textarea rows="3">Controllare profondità e mantenere core attivo.</textarea></div>
+    <form class="inline-form" data-program-form>
+      <input class="dark-input" name="titolo" placeholder="Titolo programma" required />
+      <input class="dark-input" name="descrizione" placeholder="Descrizione" />
+      <select class="dark-select" name="cartellaId">
+        <option value="">Senza cartella</option>
+        <?php foreach ($folders as $folder): ?>
+          <option value="<?= (int)$folder['idCartella'] ?>"><?= h((string)$folder['nome']) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <button class="btn primary" type="submit">Add Workout Program</button>
+    </form>
+  </div>
 
-    <div class="toolbar" style="margin-top:12px">
-      <button class="btn primary">Salva su DB</button>
-      <button class="btn">Aggiungi esercizio</button>
-      <button class="btn">Duplica programma</button>
-    </div>
-  <?php endif; ?>
+  <div class="folder-grid">
+    <?php foreach ($folders as $folder): ?>
+      <article class="folder-card">
+        <strong>📁 <?= h((string)$folder['nome']) ?></strong>
+      </article>
+    <?php endforeach; ?>
+  </div>
+
+  <div class="program-grid">
+    <?php foreach ($programs as $program): ?>
+      <article class="program-card" data-open-program="<?= (int)$program['idProgramma'] ?>">
+        <h4><?= h((string)$program['titolo']) ?></h4>
+        <p class="muted-sm"><?= h((string)($program['descrizione'] ?? '')) ?></p>
+        <div class="program-meta">
+          <span><?= (int)$program['totaleGiorni'] ?> routine</span>
+          <span><?= h((string)($program['cartellaNome'] ?? 'Senza cartella')) ?></span>
+        </div>
+      </article>
+    <?php endforeach; ?>
+    <article class="program-card add-program-card">
+      <div>
+        <div style="font-size:30px;text-align:center">＋</div>
+        <div class="muted-sm">Crea nuovo programma</div>
+      </div>
+    </article>
+  </div>
 </section>
 <?php
-renderEnd();
+renderEnd('<script src="../assets/js/program_library.js"></script>');
