@@ -22,7 +22,13 @@ class RoutineModel
 
         $exercisesStmt = Database::exec(
             'SELECT eg.idEsercizioGiorno, eg.giorno, eg.esercizio, eg.ordine, eg.istruzioni, eg.urlVideo,
-                    e.nome AS esercizioNome, e.categoria, e.muscoloPrincipale
+                    e.nome AS esercizioNome, e.categoria, e.muscoloPrincipale,
+                    (
+                        SELECT GROUP_CONCAT(m.nome ORDER BY m.nome SEPARATOR ", ")
+                        FROM EserciziMuscoliSecondari ems
+                        INNER JOIN Muscoli m ON m.idMuscolo = ems.muscolo
+                        WHERE ems.esercizio = e.idEsercizio
+                    ) AS muscoliSecondari
              FROM EserciziGiorno eg
              INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
              WHERE eg.giorno = ?
@@ -50,7 +56,13 @@ class RoutineModel
 
     public static function searchExercises(string $query, ?string $equipment, ?string $muscle): array
     {
-        $sql = 'SELECT idEsercizio, nome, categoria, muscoloPrincipale
+        $sql = 'SELECT idEsercizio, nome, categoria, muscoloPrincipale,
+                       (
+                           SELECT GROUP_CONCAT(m.nome ORDER BY m.nome SEPARATOR ", ")
+                           FROM EserciziMuscoliSecondari ems
+                           INNER JOIN Muscoli m ON m.idMuscolo = ems.muscolo
+                           WHERE ems.esercizio = Esercizi.idEsercizio
+                       ) AS muscoliSecondari
                 FROM Esercizi
                 WHERE nome LIKE ?';
         $params = ['%' . $query . '%'];

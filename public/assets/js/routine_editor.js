@@ -42,11 +42,17 @@
 
     list.innerHTML = '';
     exercises.forEach((ex, index) => {
+      const secondaryMuscles = ex.muscoliSecondari
+        ? `<div class="muted-sm">Secondari: ${ex.muscoliSecondari}</div>`
+        : '';
       const block = document.createElement('article');
       block.className = 'exercise-block';
       block.innerHTML = `
         <div class="exercise-head">
-          <h4>${index + 1}. ${ex.esercizioNome}</h4>
+          <div>
+            <h4>${index + 1}. ${ex.esercizioNome}</h4>
+            ${secondaryMuscles}
+          </div>
           <div>
             <button class="action-mini" data-move-up="${ex.idEsercizioGiorno}">↑</button>
             <button class="action-mini" data-move-down="${ex.idEsercizioGiorno}">↓</button>
@@ -89,9 +95,10 @@
     const data = await api('searchExercises', 'GET', { query });
     searchResults.innerHTML = '';
     (data.items || []).forEach((item) => {
+      const secondaryMuscles = item.muscoliSecondari ? ` • Secondari: ${item.muscoliSecondari}` : '';
       const row = document.createElement('div');
       row.className = 'search-item';
-      row.innerHTML = `<div><strong>${item.nome}</strong><div class="muted-sm">${item.muscoloPrincipale || ''}</div></div><button class="action-mini">+</button>`;
+      row.innerHTML = `<div><strong>${item.nome}</strong><div class="muted-sm">${item.muscoloPrincipale || ''}${secondaryMuscles}</div></div><button class="action-mini">+</button>`;
       row.querySelector('button').addEventListener('click', async () => {
         await api('addExerciseToDay', 'POST', { giorno, esercizio: item.idEsercizio });
         await refresh();
