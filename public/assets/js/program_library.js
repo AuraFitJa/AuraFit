@@ -115,6 +115,21 @@
     });
   });
 
+  document.querySelectorAll('[data-delete-program]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const idProgramma = btn.getAttribute('data-delete-program');
+      const folderId = btn.getAttribute('data-folder-id');
+      const confirmed = window.confirm('Eliminare questo programma?');
+      if (!confirmed) return;
+
+      await postForm('deleteProgram', { idProgramma });
+      const target = folderId && Number(folderId) > 0
+        ? `allenamenti.php?cartella=${encodeURIComponent(folderId)}`
+        : 'allenamenti.php';
+      window.location.href = target;
+    });
+  });
+
   const assignForm = document.querySelector('[data-assign-form]');
   if (assignForm) {
     assignForm.addEventListener('submit', async (e) => {

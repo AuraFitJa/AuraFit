@@ -64,6 +64,7 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
     <a href="allenamenti.php<?= $selectedFolderId > 0 ? '?cartella=' . $selectedFolderId : '' ?>" class="link-btn">← Libreria</a>
     <h2 class="section-title" style="margin:0"><?= h((string)$program['titolo']) ?></h2>
     <button class="btn" data-duplicate-program="<?= (int)$program['idProgramma'] ?>">Duplica</button>
+    <button class="btn danger" data-delete-program="<?= (int)$program['idProgramma'] ?>" data-folder-id="<?= (int)$selectedFolderId ?>">Elimina</button>
   </div>
 
   <p class="muted"><?= h((string)($program['descrizione'] ?? '')) ?></p>
