@@ -151,6 +151,16 @@
       return;
     }
 
+
+    const saveRoutineNote = e.target.closest('[data-save-routine-note]');
+    if (saveRoutineNote) {
+      await api('updateRoutineNotes', 'POST', {
+        giorno,
+        note: document.querySelector('[data-routine-note]')?.value || ''
+      });
+      return;
+    }
+
     const moveUp = e.target.closest('[data-move-up]');
     const moveDown = e.target.closest('[data-move-down]');
     if (moveUp || moveDown) {

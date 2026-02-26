@@ -66,7 +66,7 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
 
     <div class="program-grid">
       <?php foreach ($programs as $program): ?>
-        <article class="program-card" data-open-program="<?= (int)$program['idProgramma'] ?>">
+        <article class="program-card" data-open-program="<?= (int)$program['idProgramma'] ?>" data-folder-id="<?= (int)$selectedFolder['idCartella'] ?>">
           <h4><?= h((string)$program['titolo']) ?></h4>
           <p class="muted-sm"><?= h((string)($program['descrizione'] ?? '')) ?></p>
           <div class="program-meta">

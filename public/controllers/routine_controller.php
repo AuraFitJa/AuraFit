@@ -105,6 +105,18 @@ try {
             jsonResponse(200, ['ok' => true]);
             break;
 
+        case 'updateRoutineNotes':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                jsonResponse(405, ['ok' => false, 'message' => 'Metodo non consentito.']);
+            }
+            $giorno = (int)($_POST['giorno'] ?? 0);
+            if ($giorno < 1 || !RoutineModel::isDayOwnedByUser($giorno, $userId)) {
+                jsonResponse(403, ['ok' => false, 'message' => 'Routine non accessibile.']);
+            }
+            RoutineModel::updateRoutineNotes($giorno, (string)($_POST['note'] ?? ''));
+            jsonResponse(200, ['ok' => true]);
+            break;
+
         case 'updateExerciseNotesRestVideo':
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 jsonResponse(405, ['ok' => false, 'message' => 'Metodo non consentito.']);
