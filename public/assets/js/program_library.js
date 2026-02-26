@@ -115,23 +115,46 @@
     });
   });
 
-  document.querySelectorAll('[data-delete-program]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const idProgramma = btn.getAttribute('data-delete-program');
-      const folderId = btn.getAttribute('data-folder-id');
-      const confirmed = window.confirm('Eliminare questo programma?');
-      if (!confirmed) return;
+  const deleteProgramModal = document.querySelector('[data-delete-program-modal]');
+  const cancelDeleteProgramBtn = document.querySelector('[data-cancel-delete-program]');
+  const confirmDeleteProgramBtn = document.querySelector('[data-confirm-delete-program]');
+  let deleteProgramPayload = null;
 
-      try {
-        await postForm('deleteProgram', { idProgramma });
-        const target = folderId && Number(folderId) > 0
-          ? `allenamenti.php?cartella=${encodeURIComponent(folderId)}`
-          : 'allenamenti.php';
-        window.location.href = target;
-      } catch (error) {
-        window.alert(error.message || 'Impossibile eliminare il programma.');
-      }
+  document.querySelectorAll('[data-delete-program]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idProgramma = btn.getAttribute('data-delete-program');
+      const folderId = btn.getAttribute('data-folder-id') || '0';
+      if (!idProgramma) return;
+
+      deleteProgramPayload = { idProgramma, folderId };
+      toggleModal(deleteProgramModal, true);
     });
+  });
+
+  deleteProgramModal?.addEventListener('click', (event) => {
+    if (event.target === deleteProgramModal) {
+      toggleModal(deleteProgramModal, false);
+      deleteProgramPayload = null;
+    }
+  });
+
+  cancelDeleteProgramBtn?.addEventListener('click', () => {
+    toggleModal(deleteProgramModal, false);
+    deleteProgramPayload = null;
+  });
+
+  confirmDeleteProgramBtn?.addEventListener('click', async () => {
+    if (!deleteProgramPayload) return;
+
+    try {
+      await postForm('deleteProgram', { idProgramma: deleteProgramPayload.idProgramma });
+      const target = deleteProgramPayload.folderId && Number(deleteProgramPayload.folderId) > 0
+        ? `allenamenti.php?cartella=${encodeURIComponent(deleteProgramPayload.folderId)}`
+        : 'allenamenti.php';
+      window.location.href = target;
+    } catch (error) {
+      window.alert(error.message || 'Impossibile eliminare il programma.');
+    }
   });
 
   const assignForm = document.querySelector('[data-assign-form]');

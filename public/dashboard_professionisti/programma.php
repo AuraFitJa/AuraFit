@@ -130,5 +130,16 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
     <?php endforeach; ?>
   </ul>
 </section>
+
+<div class="modal-layer" data-delete-program-modal>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-program-modal-title">
+    <h3 id="delete-program-modal-title">Conferma eliminazione</h3>
+    <p class="muted">Questa azione eliminerà definitivamente il programma. Vuoi continuare?</p>
+    <div class="library-toolbar" style="justify-content:flex-end">
+      <button class="btn" type="button" data-cancel-delete-program>Annulla</button>
+      <button class="btn danger" type="button" data-confirm-delete-program>Elimina programma</button>
+    </div>
+  </div>
+</div>
 <?php
 renderEnd('<script src="../assets/js/program_library.js"></script><script src="../assets/js/routine_editor.js"></script>');
