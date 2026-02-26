@@ -2,7 +2,8 @@ TODO:
 [✅] controllare cosa succede quando utente pro è sia nutrizionista che pt 
 [ ] rework tab overview
 [ ] capire come/se/dove utilizzare immagini esecuzione esercizi
-[ ] sviluppare tab allenamenti
+[✅work in progress] sviluppare tab allenamenti
+[ ] come gestire il workout builder
 [ ] sviluppare tab nutrizionista
 [ ] implementare openfoodfacts api
 [ ] capire come implementare image to barcode senza registrare nel db img
