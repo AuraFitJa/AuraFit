@@ -23,7 +23,11 @@ if (!$program) {
 $professionistaId = ProgrammiModel::getProfessionistaIdByUserId($userId);
 $clients = $professionistaId ? ProgrammiModel::listPtClients($professionistaId) : [];
 
+$programFolderId = (int)($program['cartellaId'] ?? 0);
 $selectedFolderId = (int)($_GET['cartella'] ?? 0);
+if ($selectedFolderId < 1 && $programFolderId > 0) {
+    $selectedFolderId = $programFolderId;
+}
 $selectedGiornoId = (int)($_GET['giorno'] ?? 0);
 $selectedRoutine = null;
 
@@ -46,7 +50,7 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
 <link rel="stylesheet" href="../assets/css/allenamenti.css" />
 <section class="card workout-shell">
   <div class="program-toolbar">
-    <a href="allenamenti.php<?= $selectedFolderId > 0 ? '?cartella=' . $selectedFolderId : '' ?>" class="link-btn">← <?= $selectedFolderId > 0 ? 'Cartella' : 'Libreria' ?></a>
+    <a href="allenamenti.php<?= $selectedFolderId > 0 ? '?cartella=' . $selectedFolderId : '' ?>" class="link-btn">← Libreria</a>
     <h2 class="section-title" style="margin:0"><?= h((string)$program['titolo']) ?></h2>
     <button class="btn" data-duplicate-program="<?= (int)$program['idProgramma'] ?>">Duplica</button>
   </div>
