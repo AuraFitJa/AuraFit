@@ -4,3 +4,5 @@ TODO:
 [ ] capire come/se/dove utilizzare immagini esecuzione esercizi
 [ ] sviluppare tab allenamenti
 [ ] sviluppare tab nutrizionista
+[ ] implementare openfoodfacts api
+[ ] capire come implementare image to barcode senza registrare nel db img
