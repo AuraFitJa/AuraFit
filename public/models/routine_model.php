@@ -160,6 +160,15 @@ class RoutineModel
         }
     }
 
+
+    public static function updateRoutineNotes(int $giornoId, ?string $note): void
+    {
+        Database::exec(
+            'UPDATE GiorniAllenamento SET note = ? WHERE idGiorno = ?',
+            [self::nullableString($note), $giornoId]
+        );
+    }
+
     public static function updateExerciseNotesRestVideo(int $esercizioGiornoId, ?string $istruzioni, ?string $urlVideo): void
     {
         Database::exec(
