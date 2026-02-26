@@ -44,6 +44,7 @@ class ProgrammiModel
              LEFT JOIN ProgrammiCartelle c ON c.idCartella = p.cartellaId
              WHERE p.creatoreUtente = ?
                AND p.isTemplate = 1
+               AND p.stato <> \'archiviato\'
              ORDER BY p.aggiornatoIl DESC, p.idProgramma DESC',
             [$userId]
         );
@@ -115,7 +116,9 @@ class ProgrammiModel
         $program = Database::exec(
             'SELECT idProgramma, titolo, descrizione, aggiornatoIl, creatoreUtente, isTemplate, cartellaId
              FROM ProgrammiAllenamento
-             WHERE idProgramma = ? AND creatoreUtente = ?
+             WHERE idProgramma = ?
+               AND creatoreUtente = ?
+               AND stato <> \'archiviato\'
              LIMIT 1',
             [$programId, $userId]
         )->fetch();

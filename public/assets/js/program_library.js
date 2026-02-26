@@ -122,11 +122,23 @@
       const confirmed = window.confirm('Eliminare questo programma?');
       if (!confirmed) return;
 
+<<<<<<< codex/rimuovi-card-nuovo-allenamento-tl9b25
+      try {
+        await postForm('deleteProgram', { idProgramma });
+        const target = folderId && Number(folderId) > 0
+          ? `allenamenti.php?cartella=${encodeURIComponent(folderId)}`
+          : 'allenamenti.php';
+        window.location.href = target;
+      } catch (error) {
+        window.alert(error.message || 'Impossibile eliminare il programma.');
+      }
+=======
       await postForm('deleteProgram', { idProgramma });
       const target = folderId && Number(folderId) > 0
         ? `allenamenti.php?cartella=${encodeURIComponent(folderId)}`
         : 'allenamenti.php';
       window.location.href = target;
+>>>>>>> main
     });
   });
 
