@@ -94,7 +94,10 @@ class ProgrammiModel
             [$userId, $titolo, $descrizione, $cartellaId]
         );
 
-        return (int)Database::pdo()->lastInsertId();
+        $idProgramma = (int)Database::pdo()->lastInsertId();
+        self::addGiornoToProgram($idProgramma, 'Nuovo allenamento');
+
+        return $idProgramma;
     }
 
     public static function isProgramOwnedByUser(int $programId, int $userId): bool
