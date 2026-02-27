@@ -218,7 +218,9 @@ function renderEnd(string $scripts = ''): void {
     'report' => ['label' => 'Report', 'href' => 'report.php', 'visible' => true],
   ];
 
-  $visibleTabs = array_filter($tabs, static fn (array $tab): bool => $tab['visible']);
+  $visibleTabs = array_filter($tabs, static function ($tab) {
+    return !empty($tab['visible']);
+  });
   if (count($visibleTabs) > 5) {
     $visibleTabs = [
       'overview' => $tabs['overview'],
