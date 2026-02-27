@@ -15,7 +15,8 @@
 .add-day-card button{width:100%;padding:12px;border-radius:12px;border:1px dashed rgba(255,255,255,.3);background:transparent;color:#f0f2ff}
 .routine-layout{display:grid;grid-template-columns:1fr 320px;gap:16px}
 .exercise-block{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin-bottom:12px}
-.exercise-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.exercise-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.exercise-head>div:first-child{min-width:0;flex:1 1 220px}
 .set-table{width:100%;border-collapse:separate;border-spacing:0 6px}
 .set-table th{font-size:11px;text-transform:uppercase;color:#b8c0d8;text-align:left}
 .set-table td input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:6px}
@@ -25,10 +26,18 @@
 .exercise-search-results{max-height:480px;overflow:auto;margin-top:10px;display:grid;gap:6px}
 .search-item{display:flex;justify-content:space-between;align-items:center;gap:8px;background:rgba(255,255,255,.04);border-radius:10px;padding:8px}
 .link-btn{color:#86c3ff;text-decoration:none}
-.inline-form{display:flex;gap:8px;flex-wrap:wrap}
+.inline-form{display:flex;gap:8px;flex-wrap:wrap;max-width:100%}
+.inline-form .action-mini{flex:1 1 130px;min-width:0}
 .create-plus{font-size:30px;line-height:1}
 .modal-layer{position:fixed;inset:0;background:rgba(7,12,25,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
 .modal-layer.open{display:flex}
 .modal-card{width:min(460px,100%);background:#1d2235;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:16px;display:grid;gap:10px}
 .modal-card h3{margin:0 0 4px}
 @media (max-width:980px){.routine-layout{grid-template-columns:1fr}.picker{position:static}}
+@media (max-width:640px){
+  .exercise-block{padding:10px}
+  .set-table{display:block;overflow-x:auto;max-width:100%}
+  .set-table th,.set-table td{white-space:nowrap}
+  .action-mini{font-size:14px;padding:7px 10px}
+  .exercise-head .inline-form{width:100%;justify-content:flex-start}
+}
