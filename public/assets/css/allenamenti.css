@@ -1,4 +1,4 @@
-.workout-shell{display:grid;gap:18px}
+.workout-shell{display:grid;gap:18px;width:min(100%,1100px);margin-inline:auto}
 .library-toolbar,.program-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .dark-input,.dark-select,.dark-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);color:#f6f7fb;border-radius:10px;padding:10px 12px;font:inherit}
 .dark-textarea{min-height:74px;resize:vertical}
@@ -14,9 +14,13 @@
 .day-list{display:grid;gap:12px}
 .add-day-card button{width:100%;padding:12px;border-radius:12px;border:1px dashed rgba(255,255,255,.3);background:transparent;color:#f0f2ff}
 .routine-layout{display:grid;grid-template-columns:1fr 320px;gap:16px}
-.exercise-block{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin-bottom:12px}
+.exercise-block{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin-bottom:12px;width:100%;max-width:100%}
 .exercise-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .exercise-head>div:first-child{min-width:0;flex:1 1 220px}
+.exercise-head + .dark-textarea{margin-top:10px}
+.exercise-block .dark-textarea{min-height:92px}
+.exercise-block [data-video]{margin-top:8px}
+.exercise-block .set-table{margin-top:10px}
 .set-table{width:100%;border-collapse:separate;border-spacing:0 6px}
 .set-table th{font-size:11px;text-transform:uppercase;color:#b8c0d8;text-align:left}
 .set-table td input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:6px}
@@ -35,9 +39,18 @@
 .modal-card h3{margin:0 0 4px}
 @media (max-width:980px){.routine-layout{grid-template-columns:1fr}.picker{position:static}}
 @media (max-width:640px){
-  .exercise-block{padding:10px}
+  .workout-shell{width:100%;padding-inline:clamp(6px,3.2vw,12px)}
+  [data-exercise-list]{display:grid;gap:12px}
+  .exercise-block{width:min(100%,560px);margin-inline:auto;padding:10px 11px}
+  .exercise-block .dark-textarea{min-height:82px}
+  .exercise-block [data-video]{padding:9px 11px}
   .set-table{display:block;overflow-x:auto;max-width:100%}
   .set-table th,.set-table td{white-space:nowrap}
+  .set-table th.reps-min,.set-table th.reps-max{white-space:normal;line-height:1.05;min-width:46px}
+  .set-table th.reps-min span,.set-table th.reps-max span{display:block}
+  .set-table td:nth-child(3),.set-table td:nth-child(4),.set-table td:nth-child(5){min-width:56px}
+  .set-table td:nth-child(3) input{max-width:64px;padding-inline:4px}
+  .set-table td:nth-child(4) input,.set-table td:nth-child(5) input{max-width:56px;padding-inline:4px}
   .action-mini{font-size:14px;padding:7px 10px}
   .exercise-head .inline-form{width:100%;justify-content:flex-start}
 }
