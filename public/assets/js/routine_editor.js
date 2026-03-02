@@ -36,6 +36,40 @@
     renderExercises(data.routine.esercizi || []);
   }
 
+  const debounceTimers = new Map();
+
+  function debounceByKey(key, callback, delay = 500) {
+    const timer = debounceTimers.get(key);
+    if (timer) {
+      clearTimeout(timer);
+    }
+
+    debounceTimers.set(
+      key,
+      setTimeout(async () => {
+        debounceTimers.delete(key);
+        try {
+          await callback();
+        } catch (error) {
+          console.error(error);
+        }
+      }, delay)
+    );
+  }
+
+  function collectSets(exId) {
+    const table = document.querySelector(`[data-table="${exId}"] tbody`);
+    if (!table) return [];
+
+    return [...table.querySelectorAll('tr')].map((tr) => {
+      const obj = { numeroSerie: tr.getAttribute('data-set-number') };
+      tr.querySelectorAll('input').forEach((input) => {
+        obj[input.getAttribute('data-field')] = input.value;
+      });
+      return obj;
+    });
+  }
+
   function renderExercises(exercises) {
     const list = document.querySelector('[data-exercise-list]');
     if (!list) return;
@@ -67,8 +101,6 @@
         </table>
         <div class="library-toolbar">
           <button class="action-mini" data-add-set="${ex.idEsercizioGiorno}">Add set</button>
-          <button class="action-mini" data-save-set="${ex.idEsercizioGiorno}">Save set table</button>
-          <button class="action-mini" data-save-meta="${ex.idEsercizioGiorno}">Save note/video</button>
         </div>`;
       list.appendChild(block);
 
@@ -177,42 +209,6 @@
       return;
     }
 
-    const saveSet = e.target.closest('[data-save-set]');
-    if (saveSet) {
-      const exId = saveSet.getAttribute('data-save-set');
-      const table = document.querySelector(`[data-table="${exId}"] tbody`);
-      const sets = [...table.querySelectorAll('tr')].map((tr) => {
-        const obj = { numeroSerie: tr.getAttribute('data-set-number') };
-        tr.querySelectorAll('input').forEach((input) => {
-          obj[input.getAttribute('data-field')] = input.value;
-        });
-        return obj;
-      });
-      await api('saveSetsForExercise', 'POST', { idEsercizioGiorno: exId, sets: JSON.stringify(sets) });
-      return;
-    }
-
-    const saveMeta = e.target.closest('[data-save-meta]');
-    if (saveMeta) {
-      const exId = saveMeta.getAttribute('data-save-meta');
-      await api('updateExerciseNotesRestVideo', 'POST', {
-        idEsercizioGiorno: exId,
-        istruzioni: document.querySelector(`[data-note="${exId}"]`).value,
-        urlVideo: document.querySelector(`[data-video="${exId}"]`).value
-      });
-      return;
-    }
-
-
-    const saveRoutineNote = e.target.closest('[data-save-routine-note]');
-    if (saveRoutineNote) {
-      await api('updateRoutineNotes', 'POST', {
-        giorno,
-        note: document.querySelector('[data-routine-note]')?.value || ''
-      });
-      return;
-    }
-
     const moveUp = e.target.closest('[data-move-up]');
     const moveDown = e.target.closest('[data-move-down]');
     if (moveUp || moveDown) {
@@ -225,6 +221,60 @@
       [ids[idx], ids[swap]] = [ids[swap], ids[idx]];
       await api('reorderExercises', 'POST', { giorno, orderedIds: ids });
       await refresh();
+    }
+  });
+
+  document.addEventListener('input', (e) => {
+    const routineNote = e.target.closest('[data-routine-note]');
+    if (routineNote) {
+      debounceByKey('routine-note', () =>
+        api('updateRoutineNotes', 'POST', {
+          giorno,
+          note: routineNote.value || ''
+        })
+      );
+      return;
+    }
+
+    const exerciseNote = e.target.closest('[data-note]');
+    if (exerciseNote) {
+      const exId = exerciseNote.getAttribute('data-note');
+      debounceByKey(`exercise-meta-${exId}`, () =>
+        api('updateExerciseNotesRestVideo', 'POST', {
+          idEsercizioGiorno: exId,
+          istruzioni: document.querySelector(`[data-note="${exId}"]`)?.value || '',
+          urlVideo: document.querySelector(`[data-video="${exId}"]`)?.value || ''
+        })
+      );
+      return;
+    }
+
+    const exerciseVideo = e.target.closest('[data-video]');
+    if (exerciseVideo) {
+      const exId = exerciseVideo.getAttribute('data-video');
+      debounceByKey(`exercise-meta-${exId}`, () =>
+        api('updateExerciseNotesRestVideo', 'POST', {
+          idEsercizioGiorno: exId,
+          istruzioni: document.querySelector(`[data-note="${exId}"]`)?.value || '',
+          urlVideo: document.querySelector(`[data-video="${exId}"]`)?.value || ''
+        })
+      );
+      return;
+    }
+
+    const setInput = e.target.closest('[data-table] tbody input');
+    if (setInput) {
+      const row = setInput.closest('tr');
+      const table = setInput.closest('[data-table]');
+      const exId = table?.getAttribute('data-table');
+      if (!row || !exId) return;
+
+      debounceByKey(`exercise-sets-${exId}`, () =>
+        api('saveSetsForExercise', 'POST', {
+          idEsercizioGiorno: exId,
+          sets: JSON.stringify(collectSets(exId))
+        })
+      );
     }
   });
 

@@ -94,9 +94,6 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
           <div class="field">
             <label>Routine note</label>
             <textarea class="dark-textarea" data-routine-note placeholder="Aggiungi note per questa routine..."><?= h((string)($selectedRoutine['note'] ?? '')) ?></textarea>
-            <div class="library-toolbar" style="margin-top:.5rem">
-              <button class="action-mini" type="button" data-save-routine-note>Salva note routine</button>
-            </div>
           </div>
           <div data-exercise-list></div>
         </div>
