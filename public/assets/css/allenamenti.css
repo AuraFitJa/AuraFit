@@ -1,4 +1,4 @@
-.workout-shell{display:grid;gap:18px}
+.workout-shell{display:grid;gap:18px;width:min(100%,1100px);margin-inline:auto}
 .library-toolbar,.program-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .dark-input,.dark-select,.dark-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);color:#f6f7fb;border-radius:10px;padding:10px 12px;font:inherit}
 .dark-textarea{min-height:74px;resize:vertical}
@@ -14,7 +14,7 @@
 .day-list{display:grid;gap:12px}
 .add-day-card button{width:100%;padding:12px;border-radius:12px;border:1px dashed rgba(255,255,255,.3);background:transparent;color:#f0f2ff}
 .routine-layout{display:grid;grid-template-columns:1fr 320px;gap:16px}
-.exercise-block{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin-bottom:12px}
+.exercise-block{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;margin-bottom:12px;width:100%;max-width:100%}
 .exercise-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .exercise-head>div:first-child{min-width:0;flex:1 1 220px}
 .set-table{width:100%;border-collapse:separate;border-spacing:0 6px}
@@ -35,7 +35,9 @@
 .modal-card h3{margin:0 0 4px}
 @media (max-width:980px){.routine-layout{grid-template-columns:1fr}.picker{position:static}}
 @media (max-width:640px){
-  .exercise-block{padding:10px}
+  .workout-shell{width:100%;padding-inline:clamp(4px,2.2vw,10px)}
+  [data-exercise-list]{display:grid;gap:10px}
+  .exercise-block{width:min(100%,560px);margin-inline:auto;padding:10px 11px}
   .set-table{display:block;overflow-x:auto;max-width:100%}
   .set-table th,.set-table td{white-space:nowrap}
   .action-mini{font-size:14px;padding:7px 10px}
