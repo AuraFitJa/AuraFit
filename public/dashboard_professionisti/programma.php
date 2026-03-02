@@ -68,12 +68,17 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 
   <?php if ($selectedRoutine): ?>
+    <?php $routineDescription = trim((string)($selectedRoutine['note'] ?? ''));
+    if ($routineDescription === '') {
+        $routineDescription = trim((string)($program['descrizione'] ?? ''));
+    }
+    ?>
     <textarea
       class="dark-textarea"
       data-routine-note
       placeholder="Descrizione del giorno di allenamento..."
       style="margin-bottom:20px"
-    ><?= h((string)($selectedRoutine['note'] ?? '')) ?></textarea>
+    ><?= h($routineDescription) ?></textarea>
   <?php else: ?>
     <p class="muted"><?= h((string)($program['descrizione'] ?? '')) ?></p>
   <?php endif; ?>
