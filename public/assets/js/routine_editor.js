@@ -100,7 +100,7 @@
         <textarea class="dark-textarea" data-note="${ex.idEsercizioGiorno}" placeholder="Istruzioni">${ex.istruzioni || ''}</textarea>
         <input class="dark-input" data-video="${ex.idEsercizioGiorno}" placeholder="URL video" value="${ex.urlVideo || ''}" />
         <table class="set-table" data-table="${ex.idEsercizioGiorno}">
-          <thead><tr><th>Set</th><th>KG</th><th>Reps</th><th>Rep Min</th><th>Rep Max</th><th>RPE</th><th>Rest sec</th><th>Note</th><th></th></tr></thead>
+          <thead><tr><th>Set</th><th>KG</th><th>Reps</th><th class="reps-min"><span>REP</span> <span>MIN</span></th><th class="reps-max"><span>REP</span> <span>MAX</span></th><th>RPE</th><th>Rest sec</th><th>Note</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
         <div class="library-toolbar">
