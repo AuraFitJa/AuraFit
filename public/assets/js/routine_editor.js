@@ -76,6 +76,9 @@
 
     list.innerHTML = '';
     exercises.forEach((ex, index) => {
+      const primaryMuscle = ex.muscoloPrincipale
+        ? `<div class="muted-sm">Principale: ${ex.muscoloPrincipale}</div>`
+        : '';
       const secondaryMuscles = ex.muscoliSecondari
         ? `<div class="muted-sm">Secondari: ${ex.muscoliSecondari}</div>`
         : '';
@@ -85,6 +88,7 @@
         <div class="exercise-head">
           <div>
             <h4>${index + 1}. ${ex.esercizioNome}</h4>
+            ${primaryMuscle}
             ${secondaryMuscles}
           </div>
           <div>
