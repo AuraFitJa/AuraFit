@@ -67,7 +67,21 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
     <button class="btn danger" data-delete-program="<?= (int)$program['idProgramma'] ?>" data-folder-id="<?= (int)$selectedFolderId ?>">Elimina</button>
   </div>
 
-  <p class="muted"><?= h((string)($program['descrizione'] ?? '')) ?></p>
+  <?php if ($selectedRoutine): ?>
+    <?php $routineDescription = trim((string)($selectedRoutine['note'] ?? ''));
+    if ($routineDescription === '') {
+        $routineDescription = trim((string)($program['descrizione'] ?? ''));
+    }
+    ?>
+    <textarea
+      class="dark-textarea"
+      data-routine-note
+      placeholder="Descrizione del giorno di allenamento..."
+      style="margin-bottom:20px"
+    ><?= h($routineDescription) ?></textarea>
+  <?php else: ?>
+    <p class="muted"><?= h((string)($program['descrizione'] ?? '')) ?></p>
+  <?php endif; ?>
 
   <?php if (!empty($switchableDays)): ?>
     <div class="day-list">
@@ -91,10 +105,6 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
 
       <div class="routine-layout">
         <div>
-          <div class="field">
-            <label>Routine note</label>
-            <textarea class="dark-textarea" data-routine-note placeholder="Aggiungi note per questa routine..."><?= h((string)($selectedRoutine['note'] ?? '')) ?></textarea>
-          </div>
           <div data-exercise-list></div>
         </div>
 
