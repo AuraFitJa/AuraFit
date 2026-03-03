@@ -169,7 +169,7 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
           <td><?= h($cliente['ultimoUpdate']) ?></td>
           <td>
             <a class="btn" href="scheda_cliente.php?idCliente=<?= (int)$cliente['idCliente'] ?>">Scheda cliente</a>
-            <form method="post" style="display:inline">
+            <form method="post" style="display:inline" data-confirm-terminate-association>
               <input type="hidden" name="action" value="terminate_association" />
               <input type="hidden" name="idAssociazione" value="<?= (int)$cliente['idAssociazione'] ?>" />
               <button class="btn danger" type="submit">Termina associazione</button>
@@ -215,6 +215,22 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
     </table>
   </div>
 </section>
+
+<div class="profile-modal" data-terminate-association-confirm-modal aria-hidden="true">
+  <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="terminate-association-confirm-title" style="width:min(520px,100%);">
+    <div class="profile-modal-head">
+      <div>
+        <h3 id="terminate-association-confirm-title" class="section-title" style="margin:0">Conferma terminazione</h3>
+        <p class="muted" style="margin:8px 0 0">Confermi di voler terminare questa associazione?</p>
+      </div>
+    </div>
+    <div class="toolbar" style="justify-content:flex-end;gap:10px;margin-top:14px">
+      <button class="btn" type="button" data-terminate-association-confirm-cancel>Annulla</button>
+      <button class="btn primary" type="button" data-terminate-association-confirm-ok>Conferma</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const toggleStoricoBtn = document.getElementById('toggleStoricoTerminati');
   const storicoTerminati = document.getElementById('storicoTerminati');
@@ -225,6 +241,60 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
     storicoTerminati.hidden = isOpen;
     toggleStoricoBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     toggleStoricoIcon.textContent = isOpen ? '>' : 'v';
+  });
+
+  const terminateAssociationConfirmModal = document.querySelector('[data-terminate-association-confirm-modal]');
+  const terminateAssociationConfirmCancel = document.querySelector('[data-terminate-association-confirm-cancel]');
+  const terminateAssociationConfirmOk = document.querySelector('[data-terminate-association-confirm-ok]');
+  let pendingTerminateAssociationForm = null;
+
+  const closeTerminateAssociationConfirmModal = () => {
+    terminateAssociationConfirmModal?.classList.remove('open');
+    terminateAssociationConfirmModal?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    pendingTerminateAssociationForm = null;
+  };
+
+  const openTerminateAssociationConfirmModal = (formElement) => {
+    pendingTerminateAssociationForm = formElement;
+    terminateAssociationConfirmModal?.classList.add('open');
+    terminateAssociationConfirmModal?.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  };
+
+  document.querySelectorAll('form[data-confirm-terminate-association]').forEach((formElement) => {
+    formElement.addEventListener('submit', (event) => {
+      if (formElement.dataset.confirmedSubmit === '1') {
+        delete formElement.dataset.confirmedSubmit;
+        return;
+      }
+
+      event.preventDefault();
+      openTerminateAssociationConfirmModal(formElement);
+    });
+  });
+
+  terminateAssociationConfirmCancel?.addEventListener('click', closeTerminateAssociationConfirmModal);
+  terminateAssociationConfirmModal?.addEventListener('click', (event) => {
+    if (event.target === terminateAssociationConfirmModal) {
+      closeTerminateAssociationConfirmModal();
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && terminateAssociationConfirmModal?.classList.contains('open')) {
+      closeTerminateAssociationConfirmModal();
+    }
+  });
+
+  terminateAssociationConfirmOk?.addEventListener('click', () => {
+    if (!pendingTerminateAssociationForm) {
+      closeTerminateAssociationConfirmModal();
+      return;
+    }
+
+    pendingTerminateAssociationForm.dataset.confirmedSubmit = '1';
+    pendingTerminateAssociationForm.requestSubmit();
+    closeTerminateAssociationConfirmModal();
   });
 </script>
 <?php
