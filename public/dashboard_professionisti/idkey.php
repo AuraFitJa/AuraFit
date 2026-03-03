@@ -282,14 +282,73 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     </tbody>
   </table>
 </section>
+<div class="profile-modal" data-idkey-confirm-modal aria-hidden="true">
+  <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="idkey-confirm-title" style="width:min(520px,100%);">
+    <div class="profile-modal-head">
+      <div>
+        <h3 id="idkey-confirm-title" class="section-title" style="margin:0">Conferma eliminazione</h3>
+        <p class="muted" style="margin:8px 0 0">Confermi di voler eliminare questa ID-Key? L'operazione terminerà anche le eventuali associazioni attive collegate.</p>
+      </div>
+    </div>
+    <div class="toolbar" style="justify-content:flex-end;gap:10px;margin-top:14px">
+      <button class="btn" type="button" data-idkey-confirm-cancel>Annulla</button>
+      <button class="btn primary" type="button" data-idkey-confirm-ok>Conferma</button>
+    </div>
+  </div>
+</div>
 <script>
+  const idKeyConfirmModal = document.querySelector('[data-idkey-confirm-modal]');
+  const idKeyConfirmCancel = document.querySelector('[data-idkey-confirm-cancel]');
+  const idKeyConfirmOk = document.querySelector('[data-idkey-confirm-ok]');
+  let pendingDeleteIdKeyForm = null;
+
+  const closeIdKeyConfirmModal = () => {
+    idKeyConfirmModal?.classList.remove('open');
+    idKeyConfirmModal?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    pendingDeleteIdKeyForm = null;
+  };
+
+  const openIdKeyConfirmModal = (formElement) => {
+    pendingDeleteIdKeyForm = formElement;
+    idKeyConfirmModal?.classList.add('open');
+    idKeyConfirmModal?.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  };
+
   document.querySelectorAll('form[data-confirm-delete-idkey]').forEach((formElement) => {
     formElement.addEventListener('submit', (event) => {
-      const confirmed = window.confirm('Confermi di voler eliminare questa ID-Key? L\'operazione terminerà anche le eventuali associazioni attive collegate.');
-      if (!confirmed) {
-        event.preventDefault();
+      if (formElement.dataset.confirmedSubmit === '1') {
+        delete formElement.dataset.confirmedSubmit;
+        return;
       }
+
+      event.preventDefault();
+      openIdKeyConfirmModal(formElement);
     });
+  });
+
+  idKeyConfirmCancel?.addEventListener('click', closeIdKeyConfirmModal);
+  idKeyConfirmModal?.addEventListener('click', (event) => {
+    if (event.target === idKeyConfirmModal) {
+      closeIdKeyConfirmModal();
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && idKeyConfirmModal?.classList.contains('open')) {
+      closeIdKeyConfirmModal();
+    }
+  });
+
+  idKeyConfirmOk?.addEventListener('click', () => {
+    if (!pendingDeleteIdKeyForm) {
+      closeIdKeyConfirmModal();
+      return;
+    }
+
+    pendingDeleteIdKeyForm.dataset.confirmedSubmit = '1';
+    pendingDeleteIdKeyForm.requestSubmit();
+    closeIdKeyConfirmModal();
   });
 </script>
 <?php
