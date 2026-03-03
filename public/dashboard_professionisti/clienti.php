@@ -169,7 +169,7 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
           <td><?= h($cliente['ultimoUpdate']) ?></td>
           <td>
             <a class="btn" href="scheda_cliente.php?idCliente=<?= (int)$cliente['idCliente'] ?>">Scheda cliente</a>
-            <form method="post" style="display:inline">
+            <form method="post" style="display:inline" data-confirm-terminate-association>
               <input type="hidden" name="action" value="terminate_association" />
               <input type="hidden" name="idAssociazione" value="<?= (int)$cliente['idAssociazione'] ?>" />
               <button class="btn danger" type="submit">Termina associazione</button>
@@ -225,6 +225,15 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
     storicoTerminati.hidden = isOpen;
     toggleStoricoBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     toggleStoricoIcon.textContent = isOpen ? '>' : 'v';
+  });
+
+  document.querySelectorAll('form[data-confirm-terminate-association]').forEach((formElement) => {
+    formElement.addEventListener('submit', (event) => {
+      const confirmed = window.confirm('Confermi di voler terminare questa associazione?');
+      if (!confirmed) {
+        event.preventDefault();
+      }
+    });
   });
 </script>
 <?php
