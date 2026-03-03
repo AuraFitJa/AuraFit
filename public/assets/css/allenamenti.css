@@ -21,10 +21,36 @@
 .exercise-block .dark-textarea{min-height:92px}
 .exercise-block [data-video]{margin-top:8px}
 .exercise-block .dark-textarea,.exercise-block [data-video]{box-sizing:border-box;max-width:100%}
-.exercise-block .set-table{margin-top:10px}
-.set-table{width:100%;border-collapse:separate;border-spacing:0 6px}
+.exercise-block .set-table-wrap{margin-top:10px}
+.set-table-wrap{max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.set-table{
+  --c-set:42px;
+  --c-kg:clamp(56px,7vw,82px);
+  --c-reps:clamp(56px,7vw,82px);
+  --c-reps-min:clamp(58px,7.4vw,88px);
+  --c-reps-max:clamp(58px,7.4vw,88px);
+  --c-rpe:clamp(56px,7vw,82px);
+  --c-rest:clamp(72px,9vw,108px);
+  --c-action:54px;
+  width:100%;
+  min-width:760px;
+  border-collapse:separate;
+  border-spacing:0 6px;
+  table-layout:fixed;
+}
 .set-table th{font-size:11px;text-transform:uppercase;color:#b8c0d8;text-align:left}
-.set-table td input{width:120%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:6px}
+.set-table th,.set-table td{padding-right:6px}
+.set-table th:last-child,.set-table td:last-child{padding-right:0}
+.set-table th:nth-child(1),.set-table td:nth-child(1){width:var(--c-set)}
+.set-table th:nth-child(2),.set-table td:nth-child(2){width:var(--c-kg)}
+.set-table th:nth-child(3),.set-table td:nth-child(3){width:var(--c-reps)}
+.set-table th:nth-child(4),.set-table td:nth-child(4){width:var(--c-reps-min)}
+.set-table th:nth-child(5),.set-table td:nth-child(5){width:var(--c-reps-max)}
+.set-table th:nth-child(6),.set-table td:nth-child(6){width:var(--c-rpe)}
+.set-table th:nth-child(7),.set-table td:nth-child(7){width:var(--c-rest)}
+.set-table th:nth-child(8),.set-table td:nth-child(8){width:auto}
+.set-table th:nth-child(9),.set-table td:nth-child(9){width:var(--c-action)}
+.set-table td input{width:100%;min-width:0;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:6px}
 .action-mini{background:#2f7be6;color:#fff;border:none;border-radius:8px;padding:5px 8px;cursor:pointer}
 .action-mini.danger{background:#8d3140}
 .picker{position:sticky;top:16px;align-self:start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px}
@@ -41,6 +67,8 @@
 @media (max-width:980px){.routine-layout{grid-template-columns:1fr}.picker{position:static}}
 @media (max-width:640px){
   .workout-shell{width:100%;padding-inline:clamp(6px,3.2vw,12px)}
+  .workout-shell,.workout-shell>*{min-width:0}
+  .card.workout-shell{overflow-x:hidden}
   [data-exercise-list]{display:grid;gap:12px}
   .exercise-block{width:min(100%,560px);margin-inline:auto;padding:10px 11px}
   .exercise-head{align-items:flex-start}
@@ -51,13 +79,20 @@
   .exercise-head .inline-form [data-move-up],.exercise-head .inline-form [data-move-down]{width:44px;height:44px;font-size:24px;line-height:1}
   .exercise-head .inline-form [data-remove-ex]{width:44px;height:44px;font-size:0;padding:0}
   .exercise-head .inline-form [data-remove-ex]::before{content:'×';font-size:28px;line-height:1;color:#fff}
-  .set-table{display:block;overflow-x:auto;max-width:100%}
+  .set-table-wrap{width:100%;max-width:100%;padding-bottom:2px}
+  .set-table{
+    --c-set:36px;
+    --c-kg:clamp(48px,11vw,62px);
+    --c-reps:clamp(48px,11vw,62px);
+    --c-reps-min:clamp(50px,12vw,64px);
+    --c-reps-max:clamp(50px,12vw,64px);
+    --c-rpe:clamp(48px,11vw,62px);
+    --c-rest:clamp(62px,15vw,84px);
+    --c-action:46px;
+    min-width:620px;
+  }
   .set-table th,.set-table td{white-space:nowrap}
-  .set-table th.reps-min,.set-table th.reps-max{white-space:normal;line-height:1.05;min-width:46px}
+  .set-table th.reps-min,.set-table th.reps-max{white-space:normal;line-height:1.05}
   .set-table th.reps-min span,.set-table th.reps-max span{display:block}
-  .set-table td:nth-child(3),.set-table td:nth-child(4),.set-table td:nth-child(5){min-width:48px}
-  .set-table td:nth-child(3) input{max-width:52px;padding-inline:3px}
-  .set-table td:nth-child(4) input,.set-table td:nth-child(5) input{max-width:48px;padding-inline:3px}
-  .set-table td input[data-field="repsMin"],.set-table td input[data-field="repsMax"]{width:50%}
   .action-mini{font-size:14px;padding:7px 10px}
 }
