@@ -83,10 +83,10 @@
   .set-table-wrap{width:100%;max-width:100%;padding-bottom:2px}
   .set-table{
     --c-set:36px;
-    --c-kg:clamp(48px,11vw,62px);
-    --c-reps:clamp(48px,11vw,62px);
-    --c-reps-min:clamp(50px,12vw,64px);
-    --c-reps-max:clamp(50px,12vw,64px);
+    --c-kg:clamp(72px,18vw,82px);
+    --c-reps:clamp(50px,12vw,62px);
+    --c-reps-min:clamp(44px,8.8vw,48px);
+    --c-reps-max:clamp(44px,8.8vw,48px);
     --c-rpe:clamp(48px,11vw,62px);
     --c-rest:clamp(62px,15vw,84px);
     --c-action:46px;
@@ -95,5 +95,8 @@
   .set-table th,.set-table td{white-space:nowrap}
   .set-table th.reps-min,.set-table th.reps-max{white-space:normal;line-height:1.05}
   .set-table th.reps-min span,.set-table th.reps-max span{display:block}
+  .set-table td:nth-child(4) input,
+  .set-table td:nth-child(5) input{padding-inline:4px;text-align:center;font-variant-numeric:tabular-nums}
+  .set-table td:nth-child(2) input{font-variant-numeric:tabular-nums}
   .action-mini{font-size:14px;padding:7px 10px}
 }
