@@ -171,15 +171,31 @@ if (!$dbAvailable) {
       }
 
       $keysStmt = Database::exec(
-        'SELECT idKey, codice, stato, tipoKey FROM IdKey WHERE professionista = ? ORDER BY idKey DESC',
-        [$professionistaId]
+        "SELECT k.idKey, k.codice, k.stato, k.tipoKey,
+                (
+                  SELECT TRIM(CONCAT(COALESCE(u.nome, ''), ' ', COALESCE(u.cognome, '')))
+                  FROM Associazioni a
+                  INNER JOIN Clienti c ON c.idCliente = a.cliente
+                  INNER JOIN Utenti u ON u.idUtente = c.idUtente
+                  WHERE a.idKeyOrigine = k.idKey
+                    AND a.professionista = ?
+                    AND a.attivaFlag = 1
+                  ORDER BY a.idAssociazione DESC
+                  LIMIT 1
+                ) AS clienteCollegato
+         FROM IdKey k
+         WHERE k.professionista = ?
+         ORDER BY k.idKey DESC",
+        [$professionistaId, $professionistaId]
       );
       while ($row = $keysStmt->fetch()) {
+        $clienteCollegato = trim((string)($row['clienteCollegato'] ?? ''));
         $idKeys[] = [
           'idKey' => (int)$row['idKey'],
           'key' => (string)$row['codice'],
           'stato' => (string)$row['stato'],
           'tipo' => (string)$row['tipoKey'],
+          'clienteCollegato' => $clienteCollegato !== '' ? $clienteCollegato : 'Nessun cliente collegato',
         ];
       }
     }
@@ -228,10 +244,10 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 
   <table>
-    <thead><tr><th>ID-Key</th><th>Tipo</th><th>Stato</th><th>Azioni</th></tr></thead>
+    <thead><tr><th>ID-Key</th><th>Tipo</th><th>Cliente collegato</th><th>Stato</th><th>Azioni</th></tr></thead>
     <tbody>
       <?php if (!$idKeys): ?>
-        <tr><td colspan="4" class="muted">Nessuna ID-Key presente.</td></tr>
+        <tr><td colspan="5" class="muted">Nessuna ID-Key presente.</td></tr>
       <?php endif; ?>
       <?php foreach ($idKeys as $key): ?>
         <?php
@@ -241,6 +257,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
         <tr>
           <td><code><?= h($key['key']) ?></code></td>
           <td><?= h($key['tipo']) ?></td>
+          <td><?= h($key['clienteCollegato']) ?></td>
           <td><span class="status <?= $statusClass ?>"><?= h($key['stato']) ?></span></td>
           <td>
             <?php if ($status !== 'eliminata'): ?>
