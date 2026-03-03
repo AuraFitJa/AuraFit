@@ -268,7 +268,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
                   <button class="btn" type="submit">Riattiva</button>
                 </form>
               <?php endif; ?>
-              <form method="post" style="display:inline">
+              <form method="post" style="display:inline" data-confirm-delete-idkey>
                 <input type="hidden" name="action" value="delete_idkey" />
                 <input type="hidden" name="idKey" value="<?= (int)$key['idKey'] ?>" />
                 <button class="btn danger" type="submit">Elimina</button>
@@ -282,5 +282,15 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     </tbody>
   </table>
 </section>
+<script>
+  document.querySelectorAll('form[data-confirm-delete-idkey]').forEach((formElement) => {
+    formElement.addEventListener('submit', (event) => {
+      const confirmed = window.confirm('Confermi di voler eliminare questa ID-Key? L\'operazione terminerà anche le eventuali associazioni attive collegate.');
+      if (!confirmed) {
+        event.preventDefault();
+      }
+    });
+  });
+</script>
 <?php
 renderEnd();
