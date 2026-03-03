@@ -176,7 +176,7 @@ if (!$dbAvailable) {
                   SELECT TRIM(CONCAT(COALESCE(u.nome, ''), ' ', COALESCE(u.cognome, '')))
                   FROM Associazioni a
                   INNER JOIN Clienti c ON c.idCliente = a.cliente
-                  INNER JOIN Utenti u ON u.idUtente = c.utente
+                  INNER JOIN Utenti u ON u.idUtente = c.idUtente
                   WHERE a.idKeyOrigine = k.idKey
                     AND a.professionista = ?
                     AND a.attivaFlag = 1
