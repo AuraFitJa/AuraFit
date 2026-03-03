@@ -142,7 +142,7 @@ if (!$dbAvailable) {
 renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
 <section class="card">
-  <h2 class="section-title">Gestione Clienti (RF-004, RF-013, RF-014)</h2>
+  <h2 class="section-title">Gestione Clienti</h2>
 
   <?php foreach ($messages as $message): ?>
     <div class="okbox" style="margin-bottom:10px"><?= h($message) ?></div>
@@ -151,10 +151,6 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
   <?php foreach ($errors as $error): ?>
     <div class="alert" style="margin-bottom:10px"><?= h($error) ?></div>
   <?php endforeach; ?>
-
-  <div class="toolbar">
-    <span class="muted">Alla cessazione associazione la chat viene bloccata automaticamente (RF-016). Lo storico resta visibile al cliente in caso cambio professionista (RF-015).</span>
-  </div>
 
   <table>
     <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato associazione</th><th>Data associazione</th><th>Ultimo aggiornamento</th><th>Azioni</th></tr></thead>
@@ -186,25 +182,50 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
 
   <div class="divider"></div>
 
-  <h3>Storico clienti terminati</h3>
-  <table>
-    <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato</th><th>Data chiusura</th><th>Nota</th></tr></thead>
-    <tbody>
-      <?php if (!$clientiTerminati): ?>
-        <tr><td colspan="6" class="muted">Nessuna associazione terminata.</td></tr>
-      <?php endif; ?>
-      <?php foreach ($clientiTerminati as $cliente): ?>
-        <tr>
-          <td><?= h($cliente['nome']) ?></td>
-          <td><?= h($cliente['email']) ?></td>
-          <td><?= h($cliente['tipo']) ?></td>
-          <td><span class="status warn"><?= h($cliente['stato']) ?></span></td>
-          <td><?= h($cliente['chiusura']) ?></td>
-          <td><?= h($cliente['nota']) ?></td>
-        </tr>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
+  <button
+    id="toggleStoricoTerminati"
+    class="btn"
+    type="button"
+    aria-expanded="false"
+    aria-controls="storicoTerminati"
+    style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;"
+  >
+    <span id="toggleStoricoTerminatiIcon" aria-hidden="true">&gt;</span>
+    <span>Storico clienti terminati</span>
+  </button>
+
+  <div id="storicoTerminati" hidden>
+    <table>
+      <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato</th><th>Data chiusura</th><th>Nota</th></tr></thead>
+      <tbody>
+        <?php if (!$clientiTerminati): ?>
+          <tr><td colspan="6" class="muted">Nessuna associazione terminata.</td></tr>
+        <?php endif; ?>
+        <?php foreach ($clientiTerminati as $cliente): ?>
+          <tr>
+            <td><?= h($cliente['nome']) ?></td>
+            <td><?= h($cliente['email']) ?></td>
+            <td><?= h($cliente['tipo']) ?></td>
+            <td><span class="status warn"><?= h($cliente['stato']) ?></span></td>
+            <td><?= h($cliente['chiusura']) ?></td>
+            <td><?= h($cliente['nota']) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
 </section>
+<script>
+  const toggleStoricoBtn = document.getElementById('toggleStoricoTerminati');
+  const storicoTerminati = document.getElementById('storicoTerminati');
+  const toggleStoricoIcon = document.getElementById('toggleStoricoTerminatiIcon');
+
+  toggleStoricoBtn?.addEventListener('click', () => {
+    const isOpen = !storicoTerminati.hidden;
+    storicoTerminati.hidden = isOpen;
+    toggleStoricoBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    toggleStoricoIcon.textContent = isOpen ? '>' : 'v';
+  });
+</script>
 <?php
 renderEnd();
