@@ -4,6 +4,7 @@ require __DIR__ . '/common.php';
 $messages = [];
 $errors = [];
 $idKeys = [];
+$idKeysEliminate = [];
 $canGenerateIdKey = false;
 $limiteClienti = null;
 $clientiAttiviCount = 0;
@@ -190,13 +191,19 @@ if (!$dbAvailable) {
       );
       while ($row = $keysStmt->fetch()) {
         $clienteCollegato = trim((string)($row['clienteCollegato'] ?? ''));
-        $idKeys[] = [
+        $keyData = [
           'idKey' => (int)$row['idKey'],
           'key' => (string)$row['codice'],
           'stato' => (string)$row['stato'],
           'tipo' => (string)$row['tipoKey'],
           'clienteCollegato' => $clienteCollegato !== '' ? $clienteCollegato : 'Nessun cliente collegato',
         ];
+
+        if (strtolower((string)$row['stato']) === 'eliminata') {
+          $idKeysEliminate[] = $keyData;
+        } else {
+          $idKeys[] = $keyData;
+        }
       }
     }
   } catch (Throwable $e) {
@@ -281,6 +288,40 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
       <?php endforeach; ?>
     </tbody>
   </table>
+
+  <div class="divider"></div>
+
+  <button
+    id="toggleIdKeyEliminate"
+    class="btn"
+    type="button"
+    aria-expanded="false"
+    aria-controls="storicoIdKeyEliminate"
+    style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;"
+  >
+    <span id="toggleIdKeyEliminateIcon" aria-hidden="true">&gt;</span>
+    <span>Storico ID-Key eliminate</span>
+  </button>
+
+  <div id="storicoIdKeyEliminate" hidden>
+    <table>
+      <thead><tr><th>ID-Key</th><th>Tipo</th><th>Cliente collegato</th><th>Stato</th><th>Azioni</th></tr></thead>
+      <tbody>
+        <?php if (!$idKeysEliminate): ?>
+          <tr><td colspan="5" class="muted">Nessuna ID-Key eliminata.</td></tr>
+        <?php endif; ?>
+        <?php foreach ($idKeysEliminate as $key): ?>
+          <tr>
+            <td><code><?= h($key['key']) ?></code></td>
+            <td><?= h($key['tipo']) ?></td>
+            <td><?= h($key['clienteCollegato']) ?></td>
+            <td><span class="status danger"><?= h($key['stato']) ?></span></td>
+            <td><span class="muted">—</span></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
 </section>
 <div class="profile-modal" data-idkey-confirm-modal aria-hidden="true">
   <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="idkey-confirm-title" style="width:min(520px,100%);">
@@ -297,6 +338,17 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 </div>
 <script>
+  const toggleIdKeyEliminateBtn = document.getElementById('toggleIdKeyEliminate');
+  const storicoIdKeyEliminate = document.getElementById('storicoIdKeyEliminate');
+  const toggleIdKeyEliminateIcon = document.getElementById('toggleIdKeyEliminateIcon');
+
+  toggleIdKeyEliminateBtn?.addEventListener('click', () => {
+    const isOpen = !storicoIdKeyEliminate.hidden;
+    storicoIdKeyEliminate.hidden = isOpen;
+    toggleIdKeyEliminateBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    toggleIdKeyEliminateIcon.textContent = isOpen ? '>' : 'v';
+  });
+
   const idKeyConfirmModal = document.querySelector('[data-idkey-confirm-modal]');
   const idKeyConfirmCancel = document.querySelector('[data-idkey-confirm-cancel]');
   const idKeyConfirmOk = document.querySelector('[data-idkey-confirm-ok]');
