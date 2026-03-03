@@ -24,7 +24,7 @@
 .exercise-block .set-table{margin-top:10px}
 .set-table{width:100%;border-collapse:separate;border-spacing:0 6px}
 .set-table th{font-size:11px;text-transform:uppercase;color:#b8c0d8;text-align:left}
-.set-table td input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:6px}
+.set-table td input{width:120%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;padding:6px}
 .action-mini{background:#2f7be6;color:#fff;border:none;border-radius:8px;padding:5px 8px;cursor:pointer}
 .action-mini.danger{background:#8d3140}
 .picker{position:sticky;top:16px;align-self:start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px}
@@ -58,5 +58,6 @@
   .set-table td:nth-child(3),.set-table td:nth-child(4),.set-table td:nth-child(5){min-width:48px}
   .set-table td:nth-child(3) input{max-width:52px;padding-inline:3px}
   .set-table td:nth-child(4) input,.set-table td:nth-child(5) input{max-width:48px;padding-inline:3px}
+  .set-table td input[data-field="repsMin"],.set-table td input[data-field="repsMax"]{width:50%}
   .action-mini{font-size:14px;padding:7px 10px}
 }
