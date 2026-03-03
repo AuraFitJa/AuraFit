@@ -172,7 +172,7 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
           <td><?= h($cliente['associazione']) ?></td>
           <td><?= h($cliente['ultimoUpdate']) ?></td>
           <td>
-            <a class="btn" href="../dashboard_cliente.php?idCliente=<?= (int)$cliente['idCliente'] ?>">Scheda cliente</a>
+            <a class="btn" href="scheda_cliente.php?idCliente=<?= (int)$cliente['idCliente'] ?>">Scheda cliente</a>
             <form method="post" style="display:inline">
               <input type="hidden" name="action" value="terminate_association" />
               <input type="hidden" name="idAssociazione" value="<?= (int)$cliente['idAssociazione'] ?>" />
