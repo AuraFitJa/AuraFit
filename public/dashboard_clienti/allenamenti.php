@@ -2,15 +2,14 @@
 require __DIR__ . '/common.php';
 
 $folders = [];
-$selectedFolderId = isset($_GET['cartella']) ? (string)$_GET['cartella'] : '';
+$selectedFolderId = isset($_GET['cartella']) ? (int)$_GET['cartella'] : 0;
 $selectedFolder = null;
 $programs = [];
-$assignedFolderKey = 'assigned';
-$assignedFolder = null;
 $clienteId = null;
 $ptProfessionistaId = null;
 $ptUserId = null;
-$ptDisplayName = '';
+$assignedByProgramId = [];
+$assignedFolderIds = [];
 
 if ($dbAvailable) {
   try {
@@ -23,10 +22,9 @@ if ($dbAvailable) {
       $clienteId = (int)$clienteRow['idCliente'];
 
       $ptRow = Database::exec(
-        "SELECT p.idProfessionista, p.idUtente, u.nome, u.cognome
+        "SELECT p.idProfessionista, p.idUtente
          FROM Associazioni a
          INNER JOIN Professionisti p ON p.idProfessionista = a.professionista
-         INNER JOIN Utenti u ON u.idUtente = p.idUtente
          WHERE a.cliente = ?
            AND a.tipoAssociazione = 'pt'
            AND a.attivaFlag = 1
@@ -38,7 +36,6 @@ if ($dbAvailable) {
       if ($ptRow) {
         $ptProfessionistaId = (int)$ptRow['idProfessionista'];
         $ptUserId = (int)$ptRow['idUtente'];
-        $ptDisplayName = trim((string)($ptRow['nome'] ?? '') . ' ' . (string)($ptRow['cognome'] ?? ''));
 
         $folders = Database::exec(
           'SELECT idCartella, nome, ordine
@@ -49,15 +46,7 @@ if ($dbAvailable) {
         )->fetchAll();
 
         $assignedPrograms = Database::exec(
-          "SELECT p.idProgramma, p.titolo, p.descrizione, p.aggiornatoIl,
-                  ap.assegnatoIl, ap.stato,
-                  (
-                    SELECT GROUP_CONCAT(e.nome ORDER BY g.ordine ASC, eg.ordine ASC SEPARATOR ', ')
-                    FROM GiorniAllenamento g
-                    INNER JOIN EserciziGiorno eg ON eg.giorno = g.idGiorno
-                    INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
-                    WHERE g.programma = p.idProgramma
-                  ) AS previewEsercizi
+          "SELECT p.idProgramma, p.cartellaId, ap.assegnatoIl, ap.stato
            FROM AssegnazioniProgramma ap
            INNER JOIN ProgrammiAllenamento p ON p.idProgramma = ap.programma
            WHERE ap.cliente = ?
@@ -66,41 +55,42 @@ if ($dbAvailable) {
           [$clienteId]
         )->fetchAll();
 
-        if ($assignedPrograms) {
-          $assignedFolder = [
-            'idCartella' => $assignedFolderKey,
-            'nome' => 'Programmi Assegnati da ' . $ptDisplayName . ' "Personal Trainer"',
-            'isAssigned' => true,
-            'programs' => $assignedPrograms,
-          ];
+        foreach ($assignedPrograms as $assignedProgram) {
+          $programId = (int)$assignedProgram['idProgramma'];
+          $folderId = isset($assignedProgram['cartellaId']) ? (int)$assignedProgram['cartellaId'] : 0;
+
+          if (!isset($assignedByProgramId[$programId])) {
+            $assignedByProgramId[$programId] = [
+              'assegnatoIl' => (string)($assignedProgram['assegnatoIl'] ?? ''),
+              'stato' => (string)($assignedProgram['stato'] ?? ''),
+            ];
+          }
+
+          if ($folderId > 0) {
+            $assignedFolderIds[$folderId] = true;
+          }
         }
       }
     }
   } catch (Throwable $e) {
     $folders = [];
-    $assignedFolder = null;
+    $assignedByProgramId = [];
+    $assignedFolderIds = [];
   }
 }
 
-if ($selectedFolderId === '' && !empty($folders)) {
-  $selectedFolderId = (string)$folders[0]['idCartella'];
-}
-if ($selectedFolderId === '' && $assignedFolder) {
-  $selectedFolderId = $assignedFolderKey;
+if ($selectedFolderId <= 0 && !empty($folders)) {
+  $selectedFolderId = (int)$folders[0]['idCartella'];
 }
 
 foreach ($folders as $folder) {
-  if ((string)$folder['idCartella'] === $selectedFolderId) {
+  if ((int)$folder['idCartella'] === $selectedFolderId) {
     $selectedFolder = $folder;
     break;
   }
 }
 
-if ($selectedFolderId === $assignedFolderKey && $assignedFolder) {
-  $selectedFolder = $assignedFolder;
-}
-
-if ($selectedFolder && empty($selectedFolder['isAssigned']) && $ptUserId) {
+if ($selectedFolder && $ptUserId) {
   $programs = Database::exec(
     "SELECT p.idProgramma, p.titolo, p.descrizione,
             (
@@ -120,10 +110,6 @@ if ($selectedFolder && empty($selectedFolder['isAssigned']) && $ptUserId) {
   )->fetchAll();
 }
 
-if ($selectedFolder && !empty($selectedFolder['isAssigned'])) {
-  $programs = $selectedFolder['programs'] ?? [];
-}
-
 renderStart('Allenamenti cliente', 'allenamenti', $email);
 ?>
 <link rel="stylesheet" href="../assets/css/allenamenti.css" />
@@ -134,18 +120,15 @@ renderStart('Allenamenti cliente', 'allenamenti', $email);
 
   <div class="folder-grid">
     <?php foreach ($folders as $folder): ?>
-      <?php $isActive = ((string)$folder['idCartella'] === (string)$selectedFolderId); ?>
-      <a class="folder-card folder-link<?= $isActive ? ' active-folder' : '' ?>" href="allenamenti.php?cartella=<?= (int)$folder['idCartella'] ?>">
+      <?php
+        $folderId = (int)$folder['idCartella'];
+        $isActive = ($folderId === (int)$selectedFolderId);
+        $isAssignedFolder = isset($assignedFolderIds[$folderId]);
+      ?>
+      <a class="folder-card folder-link<?= $isActive ? ' active-folder' : '' ?><?= $isAssignedFolder ? ' assigned-folder' : '' ?>" href="allenamenti.php?cartella=<?= $folderId ?>">
         <strong>📁 <?= h((string)$folder['nome']) ?></strong>
       </a>
     <?php endforeach; ?>
-
-    <?php if ($assignedFolder): ?>
-      <?php $isAssignedActive = ($selectedFolderId === $assignedFolderKey); ?>
-      <a class="folder-card folder-link assigned-folder<?= $isAssignedActive ? ' active-folder' : '' ?>" href="allenamenti.php?cartella=<?= h($assignedFolderKey) ?>">
-        <strong>📁 <?= h((string)$assignedFolder['nome']) ?></strong>
-      </a>
-    <?php endif; ?>
   </div>
 
   <?php if ($selectedFolder): ?>
@@ -163,6 +146,8 @@ renderStart('Allenamenti cliente', 'allenamenti', $email);
 
       <?php foreach ($programs as $program): ?>
         <?php
+          $programId = (int)$program['idProgramma'];
+          $assignment = $assignedByProgramId[$programId] ?? null;
           $exercisePreview = trim((string)($program['previewEsercizi'] ?? ''));
           if ($exercisePreview === '') {
             $exercisePreview = 'Nessun esercizio';
@@ -170,15 +155,21 @@ renderStart('Allenamenti cliente', 'allenamenti', $email);
             $exercisePreview = substr($exercisePreview, 0, 89) . '…';
           }
         ?>
-        <article class="program-card">
+        <article class="program-card<?= $assignment ? ' assigned-program-card' : '' ?>">
           <h4><?= h((string)$program['titolo']) ?></h4>
           <p class="muted-sm"><?= h((string)($program['descrizione'] ?? '')) ?></p>
           <div class="program-meta">
             <span><?= h($exercisePreview) ?></span>
-            <?php if (isset($program['assegnatoIl'])): ?>
-              <span>Assegnato: <?= h((string)$program['assegnatoIl']) ?></span>
+            <?php if ($assignment): ?>
+              <span class="status ok">Assegnato</span>
+              <span><?= h((string)$assignment['assegnatoIl']) ?></span>
             <?php endif; ?>
           </div>
+          <?php if ($assignment): ?>
+            <div style="margin-top:10px">
+              <a class="btn" href="scheda_assegnata.php?id=<?= $programId ?>">Visualizza scheda assegnata</a>
+            </div>
+          <?php endif; ?>
         </article>
       <?php endforeach; ?>
     </div>
@@ -192,7 +183,8 @@ renderStart('Allenamenti cliente', 'allenamenti', $email);
 
 <style>
   .active-folder{border-color:rgba(134,195,255,.75);box-shadow:0 0 0 1px rgba(134,195,255,.35) inset}
-  .assigned-folder{background:linear-gradient(135deg,rgba(63,106,255,.22),rgba(75,203,255,.18));border-color:rgba(128,219,255,.6)}
+  .assigned-folder{background:linear-gradient(135deg,rgba(52,173,121,.2),rgba(77,193,255,.15));border-color:rgba(94,222,171,.55)}
+  .assigned-program-card{border-color:rgba(94,222,171,.45)}
 </style>
 <?php
 renderEnd();
