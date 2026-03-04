@@ -31,6 +31,7 @@ if ($programId <= 0) {
          INNER JOIN Utenti u ON u.idUtente = pr.idUtente
          WHERE ap.programma = ?
            AND ap.cliente = ?
+           AND ap.stato = 'attivo'
            AND p.stato <> 'archiviato'
          ORDER BY ap.assegnatoIl DESC
          LIMIT 1",
