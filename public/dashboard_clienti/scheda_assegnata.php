@@ -892,7 +892,6 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       setAddFeedback('');
       addSerieBody.innerHTML = '';
       appendSerieRow();
-      appendSerieRow();
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       addDate.value = now.toISOString().slice(0, 16);
