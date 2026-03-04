@@ -76,7 +76,7 @@ try {
      FROM AssegnazioniProgramma
      WHERE cliente = ?
        AND programma = ?
-       AND stato = 'attivo'
+       AND stato IN ('attivo', 'attiva')
      LIMIT 1",
     [$idCliente, $idProgramma]
   )->fetch();
@@ -92,7 +92,7 @@ try {
      SET stato = 'revocato'
      WHERE cliente = ?
        AND programma = ?
-       AND stato = 'attivo'
+       AND stato IN ('attivo', 'attiva')
      LIMIT 1",
     [$idCliente, $idProgramma]
   );

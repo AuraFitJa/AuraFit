@@ -181,7 +181,7 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
             <td><?= h((string)$programma['assegnatoIl']) ?></td>
             <td style="display:flex;gap:8px;flex-wrap:wrap">
               <a class="btn" href="programma.php?id=<?= (int)$programma['idProgramma'] ?>">Apri programma</a>
-              <?php if ((string)$programma['stato'] === 'attivo'): ?>
+              <?php if (in_array((string)$programma['stato'], ['attivo', 'attiva'], true)): ?>
                 <button
                   class="btn"
                   type="button"
