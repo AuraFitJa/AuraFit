@@ -68,9 +68,11 @@ if ($programId <= 0) {
               [(int)$exercise['idEsercizioGiorno']]
             )->fetchAll();
           }
+          unset($exercise);
 
           $day['exercises'] = $exercises;
         }
+        unset($day);
       }
     }
   } catch (Throwable $e) {
