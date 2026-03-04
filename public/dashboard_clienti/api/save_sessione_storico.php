@@ -40,6 +40,8 @@ if (!$dt) {
   exit;
 }
 
+$svoltaIlNormalized = $dt->format('Y-m-d H:i:00');
+
 $validateNumberOrNull = static function ($value, bool $allowFloat = true): ?float {
   if ($value === null || $value === '') {
     return null;
@@ -107,15 +109,39 @@ try {
   $pdo = Database::pdo();
   $pdo->beginTransaction();
 
-  Database::exec(
-    'INSERT INTO SessioniAllenamento (cliente, programma, giorno, svoltaIl)
-     VALUES (?, ?, ?, ?)',
-    [$clienteId, $programId, (int)$assegnazione['giorno'], $dt->format('Y-m-d H:i:s')]
-  );
+  $giornoId = (int)$assegnazione['giorno'];
 
-  $sessioneId = (int)$pdo->lastInsertId();
+  $sessioneEsistente = Database::exec(
+    'SELECT idSessione
+     FROM SessioniAllenamento
+     WHERE cliente = ?
+       AND programma = ?
+       AND giorno = ?
+       AND svoltaIl = ?
+     LIMIT 1',
+    [$clienteId, $programId, $giornoId, $svoltaIlNormalized]
+  )->fetch();
 
-  $numeroSerie = 1;
+  if ($sessioneEsistente) {
+    $sessioneId = (int)$sessioneEsistente['idSessione'];
+  } else {
+    Database::exec(
+      'INSERT INTO SessioniAllenamento (cliente, programma, giorno, svoltaIl)
+       VALUES (?, ?, ?, ?)',
+      [$clienteId, $programId, $giornoId, $svoltaIlNormalized]
+    );
+
+    $sessioneId = (int)$pdo->lastInsertId();
+  }
+
+  $maxNumeroSerie = Database::exec(
+    'SELECT COALESCE(MAX(numeroSerie), 0) AS maxNumeroSerie
+     FROM SerieSvolte
+     WHERE sessione = ?',
+    [$sessioneId]
+  )->fetch();
+
+  $numeroSerie = ((int)($maxNumeroSerie['maxNumeroSerie'] ?? 0)) + 1;
   foreach ($serie as $item) {
     if (!is_array($item)) {
       continue;
