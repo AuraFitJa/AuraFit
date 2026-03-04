@@ -244,6 +244,35 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     gap: 8px;
     margin-top: 10px;
   }
+
+  .confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .75);
+    z-index: 1100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .confirm-modal-overlay.open {
+    display: flex;
+  }
+  .confirm-modal {
+    width: min(480px, 100%);
+    border-radius: 14px;
+    background: #1a2026;
+    border: 1px solid rgba(255, 255, 255, .1);
+    padding: 18px;
+    color: #eef3f7;
+  }
+  .confirm-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
 </style>
 <section class="card workout-shell">
   <div class="library-toolbar" style="justify-content:space-between">
@@ -411,7 +440,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       <table class="set-table" id="sessioneStoricoTable">
         <thead>
           <tr>
-            <th>Data</th><th>Reps</th><th>Kg</th>
+            <th>Data</th><th>Reps</th><th>Kg</th><th></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -458,6 +487,18 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     <div class="sessione-modal-foot" style="margin-top:16px">
       <button type="button" class="btn" id="addSessioneCancel">Chiudi</button>
       <button type="button" class="btn primary" id="addSessioneSave">Salva</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="confirmModalOverlay" class="confirm-modal-overlay" aria-hidden="true">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <h3 id="confirmModalTitle" class="section-title" style="margin:0">Conferma rimozione</h3>
+    <p id="confirmModalMessage" class="muted" style="margin:10px 0 0">Vuoi davvero rimuovere questa serie?</p>
+    <div class="confirm-modal-actions">
+      <button type="button" class="btn" id="confirmModalCancel">Annulla</button>
+      <button type="button" class="btn primary" id="confirmModalOk">Rimuovi</button>
     </div>
   </div>
 </div>
@@ -784,8 +825,12 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     const addSerieBody = document.querySelector('#addSessioneSerieTable tbody');
     const addSerieBtn = document.getElementById('addSessioneAddSerie');
     const addSaveBtn = document.getElementById('addSessioneSave');
+    const confirmOverlay = document.getElementById('confirmModalOverlay');
+    const confirmMessage = document.getElementById('confirmModalMessage');
+    const confirmCancel = document.getElementById('confirmModalCancel');
+    const confirmOk = document.getElementById('confirmModalOk');
 
-    if (!listWrap || !loadMoreBtn || !overlay || !addOverlay || !PROGRAM_ID) return;
+    if (!listWrap || !loadMoreBtn || !overlay || !addOverlay || !confirmOverlay || !PROGRAM_ID) return;
 
     const EXERCISES = <?= json_encode(array_values(array_reduce($days, function ($carry, $day) {
       foreach (($day['exercises'] ?? []) as $exercise) {
@@ -849,6 +894,80 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       addDate.value = now.toISOString().slice(0, 16);
+    }
+
+    function openConfirmModal(message) {
+      confirmMessage.textContent = message;
+      confirmOverlay.classList.add('open');
+      confirmOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeConfirmModal() {
+      confirmOverlay.classList.remove('open');
+      confirmOverlay.setAttribute('aria-hidden', 'true');
+      if (!overlay.classList.contains('open') && !addOverlay.classList.contains('open')) {
+        document.body.style.overflow = '';
+      }
+    }
+
+    function confirmAction(message) {
+      return new Promise((resolve) => {
+        openConfirmModal(message);
+        const handleCancel = () => {
+          cleanup();
+          resolve(false);
+        };
+        const handleConfirm = () => {
+          cleanup();
+          resolve(true);
+        };
+        const handleOverlayClick = (event) => {
+          if (event.target === confirmOverlay) {
+            handleCancel();
+          }
+        };
+        const cleanup = () => {
+          confirmCancel.removeEventListener('click', handleCancel);
+          confirmOk.removeEventListener('click', handleConfirm);
+          confirmOverlay.removeEventListener('click', handleOverlayClick);
+          closeConfirmModal();
+        };
+
+        confirmCancel.addEventListener('click', handleCancel);
+        confirmOk.addEventListener('click', handleConfirm);
+        confirmOverlay.addEventListener('click', handleOverlayClick);
+      });
+    }
+
+    async function removeSerieStorico(idSerieSvolta) {
+      const confirmed = await confirmAction('Vuoi davvero rimuovere questa serie dallo storico?');
+      if (!confirmed) return;
+
+      modalFeedback.textContent = 'Rimozione serie...';
+      try {
+        const res = await fetch('api/delete_sessione_serie.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({
+            programId: PROGRAM_ID,
+            idSerieSvolta,
+          }),
+        });
+        const payload = await res.json();
+        if (!res.ok || !payload.ok) {
+          throw new Error(payload.error || 'Errore rimozione serie');
+        }
+
+        modalFeedback.textContent = 'Serie rimossa con successo.';
+        await apriDettaglioEsercizio(Number(modalExerciseTitle.dataset.esercizioId || 0));
+        await loadSessioni();
+      } catch (error) {
+        modalFeedback.textContent = error.message || 'Errore rimozione serie';
+      }
     }
 
     function appendSerieRow() {
@@ -939,18 +1058,30 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
 
         modalFeedback.textContent = '';
         modalExerciseTitle.textContent = payload.esercizio?.nome || 'Esercizio';
+        modalExerciseTitle.dataset.esercizioId = String(payload.esercizio?.idEsercizio || 0);
         storicoTableBody.innerHTML = '';
         (payload.serie || []).forEach((serie) => {
           const tr = document.createElement('tr');
           const tdData = document.createElement('td');
           const tdReps = document.createElement('td');
           const tdKg = document.createElement('td');
+          const tdActions = document.createElement('td');
           tdData.textContent = valOrDash(serie.svoltaIl);
           tdReps.textContent = valOrDash(serie.repsEffettive);
           tdKg.textContent = valOrDash(serie.caricoEffettivo);
+          if (serie.idSerieSvolta) {
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn';
+            removeBtn.textContent = 'Rimuovi';
+            removeBtn.dataset.action = 'remove-serie-storico';
+            removeBtn.dataset.idSerieSvolta = String(serie.idSerieSvolta);
+            tdActions.appendChild(removeBtn);
+          }
           tr.appendChild(tdData);
           tr.appendChild(tdReps);
           tr.appendChild(tdKg);
+          tr.appendChild(tdActions);
           storicoTableBody.appendChild(tr);
         });
       } catch (error) {
@@ -1015,6 +1146,12 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       apriDettaglioEsercizio(Number(link.dataset.esercizioId || 0));
     });
 
+    storicoTableBody.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action="remove-serie-storico"]');
+      if (!button) return;
+      removeSerieStorico(Number(button.dataset.idSerieSvolta || 0));
+    });
+
     modalClose.addEventListener('click', closeDetailModal);
     modalCancel.addEventListener('click', closeDetailModal);
     overlay.addEventListener('click', (event) => {
@@ -1033,6 +1170,9 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       }
       if (event.key === 'Escape' && addOverlay.classList.contains('open')) {
         closeAddModal();
+      }
+      if (event.key === 'Escape' && confirmOverlay.classList.contains('open')) {
+        closeConfirmModal();
       }
     });
 

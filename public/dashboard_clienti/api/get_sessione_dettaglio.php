@@ -66,7 +66,7 @@ try {
   }
 
   $serie = Database::exec(
-    'SELECT sa.svoltaIl, ss.numeroSerie, ss.repsEffettive, ss.caricoEffettivo, ss.rpeEffettivo, ss.completata, ss.note
+    'SELECT ss.idSerieSvolta, sa.svoltaIl, ss.numeroSerie, ss.repsEffettive, ss.caricoEffettivo, ss.rpeEffettivo, ss.completata, ss.note
      FROM SerieSvolte ss
      INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
      LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
