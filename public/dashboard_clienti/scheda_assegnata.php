@@ -172,6 +172,78 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     margin-top: 10px;
   }
   .exercise-inline-feedback { margin: 0; }
+  .sessioni-list {
+    display: grid;
+    gap: 10px;
+  }
+  .sessione-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .02);
+  }
+  .sessione-meta {
+    display: grid;
+    gap: 2px;
+  }
+  .sessione-title-link {
+    font-weight: 700;
+    color: #eef3f7;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: rgba(238, 243, 247, .35);
+  }
+  .sessione-title-link:hover {
+    text-decoration-color: rgba(238, 243, 247, .9);
+  }
+  .sessione-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .75);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .sessione-modal-overlay.open {
+    display: flex;
+  }
+  .sessione-modal {
+    width: min(980px, 100%);
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    background: #1a2026;
+    border: 1px solid rgba(255, 255, 255, .08);
+    padding: 18px;
+    color: #eef3f7;
+  }
+  .sessione-modal-head,
+  .sessione-modal-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .sessione-modal-close {
+    border: 0;
+    background: #303a45;
+    color: #eef3f7;
+    border-radius: 8px;
+    padding: 8px 11px;
+    cursor: pointer;
+  }
+  .sessione-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
 </style>
 <section class="card workout-shell">
   <div class="library-toolbar" style="justify-content:space-between">
@@ -191,6 +263,14 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
         <span>Data: <?= h((string)$program['assegnatoIl']) ?></span>
         <span>PT: <?= h(trim((string)$program['nome'] . ' ' . (string)$program['cognome'])) ?></span>
       </div>
+    </article>
+
+    <article class="card" style="margin-top:12px">
+      <h3 class="section-title" style="margin-top:0">Storico sessioni</h3>
+      <div id="sessioniList" class="sessioni-list"></div>
+      <p class="muted" id="sessioniError" style="display:none">Errore caricamento sessioni.</p>
+      <p class="muted" id="sessioniEmpty" style="display:none">Nessuna sessione registrata.</p>
+      <button class="btn" id="loadMoreSessioni" type="button" style="margin-top:10px">Carica altre</button>
     </article>
 
     <?php foreach ($days as $day): ?>
@@ -314,6 +394,70 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     <div class="exercise-modal-footer" style="margin-top:16px">
       <button type="button" class="btn" id="exerciseModalCancel">Chiudi</button>
       <button type="button" class="btn primary" id="exerciseModalSave">Salva</button>
+    </div>
+  </div>
+</div>
+
+<div id="sessioneModalOverlay" class="sessione-modal-overlay" aria-hidden="true">
+  <div id="sessioneModal" class="sessione-modal" role="dialog" aria-modal="true" aria-labelledby="sessioneModalTitle">
+    <div class="sessione-modal-head">
+      <h2 id="sessioneModalTitle" style="margin:0">Storico esercizio</h2>
+      <button type="button" class="sessione-modal-close" id="sessioneModalClose">✕</button>
+    </div>
+
+    <p class="muted" id="sessioneModalFeedback" style="margin-top:8px"></p>
+    <h3 class="section-title" id="sessioneModalExerciseTitle" style="margin:0 0 8px 0"></h3>
+    <div class="set-table-wrap">
+      <table class="set-table" id="sessioneStoricoTable">
+        <thead>
+          <tr>
+            <th>Data</th><th>Reps</th><th>Kg</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="sessione-modal-foot" style="margin-top:16px">
+      <span></span>
+      <button type="button" class="btn" id="sessioneModalCancel">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<div id="addSessioneOverlay" class="sessione-modal-overlay" aria-hidden="true">
+  <div class="sessione-modal" role="dialog" aria-modal="true" aria-labelledby="addSessioneTitle">
+    <div class="sessione-modal-head">
+      <h2 id="addSessioneTitle" style="margin:0">Aggiungi sessione</h2>
+      <button type="button" class="sessione-modal-close" id="addSessioneClose">✕</button>
+    </div>
+
+    <p id="addSessioneFeedback" class="muted" style="margin-top:8px"></p>
+
+    <div class="field" style="margin-top:10px">
+      <label for="addSessioneEsercizio">Esercizio</label>
+      <select id="addSessioneEsercizio"></select>
+    </div>
+
+    <div class="field" style="margin-top:10px">
+      <label for="addSessioneData">Data e ora</label>
+      <input type="datetime-local" id="addSessioneData" />
+    </div>
+
+    <section class="card" style="margin-top:12px; padding:12px">
+      <h3 class="section-title" style="margin-top:0">Serie</h3>
+      <table class="exercise-form-table" id="addSessioneSerieTable">
+        <thead>
+          <tr><th>#</th><th>Reps</th><th>Kg</th><th>RPE</th><th>Note</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button type="button" class="btn" id="addSessioneAddSerie" style="margin-top:10px">+ Aggiungi serie</button>
+    </section>
+
+    <div class="sessione-modal-foot" style="margin-top:16px">
+      <button type="button" class="btn" id="addSessioneCancel">Chiudi</button>
+      <button type="button" class="btn primary" id="addSessioneSave">Salva</button>
     </div>
   </div>
 </div>
@@ -615,6 +759,307 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
         closeModal();
       }
     });
+  })();
+
+  (function () {
+    const PROGRAM_ID = <?= (int)$programId ?>;
+    const listWrap = document.getElementById('sessioniList');
+    const loadMoreBtn = document.getElementById('loadMoreSessioni');
+    const emptyNode = document.getElementById('sessioniEmpty');
+    const errorNode = document.getElementById('sessioniError');
+
+    const overlay = document.getElementById('sessioneModalOverlay');
+    const modalClose = document.getElementById('sessioneModalClose');
+    const modalCancel = document.getElementById('sessioneModalCancel');
+    const modalFeedback = document.getElementById('sessioneModalFeedback');
+    const modalExerciseTitle = document.getElementById('sessioneModalExerciseTitle');
+    const storicoTableBody = document.querySelector('#sessioneStoricoTable tbody');
+
+    const addOverlay = document.getElementById('addSessioneOverlay');
+    const addClose = document.getElementById('addSessioneClose');
+    const addCancel = document.getElementById('addSessioneCancel');
+    const addFeedback = document.getElementById('addSessioneFeedback');
+    const addSelect = document.getElementById('addSessioneEsercizio');
+    const addDate = document.getElementById('addSessioneData');
+    const addSerieBody = document.querySelector('#addSessioneSerieTable tbody');
+    const addSerieBtn = document.getElementById('addSessioneAddSerie');
+    const addSaveBtn = document.getElementById('addSessioneSave');
+
+    if (!listWrap || !loadMoreBtn || !overlay || !addOverlay || !PROGRAM_ID) return;
+
+    const EXERCISES = <?= json_encode(array_values(array_reduce($days, function ($carry, $day) {
+      foreach (($day['exercises'] ?? []) as $exercise) {
+        $id = (int)($exercise['idEsercizio'] ?? 0);
+        if ($id > 0 && !isset($carry[$id])) {
+          $carry[$id] = ['idEsercizio' => $id, 'nome' => (string)($exercise['nome'] ?? '')];
+        }
+      }
+      return $carry;
+    }, [])), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
+    function valOrDash(value) {
+      return value === null || value === undefined || value === '' ? '—' : String(value);
+    }
+
+    function setSessionError(message) {
+      errorNode.style.display = message ? '' : 'none';
+      errorNode.textContent = message || '';
+    }
+
+    function setAddFeedback(message, isError) {
+      addFeedback.textContent = message || '';
+      addFeedback.style.color = isError ? '#ff8585' : '#9fb3c8';
+    }
+
+    function toNumberOrNull(value) {
+      if (value === '' || value === null || value === undefined) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function openDetailModal() {
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDetailModal() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      modalFeedback.textContent = '';
+      modalExerciseTitle.textContent = '';
+      storicoTableBody.innerHTML = '';
+    }
+
+    function openAddModal() {
+      addOverlay.classList.add('open');
+      addOverlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeAddModal() {
+      addOverlay.classList.remove('open');
+      addOverlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      setAddFeedback('');
+      addSerieBody.innerHTML = '';
+      appendSerieRow();
+      appendSerieRow();
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      addDate.value = now.toISOString().slice(0, 16);
+    }
+
+    function appendSerieRow() {
+      const tr = document.createElement('tr');
+      const index = addSerieBody.children.length + 1;
+      tr.innerHTML = `
+        <td>${index}</td>
+        <td><input type="number" min="0" step="1" data-field="repsEffettive"></td>
+        <td><input type="number" min="0" step="0.5" data-field="caricoEffettivo"></td>
+        <td><input type="number" min="0" step="0.5" data-field="rpeEffettivo"></td>
+        <td><input type="text" data-field="note"></td>
+        <td><button type="button" class="btn" data-action="remove-serie">Rimuovi</button></td>
+      `;
+      addSerieBody.appendChild(tr);
+    }
+
+    function resetExerciseSelect() {
+      addSelect.innerHTML = '';
+      EXERCISES.forEach((exercise) => {
+        const opt = document.createElement('option');
+        opt.value = String(exercise.idEsercizio);
+        opt.textContent = exercise.nome;
+        addSelect.appendChild(opt);
+      });
+    }
+
+    function renderSessioneRow(item) {
+      const row = document.createElement('div');
+      row.className = 'sessione-item';
+
+      const meta = document.createElement('div');
+      meta.className = 'sessione-meta';
+
+      const title = document.createElement('span');
+      title.className = 'sessione-title-link';
+      title.textContent = item.nomeEsercizio || 'Esercizio';
+      title.dataset.esercizioId = String(item.idEsercizio || 0);
+
+      const preview = document.createElement('span');
+      preview.className = 'muted';
+      preview.textContent = `Ultima serie: Reps ${valOrDash(item.lastReps)} • Kg ${valOrDash(item.lastKg)}`;
+
+      meta.appendChild(title);
+      meta.appendChild(preview);
+      row.appendChild(meta);
+      listWrap.appendChild(row);
+    }
+
+    async function loadSessioni() {
+      setSessionError('');
+      try {
+        const params = new URLSearchParams({
+          programId: String(PROGRAM_ID),
+          cursor: '0',
+          limit: '30',
+        });
+        const res = await fetch(`api/get_sessioni.php?${params.toString()}`, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const payload = await res.json();
+        if (!res.ok || !payload.ok) {
+          throw new Error(payload.error || 'Errore caricamento sessioni');
+        }
+
+        listWrap.innerHTML = '';
+        (payload.items || []).forEach(renderSessioneRow);
+        emptyNode.style.display = listWrap.children.length ? 'none' : '';
+      } catch (error) {
+        setSessionError(error.message || 'Errore caricamento sessioni');
+      }
+    }
+
+    async function apriDettaglioEsercizio(esercizioId) {
+      modalFeedback.textContent = 'Caricamento...';
+      openDetailModal();
+      try {
+        const params = new URLSearchParams({
+          programId: String(PROGRAM_ID),
+          esercizioId: String(esercizioId),
+        });
+        const res = await fetch(`api/get_sessione_dettaglio.php?${params.toString()}`, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        const payload = await res.json();
+        if (!res.ok || !payload.ok) {
+          throw new Error(payload.error || 'Errore caricamento dettaglio');
+        }
+
+        modalFeedback.textContent = '';
+        modalExerciseTitle.textContent = payload.esercizio?.nome || 'Esercizio';
+        storicoTableBody.innerHTML = '';
+        (payload.serie || []).forEach((serie) => {
+          const tr = document.createElement('tr');
+          const tdData = document.createElement('td');
+          const tdReps = document.createElement('td');
+          const tdKg = document.createElement('td');
+          tdData.textContent = valOrDash(serie.svoltaIl);
+          tdReps.textContent = valOrDash(serie.repsEffettive);
+          tdKg.textContent = valOrDash(serie.caricoEffettivo);
+          tr.appendChild(tdData);
+          tr.appendChild(tdReps);
+          tr.appendChild(tdKg);
+          storicoTableBody.appendChild(tr);
+        });
+      } catch (error) {
+        modalFeedback.textContent = error.message || 'Errore caricamento dettaglio';
+      }
+    }
+
+    async function saveStoricoSessione() {
+      const esercizioId = Number(addSelect.value || 0);
+      if (!esercizioId) {
+        setAddFeedback('Seleziona un esercizio.', true);
+        return;
+      }
+      if (!addDate.value) {
+        setAddFeedback('Inserisci data e ora sessione.', true);
+        return;
+      }
+
+      const serie = Array.from(addSerieBody.querySelectorAll('tr')).map((row) => ({
+        repsEffettive: toNumberOrNull(row.querySelector('[data-field="repsEffettive"]').value),
+        caricoEffettivo: toNumberOrNull(row.querySelector('[data-field="caricoEffettivo"]').value),
+        rpeEffettivo: toNumberOrNull(row.querySelector('[data-field="rpeEffettivo"]').value),
+        note: row.querySelector('[data-field="note"]').value.trim() || null,
+      })).filter((item) => item.repsEffettive !== null || item.caricoEffettivo !== null || item.rpeEffettivo !== null || item.note);
+
+      if (!serie.length) {
+        setAddFeedback('Inserisci almeno una serie con valori.', true);
+        return;
+      }
+
+      setAddFeedback('Salvataggio...');
+      const res = await fetch('api/save_sessione_storico.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({
+          programId: PROGRAM_ID,
+          esercizioId,
+          svoltaIl: addDate.value,
+          serie,
+        }),
+      });
+      const payload = await res.json();
+      if (!res.ok || !payload.ok) {
+        throw new Error(payload.error || 'Errore salvataggio sessione');
+      }
+
+      setAddFeedback('Sessione salvata con successo.');
+      await loadSessioni();
+      closeAddModal();
+    }
+
+    loadMoreBtn.addEventListener('click', () => {
+      openAddModal();
+    });
+
+    listWrap.addEventListener('click', (event) => {
+      const link = event.target.closest('.sessione-title-link');
+      if (!link) return;
+      apriDettaglioEsercizio(Number(link.dataset.esercizioId || 0));
+    });
+
+    modalClose.addEventListener('click', closeDetailModal);
+    modalCancel.addEventListener('click', closeDetailModal);
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) closeDetailModal();
+    });
+
+    addClose.addEventListener('click', closeAddModal);
+    addCancel.addEventListener('click', closeAddModal);
+    addOverlay.addEventListener('click', (event) => {
+      if (event.target === addOverlay) closeAddModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && overlay.classList.contains('open')) {
+        closeDetailModal();
+      }
+      if (event.key === 'Escape' && addOverlay.classList.contains('open')) {
+        closeAddModal();
+      }
+    });
+
+    addSerieBtn.addEventListener('click', appendSerieRow);
+    addSerieBody.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action="remove-serie"]');
+      if (!button) return;
+      const row = button.closest('tr');
+      if (!row) return;
+      row.remove();
+      Array.from(addSerieBody.querySelectorAll('tr')).forEach((tr, index) => {
+        const numCell = tr.querySelector('td');
+        if (numCell) numCell.textContent = String(index + 1);
+      });
+    });
+
+    addSaveBtn.addEventListener('click', async () => {
+      try {
+        await saveStoricoSessione();
+      } catch (error) {
+        setAddFeedback(error.message || 'Errore salvataggio sessione', true);
+      }
+    });
+
+    resetExerciseSelect();
+    closeAddModal();
+    loadSessioni();
   })();
 </script>
 <?php
