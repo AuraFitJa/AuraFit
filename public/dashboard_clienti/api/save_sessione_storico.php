@@ -40,7 +40,7 @@ if (!$dt) {
   exit;
 }
 
-$svoltaIlNormalized = $dt->format('Y-m-d H:i:00');
+$svoltaDb = $dt->format('Y-m-d H:i:00');
 
 $validateNumberOrNull = static function ($value, bool $allowFloat = true): ?float {
   if ($value === null || $value === '') {
@@ -119,7 +119,7 @@ try {
        AND giorno = ?
        AND svoltaIl = ?
      LIMIT 1',
-    [$clienteId, $programId, $giornoId, $svoltaIlNormalized]
+    [$clienteId, $programId, $giornoId, $svoltaDb]
   )->fetch();
 
   if ($sessioneEsistente) {
@@ -128,7 +128,7 @@ try {
     Database::exec(
       'INSERT INTO SessioniAllenamento (cliente, programma, giorno, svoltaIl)
        VALUES (?, ?, ?, ?)',
-      [$clienteId, $programId, $giornoId, $svoltaIlNormalized]
+      [$clienteId, $programId, $giornoId, $svoltaDb]
     );
 
     $sessioneId = (int)$pdo->lastInsertId();
@@ -165,6 +165,7 @@ try {
 
   echo json_encode(['ok' => true, 'idSessione' => $sessioneId]);
 } catch (Throwable $e) {
+  error_log('save_sessione_storico.php error: ' . $e->getMessage());
   if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
     $pdo->rollBack();
   }
