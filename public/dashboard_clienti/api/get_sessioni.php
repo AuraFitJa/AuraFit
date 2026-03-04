@@ -20,10 +20,7 @@ if ($programId <= 0 || $cursor < 0) {
   exit;
 }
 
-if ($limit <= 0) {
-  $limit = 20;
-}
-$limit = min($limit, 30);
+$limit = min(max((int)$limit, 1), 30);
 
 try {
   $cliente = Database::exec(
@@ -61,7 +58,6 @@ try {
     $whereCursor = ' AND eg.idEsercizioGiorno < ? ';
     $params[] = $cursor;
   }
-  $params[] = $limit;
 
   $rows = Database::exec(
     "SELECT
@@ -86,16 +82,16 @@ try {
       LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
       INNER JOIN (
         SELECT
-          COALESCE(ssk.esercizio, egpk.esercizio) AS exercise_id,
-          MAX(CONCAT(DATE_FORMAT(sak.svoltaIl, '%Y%m%d%H%i%S'), '-', LPAD(ssk.idSerieSvolta, 20, '0'))) AS maxKey
-        FROM SerieSvolte ssk
-        INNER JOIN SessioniAllenamento sak ON sak.idSessione = ssk.sessione
-        LEFT JOIN SeriePrescritte spk ON spk.idSeriePrescritta = ssk.seriePrescritta
-        LEFT JOIN EserciziGiorno egpk ON egpk.idEsercizioGiorno = spk.esercizioGiorno
-        WHERE sak.cliente = ?
-          AND sak.programma = ?
-          AND COALESCE(ssk.esercizio, egpk.esercizio) IS NOT NULL
-        GROUP BY COALESCE(ssk.esercizio, egpk.esercizio)
+          COALESCE(ss2.esercizio, egp2.esercizio) AS exercise_id,
+          MAX(CONCAT(DATE_FORMAT(sa2.svoltaIl, '%Y%m%d%H%i%S'), '-', LPAD(ss2.idSerieSvolta, 20, '0'))) AS maxKey
+        FROM SerieSvolte ss2
+        INNER JOIN SessioniAllenamento sa2 ON sa2.idSessione = ss2.sessione
+        LEFT JOIN SeriePrescritte sp2 ON sp2.idSeriePrescritta = ss2.seriePrescritta
+        LEFT JOIN EserciziGiorno egp2 ON egp2.idEsercizioGiorno = sp2.esercizioGiorno
+        WHERE sa2.cliente = ?
+          AND sa2.programma = ?
+          AND COALESCE(ss2.esercizio, egp2.esercizio) IS NOT NULL
+        GROUP BY COALESCE(ss2.esercizio, egp2.esercizio)
       ) lk
         ON lk.exercise_id = COALESCE(ss.esercizio, egp.esercizio)
        AND lk.maxKey = CONCAT(DATE_FORMAT(sa.svoltaIl, '%Y%m%d%H%i%S'), '-', LPAD(ss.idSerieSvolta, 20, '0'))
@@ -103,7 +99,7 @@ try {
     WHERE g.programma = ?
       {$whereCursor}
     ORDER BY eg.idEsercizioGiorno DESC
-    LIMIT ?",
+    LIMIT $limit",
     $params
   )->fetchAll();
 
