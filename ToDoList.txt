@@ -1,9 +1,10 @@
 TODO:
-[✅] controllare cosa succede quando utente pro è sia nutrizionista che pt 
+!![ ]Applicare la visualizzazione dei progressi negli esercizi nella dashboard professionista
 [ ] rework tab overview
-[ ] capire come/se/dove utilizzare immagini esecuzione esercizi
-[✅work in progress] sviluppare tab allenamenti
-[ ] come gestire il workout builder
 [ ] sviluppare tab nutrizionista
 [ ] implementare openfoodfacts api
 [ ] capire come implementare image to barcode senza registrare nel db img
+[✅] controllare cosa succede quando utente pro è sia nutrizionista che pt 
+[✅] capire come/se/dove utilizzare immagini esecuzione esercizi soluzione:(Non le usiamo)
+[✅work in progress] sviluppare tab allenamenti
+[✅] come gestire il workout builder
