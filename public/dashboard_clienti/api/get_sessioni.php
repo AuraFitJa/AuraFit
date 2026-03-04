@@ -54,7 +54,15 @@ try {
     exit;
   }
 
-  $params = [$clienteId, $programId, $programId];
+  $params = [
+    $clienteId,
+    $programId,
+    $clienteId,
+    $programId,
+    $clienteId,
+    $programId,
+    $programId,
+  ];
   $whereCursor = '';
   if ($cursor > 0) {
     $whereCursor = ' AND eg.idEsercizioGiorno < ? ';
@@ -67,34 +75,45 @@ try {
       eg.idEsercizioGiorno,
       e.idEsercizio,
       e.nome AS nomeEsercizio,
-      latest.repsEffettive AS lastReps,
-      latest.caricoEffettivo AS lastKg,
-      latest.svoltaIl AS lastSvoltaIl
+      (
+        SELECT ss2.repsEffettive
+        FROM SerieSvolte ss2
+        INNER JOIN SessioniAllenamento sa2 ON sa2.idSessione = ss2.sessione
+        LEFT JOIN SeriePrescritte sp2 ON sp2.idSeriePrescritta = ss2.seriePrescritta
+        LEFT JOIN EserciziGiorno egp2 ON egp2.idEsercizioGiorno = sp2.esercizioGiorno
+        WHERE sa2.cliente = ?
+          AND sa2.programma = ?
+          AND COALESCE(ss2.esercizio, egp2.esercizio) = e.idEsercizio
+        ORDER BY sa2.svoltaIl DESC, ss2.idSerieSvolta DESC
+        LIMIT 1
+      ) AS lastReps,
+      (
+        SELECT ss3.caricoEffettivo
+        FROM SerieSvolte ss3
+        INNER JOIN SessioniAllenamento sa3 ON sa3.idSessione = ss3.sessione
+        LEFT JOIN SeriePrescritte sp3 ON sp3.idSeriePrescritta = ss3.seriePrescritta
+        LEFT JOIN EserciziGiorno egp3 ON egp3.idEsercizioGiorno = sp3.esercizioGiorno
+        WHERE sa3.cliente = ?
+          AND sa3.programma = ?
+          AND COALESCE(ss3.esercizio, egp3.esercizio) = e.idEsercizio
+        ORDER BY sa3.svoltaIl DESC, ss3.idSerieSvolta DESC
+        LIMIT 1
+      ) AS lastKg,
+      (
+        SELECT sa4.svoltaIl
+        FROM SerieSvolte ss4
+        INNER JOIN SessioniAllenamento sa4 ON sa4.idSessione = ss4.sessione
+        LEFT JOIN SeriePrescritte sp4 ON sp4.idSeriePrescritta = ss4.seriePrescritta
+        LEFT JOIN EserciziGiorno egp4 ON egp4.idEsercizioGiorno = sp4.esercizioGiorno
+        WHERE sa4.cliente = ?
+          AND sa4.programma = ?
+          AND COALESCE(ss4.esercizio, egp4.esercizio) = e.idEsercizio
+        ORDER BY sa4.svoltaIl DESC, ss4.idSerieSvolta DESC
+        LIMIT 1
+      ) AS lastSvoltaIl
     FROM EserciziGiorno eg
     INNER JOIN GiorniAllenamento g ON g.idGiorno = eg.giorno
     INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
-    LEFT JOIN (
-      SELECT t.esercizioId, t.repsEffettive, t.caricoEffettivo, t.svoltaIl
-      FROM (
-        SELECT
-          COALESCE(ss.esercizio, egp.esercizio) AS esercizioId,
-          ss.repsEffettive,
-          ss.caricoEffettivo,
-          sa.svoltaIl,
-          ss.idSerieSvolta,
-          ROW_NUMBER() OVER (
-            PARTITION BY COALESCE(ss.esercizio, egp.esercizio)
-            ORDER BY sa.svoltaIl DESC, ss.idSerieSvolta DESC
-          ) AS rn
-        FROM SerieSvolte ss
-        INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
-        LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
-        LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
-        WHERE sa.cliente = ?
-          AND sa.programma = ?
-      ) t
-      WHERE t.rn = 1
-    ) latest ON latest.esercizioId = e.idEsercizio
     WHERE g.programma = ?
       {$whereCursor}
     ORDER BY eg.idEsercizioGiorno DESC
