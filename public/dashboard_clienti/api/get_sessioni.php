@@ -43,7 +43,7 @@ try {
      FROM AssegnazioniProgramma
      WHERE programma = ?
        AND cliente = ?
-       AND stato = 'attivo'
+       AND stato IN ('attivo', 'attiva')
      LIMIT 1",
     [$programId, $clienteId]
   )->fetch();
