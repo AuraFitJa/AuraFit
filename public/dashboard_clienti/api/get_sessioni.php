@@ -12,6 +12,7 @@ if (!$dbAvailable) {
 $programId = (int)($_GET['programId'] ?? 0);
 $cursor = (int)($_GET['cursor'] ?? 0);
 $limit = (int)($_GET['limit'] ?? 20);
+$debug = (int)($_GET['debug'] ?? 0) === 1;
 
 if ($programId <= 0 || $cursor < 0) {
   http_response_code(422);
@@ -54,15 +55,7 @@ try {
     exit;
   }
 
-  $params = [
-    $clienteId,
-    $programId,
-    $clienteId,
-    $programId,
-    $clienteId,
-    $programId,
-    $programId,
-  ];
+  $params = [$clienteId, $programId, $programId];
   $whereCursor = '';
   if ($cursor > 0) {
     $whereCursor = ' AND eg.idEsercizioGiorno < ? ';
@@ -71,69 +64,34 @@ try {
   $params[] = $limit;
 
   $rows = Database::exec(
-    "SELECT
+    "WITH last_per_exercise AS (
+      SELECT
+        COALESCE(ss.esercizio, egp.esercizio) AS exercise_id,
+        ss.repsEffettive,
+        ss.caricoEffettivo,
+        sa.svoltaIl,
+        ROW_NUMBER() OVER (
+          PARTITION BY COALESCE(ss.esercizio, egp.esercizio)
+          ORDER BY sa.svoltaIl DESC, ss.idSerieSvolta DESC
+        ) AS rn
+      FROM SerieSvolte ss
+      INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
+      LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
+      LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
+      WHERE sa.cliente = ? AND sa.programma = ?
+    )
+    SELECT
       eg.idEsercizioGiorno,
       e.idEsercizio,
       e.nome AS nomeEsercizio,
-      last.repsEffettive AS lastReps,
-      last.caricoEffettivo AS lastKg,
-      last.svoltaIl AS lastSvoltaIl
+      l.repsEffettive AS lastReps,
+      l.caricoEffettivo AS lastKg,
+      l.svoltaIl AS lastSvoltaIl
     FROM EserciziGiorno eg
     INNER JOIN GiorniAllenamento g ON g.idGiorno = eg.giorno
     INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
-    LEFT JOIN (
-      SELECT z.exercise_id, z.repsEffettive, z.caricoEffettivo, z.svoltaIl
-      FROM (
-        SELECT
-          COALESCE(ss.esercizio, egp.esercizio) AS exercise_id,
-          ss.repsEffettive,
-          ss.caricoEffettivo,
-          sa.svoltaIl,
-          ss.idSerieSvolta
-        FROM SerieSvolte ss
-        INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
-        LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
-        LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
-        WHERE sa.cliente = ?
-          AND sa.programma = ?
-      ) z
-      INNER JOIN (
-        SELECT pick.exercise_id, pick.svoltaIl, MAX(pick.idSerieSvolta) AS maxSerieId
-        FROM (
-          SELECT
-            COALESCE(ss.esercizio, egp.esercizio) AS exercise_id,
-            sa.svoltaIl,
-            ss.idSerieSvolta
-          FROM SerieSvolte ss
-          INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
-          LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
-          LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
-          INNER JOIN (
-            SELECT t.exercise_id, MAX(t.svoltaIl) AS maxSvoltaIl
-            FROM (
-              SELECT
-                COALESCE(ss.esercizio, egp.esercizio) AS exercise_id,
-                sa.svoltaIl
-              FROM SerieSvolte ss
-              INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
-              LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
-              LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
-              WHERE sa.cliente = ?
-                AND sa.programma = ?
-            ) t
-            GROUP BY t.exercise_id
-          ) m
-            ON m.exercise_id = COALESCE(ss.esercizio, egp.esercizio)
-           AND m.maxSvoltaIl = sa.svoltaIl
-          WHERE sa.cliente = ?
-            AND sa.programma = ?
-        ) pick
-        GROUP BY pick.exercise_id, pick.svoltaIl
-      ) chosen
-        ON chosen.exercise_id = z.exercise_id
-       AND chosen.svoltaIl = z.svoltaIl
-       AND chosen.maxSerieId = z.idSerieSvolta
-    ) last ON last.exercise_id = e.idEsercizio
+    LEFT JOIN last_per_exercise l
+      ON l.exercise_id = e.idEsercizio AND l.rn = 1
     WHERE g.programma = ?
       {$whereCursor}
     ORDER BY eg.idEsercizioGiorno DESC
@@ -166,5 +124,9 @@ try {
 } catch (Throwable $e) {
   error_log('get_sessioni.php error: ' . $e->getMessage());
   http_response_code(500);
-  echo json_encode(['ok' => false, 'error' => 'Errore caricamento sessioni.']);
+  echo json_encode([
+    'ok' => false,
+    'error' => $debug ? ('Errore caricamento sessioni: ' . $e->getMessage()) : 'Errore caricamento sessioni.',
+  ]);
+  exit;
 }
