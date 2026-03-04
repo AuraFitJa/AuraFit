@@ -11,7 +11,7 @@ if (!$dbAvailable) {
 
 $programId = (int)($_GET['programId'] ?? 0);
 $cursor = (int)($_GET['cursor'] ?? 0);
-$limit = (int)($_GET['limit'] ?? 10);
+$limit = (int)($_GET['limit'] ?? 20);
 
 if ($programId <= 0 || $cursor < 0) {
   http_response_code(422);
@@ -20,7 +20,7 @@ if ($programId <= 0 || $cursor < 0) {
 }
 
 if ($limit <= 0) {
-  $limit = 10;
+  $limit = 20;
 }
 $limit = min($limit, 30);
 
@@ -54,52 +54,69 @@ try {
     exit;
   }
 
-  if ($cursor === 0) {
-    $rows = Database::exec(
-      'SELECT sa.idSessione, sa.svoltaIl, sa.durataMinuti, sa.noteSessione,
-              g.nome AS giornoNome,
-              (SELECT COUNT(*) FROM SerieSvolte ss WHERE ss.sessione = sa.idSessione) AS totSerie
-       FROM SessioniAllenamento sa
-       LEFT JOIN GiorniAllenamento g ON g.idGiorno = sa.giorno
-       WHERE sa.cliente = ?
-         AND sa.programma = ?
-       ORDER BY sa.svoltaIl DESC, sa.idSessione DESC
-       LIMIT ?',
-      [$clienteId, $programId, $limit]
-    )->fetchAll();
-  } else {
-    $rows = Database::exec(
-      'SELECT sa.idSessione, sa.svoltaIl, sa.durataMinuti, sa.noteSessione,
-              g.nome AS giornoNome,
-              (SELECT COUNT(*) FROM SerieSvolte ss WHERE ss.sessione = sa.idSessione) AS totSerie
-       FROM SessioniAllenamento sa
-       LEFT JOIN GiorniAllenamento g ON g.idGiorno = sa.giorno
-       WHERE sa.cliente = ?
-         AND sa.programma = ?
-         AND sa.idSessione < ?
-       ORDER BY sa.svoltaIl DESC, sa.idSessione DESC
-       LIMIT ?',
-      [$clienteId, $programId, $cursor, $limit]
-    )->fetchAll();
+  $params = [$clienteId, $programId, $programId];
+  $whereCursor = '';
+  if ($cursor > 0) {
+    $whereCursor = ' AND eg.idEsercizioGiorno < ? ';
+    $params[] = $cursor;
   }
+  $params[] = $limit;
+
+  $rows = Database::exec(
+    "SELECT
+      eg.idEsercizioGiorno,
+      e.idEsercizio,
+      e.nome AS nomeEsercizio,
+      latest.repsEffettive AS lastReps,
+      latest.caricoEffettivo AS lastKg,
+      latest.svoltaIl AS lastSvoltaIl
+    FROM EserciziGiorno eg
+    INNER JOIN GiorniAllenamento g ON g.idGiorno = eg.giorno
+    INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
+    LEFT JOIN (
+      SELECT t.esercizioId, t.repsEffettive, t.caricoEffettivo, t.svoltaIl
+      FROM (
+        SELECT
+          COALESCE(ss.esercizio, egp.esercizio) AS esercizioId,
+          ss.repsEffettive,
+          ss.caricoEffettivo,
+          sa.svoltaIl,
+          ss.idSerieSvolta,
+          ROW_NUMBER() OVER (
+            PARTITION BY COALESCE(ss.esercizio, egp.esercizio)
+            ORDER BY sa.svoltaIl DESC, ss.idSerieSvolta DESC
+          ) AS rn
+        FROM SerieSvolte ss
+        INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
+        LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
+        LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
+        WHERE sa.cliente = ?
+          AND sa.programma = ?
+      ) t
+      WHERE t.rn = 1
+    ) latest ON latest.esercizioId = e.idEsercizio
+    WHERE g.programma = ?
+      {$whereCursor}
+    ORDER BY eg.idEsercizioGiorno DESC
+    LIMIT ?",
+    $params
+  )->fetchAll();
 
   $items = [];
   foreach ($rows as $row) {
     $items[] = [
-      'idSessione' => (int)$row['idSessione'],
-      'svoltaIl' => $row['svoltaIl'],
-      'giornoNome' => $row['giornoNome'],
-      'durataMinuti' => $row['durataMinuti'] !== null ? (int)$row['durataMinuti'] : null,
-      'totSerie' => (int)$row['totSerie'],
+      'cursorId' => (int)$row['idEsercizioGiorno'],
+      'idEsercizio' => (int)$row['idEsercizio'],
+      'nomeEsercizio' => (string)$row['nomeEsercizio'],
+      'lastReps' => $row['lastReps'] !== null ? (float)$row['lastReps'] : null,
+      'lastKg' => $row['lastKg'] !== null ? (float)$row['lastKg'] : null,
+      'lastSvoltaIl' => $row['lastSvoltaIl'],
     ];
   }
 
   $nextCursor = 0;
-  if (!empty($items)) {
-    $nextCursor = (int)$items[count($items) - 1]['idSessione'];
-    if (count($items) < $limit) {
-      $nextCursor = 0;
-    }
+  if (!empty($items) && count($items) === $limit) {
+    $nextCursor = (int)$items[count($items) - 1]['cursorId'];
   }
 
   echo json_encode([
