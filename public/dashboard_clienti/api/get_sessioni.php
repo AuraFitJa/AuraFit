@@ -64,34 +64,42 @@ try {
   $params[] = $limit;
 
   $rows = Database::exec(
-    "WITH last_per_exercise AS (
+    "SELECT
+      eg.idEsercizioGiorno,
+      e.idEsercizio,
+      e.nome AS nomeEsercizio,
+      lr.repsEffettive AS lastReps,
+      lr.caricoEffettivo AS lastKg,
+      lr.svoltaIl AS lastSvoltaIl
+    FROM EserciziGiorno eg
+    INNER JOIN GiorniAllenamento g ON g.idGiorno = eg.giorno
+    INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
+    LEFT JOIN (
       SELECT
         COALESCE(ss.esercizio, egp.esercizio) AS exercise_id,
         ss.repsEffettive,
         ss.caricoEffettivo,
-        sa.svoltaIl,
-        ROW_NUMBER() OVER (
-          PARTITION BY COALESCE(ss.esercizio, egp.esercizio)
-          ORDER BY sa.svoltaIl DESC, ss.idSerieSvolta DESC
-        ) AS rn
+        sa.svoltaIl
       FROM SerieSvolte ss
       INNER JOIN SessioniAllenamento sa ON sa.idSessione = ss.sessione
       LEFT JOIN SeriePrescritte sp ON sp.idSeriePrescritta = ss.seriePrescritta
       LEFT JOIN EserciziGiorno egp ON egp.idEsercizioGiorno = sp.esercizioGiorno
-      WHERE sa.cliente = ? AND sa.programma = ?
-    )
-    SELECT
-      eg.idEsercizioGiorno,
-      e.idEsercizio,
-      e.nome AS nomeEsercizio,
-      l.repsEffettive AS lastReps,
-      l.caricoEffettivo AS lastKg,
-      l.svoltaIl AS lastSvoltaIl
-    FROM EserciziGiorno eg
-    INNER JOIN GiorniAllenamento g ON g.idGiorno = eg.giorno
-    INNER JOIN Esercizi e ON e.idEsercizio = eg.esercizio
-    LEFT JOIN last_per_exercise l
-      ON l.exercise_id = e.idEsercizio AND l.rn = 1
+      INNER JOIN (
+        SELECT
+          COALESCE(ssk.esercizio, egpk.esercizio) AS exercise_id,
+          MAX(CONCAT(DATE_FORMAT(sak.svoltaIl, '%Y%m%d%H%i%S'), '-', LPAD(ssk.idSerieSvolta, 20, '0'))) AS maxKey
+        FROM SerieSvolte ssk
+        INNER JOIN SessioniAllenamento sak ON sak.idSessione = ssk.sessione
+        LEFT JOIN SeriePrescritte spk ON spk.idSeriePrescritta = ssk.seriePrescritta
+        LEFT JOIN EserciziGiorno egpk ON egpk.idEsercizioGiorno = spk.esercizioGiorno
+        WHERE sak.cliente = ?
+          AND sak.programma = ?
+          AND COALESCE(ssk.esercizio, egpk.esercizio) IS NOT NULL
+        GROUP BY COALESCE(ssk.esercizio, egpk.esercizio)
+      ) lk
+        ON lk.exercise_id = COALESCE(ss.esercizio, egp.esercizio)
+       AND lk.maxKey = CONCAT(DATE_FORMAT(sa.svoltaIl, '%Y%m%d%H%i%S'), '-', LPAD(ss.idSerieSvolta, 20, '0'))
+    ) lr ON lr.exercise_id = e.idEsercizio
     WHERE g.programma = ?
       {$whereCursor}
     ORDER BY eg.idEsercizioGiorno DESC
@@ -121,6 +129,7 @@ try {
     'items' => $items,
     'nextCursor' => $nextCursor,
   ]);
+  exit;
 } catch (Throwable $e) {
   error_log('get_sessioni.php error: ' . $e->getMessage());
   http_response_code(500);
