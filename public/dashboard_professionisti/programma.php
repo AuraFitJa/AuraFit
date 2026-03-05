@@ -122,10 +122,10 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
   <h3>Assegna a cliente</h3>
   <form class="inline-form" data-assign-form>
     <input type="hidden" name="idProgramma" value="<?= (int)$program['idProgramma'] ?>" />
-    <select class="dark-select" name="idCliente" required>
-      <option value="">Seleziona cliente</option>
+    <select class="dark-select" name="idCliente" required style="background:#0b1220;color:var(--text)">
+      <option value="" style="background:#0b1220;color:var(--text)">Seleziona cliente</option>
       <?php foreach ($clients as $client): ?>
-        <option value="<?= (int)$client['idCliente'] ?>"><?= h(trim((string)$client['nome'] . ' ' . (string)$client['cognome'])) ?></option>
+        <option value="<?= (int)$client['idCliente'] ?>" style="background:#0b1220;color:var(--text)"><?= h(trim((string)$client['nome'] . ' ' . (string)$client['cognome'])) ?></option>
       <?php endforeach; ?>
     </select>
     <button class="btn primary" type="submit">Assegna programma</button>
