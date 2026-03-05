@@ -1,5 +1,7 @@
 TODO:
 !![ ]Applicare la visualizzazione dei progressi negli esercizi nella dashboard professionista
+[ ] fix bg color su dashboard cliente
+[ ] ipotetico fix/ottimizzazione su scroll card aggiungi serie esercizio assegnato
 [ ] rework tab overview
 [ ] sviluppare tab nutrizionista
 [ ] implementare openfoodfacts api
