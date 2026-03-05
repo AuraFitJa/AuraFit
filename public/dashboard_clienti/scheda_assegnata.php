@@ -84,6 +84,30 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
 ?>
 <link rel="stylesheet" href="../assets/css/allenamenti.css" />
 <style>
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .card,
+  .workout-shell {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .program-meta,
+  .exercise-block,
+  .toolbar {
+    min-width: 0;
+  }
+  .set-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .set-table {
+    width: 100%;
+    min-width: 600px;
+  }
   .exercise-block {
     cursor: pointer;
     transition: transform .18s ease, box-shadow .18s ease;
