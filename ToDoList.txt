@@ -1,5 +1,5 @@
 TODO:
-[!] Applicare la visualizzazione dei progressi negli esercizi nella dashboard professionista
+[✅] Applicare la visualizzazione dei progressi negli esercizi nella dashboard professionista
 [ ] su scheda_cliente.php?idCliente=x applicare hide/show logic to card "Storico associazioni con questo cliente"
 [ ] implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
 [ ] ipotetico fix/ottimizzazione su scroll card aggiungi serie esercizio assegnato
