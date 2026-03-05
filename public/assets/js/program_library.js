@@ -115,6 +115,101 @@
     });
   });
 
+
+  const deleteFolderModal = document.querySelector('[data-delete-folder-modal]');
+  const cancelDeleteFolderBtn = document.querySelector('[data-cancel-delete-folder]');
+  const confirmDeleteFolderBtn = document.querySelector('[data-confirm-delete-folder]');
+  const deleteFolderName = document.querySelector('[data-delete-folder-name]');
+  const deleteFolderFeedback = document.querySelector('[data-delete-folder-feedback]');
+  let deleteFolderId = null;
+
+  function resetDeleteFolderModalState() {
+    if (deleteFolderFeedback) {
+      deleteFolderFeedback.textContent = '';
+    }
+    if (confirmDeleteFolderBtn) {
+      confirmDeleteFolderBtn.disabled = false;
+      confirmDeleteFolderBtn.textContent = 'Elimina';
+    }
+  }
+
+  function closeDeleteFolderModal() {
+    toggleModal(deleteFolderModal, false);
+    deleteFolderId = null;
+    if (deleteFolderName) {
+      deleteFolderName.textContent = '';
+    }
+    resetDeleteFolderModalState();
+  }
+
+  document.querySelectorAll('[data-delete-cartella]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const folderId = Number(btn.getAttribute('data-delete-cartella'));
+      if (!folderId) {
+        return;
+      }
+
+      deleteFolderId = folderId;
+      if (deleteFolderName) {
+        const folderName = btn.getAttribute('data-folder-name') || '';
+        deleteFolderName.textContent = folderName ? `Cartella: ${folderName}` : '';
+      }
+      resetDeleteFolderModalState();
+      toggleModal(deleteFolderModal, true);
+    });
+  });
+
+  deleteFolderModal?.addEventListener('click', (event) => {
+    if (event.target === deleteFolderModal) {
+      closeDeleteFolderModal();
+    }
+  });
+
+  cancelDeleteFolderBtn?.addEventListener('click', () => {
+    closeDeleteFolderModal();
+  });
+
+  confirmDeleteFolderBtn?.addEventListener('click', async () => {
+    if (!deleteFolderId) {
+      return;
+    }
+
+    confirmDeleteFolderBtn.disabled = true;
+    confirmDeleteFolderBtn.textContent = 'Eliminazione...';
+    if (deleteFolderFeedback) {
+      deleteFolderFeedback.textContent = '';
+    }
+
+    try {
+      const res = await fetch('api/delete_cartella.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ idCartella: deleteFolderId })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Errore eliminazione cartella.');
+      }
+
+      const folderCard = document.querySelector(`[data-folder-card="${deleteFolderId}"]`);
+      folderCard?.remove();
+      closeDeleteFolderModal();
+    } catch (error) {
+      if (deleteFolderFeedback) {
+        deleteFolderFeedback.textContent = error.message || 'Errore eliminazione cartella.';
+      }
+      confirmDeleteFolderBtn.disabled = false;
+      confirmDeleteFolderBtn.textContent = 'Elimina';
+    }
+  });
+
   const deleteProgramModal = document.querySelector('[data-delete-program-modal]');
   const cancelDeleteProgramBtn = document.querySelector('[data-cancel-delete-program]');
   const confirmDeleteProgramBtn = document.querySelector('[data-confirm-delete-program]');
