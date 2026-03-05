@@ -7,6 +7,7 @@ TODO:
 [ ] sviluppare tab nutrizionista
 [ ] implementare openfoodfacts api
 [ ] capire come implementare image to barcode senza registrare nel db img
+[ ] rework Readme
 [✅] fix bg color su dashboard cliente
 [✅] controllare cosa succede quando utente pro è sia nutrizionista che pt 
 [✅] capire come/se/dove utilizzare immagini esecuzione esercizi soluzione:(Non le usiamo)
