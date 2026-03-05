@@ -4,6 +4,7 @@ TODO:
   [!!] Tab Scheda Cliente REWORK ASAP 
   [ ] Tab ID-Key card Gestione ID-Key
   [ ] Tab Clienti card Gestione Clienti
+[ ] Uniformare il bg color come in Allenamenti(PT)
 [✅] su scheda_cliente.php?idCliente=x applicare hide/show logic to card "Storico associazioni con questo cliente"
 [ ] implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
 [ ] ipotetico fix/ottimizzazione su scroll card aggiungi serie esercizio assegnato
