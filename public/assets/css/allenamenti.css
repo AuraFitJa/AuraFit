@@ -22,7 +22,10 @@ body {
 .folder-card,.program-card,.day-card,.add-day-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px}
 .folder-item{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px}
 .folder-link{display:flex;align-items:center;min-height:52px;text-decoration:none;color:#f6f7fb;flex:1;min-width:0}
+.folder-link>div{min-width:0}
 .folder-link strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-link [data-folder-description]{margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.folder-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .folder-create{display:grid;place-items:center;cursor:pointer;background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.35)}
 .program-card{cursor:pointer;text-align:left}
 .program-card h4,.day-card h3{margin:0 0 6px}

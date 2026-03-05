@@ -48,17 +48,32 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
 
     <div class="folder-grid">
       <?php foreach ($folders as $folder): ?>
+        <?php $folderDescription = trim((string)($folder['descrizione'] ?? '')); ?>
         <article class="folder-card folder-item" data-folder-card="<?= (int)$folder['idCartella'] ?>">
           <a class="folder-link" href="allenamenti.php?cartella=<?= (int)$folder['idCartella'] ?>">
-            <strong>📁 <?= h((string)$folder['nome']) ?></strong>
+            <div>
+              <strong data-folder-title>📁 <?= h((string)$folder['nome']) ?></strong>
+              <p class="muted-sm" data-folder-description <?= $folderDescription === '' ? 'hidden' : '' ?>><?= h($folderDescription) ?></p>
+            </div>
           </a>
-          <button
-            type="button"
-            class="icon-btn danger"
-            data-delete-cartella="<?= (int)$folder['idCartella'] ?>"
-            data-folder-name="<?= h((string)$folder['nome']) ?>"
-            aria-label="Elimina cartella"
-          >🗑</button>
+          <div class="folder-actions">
+            <button
+              type="button"
+              class="icon-btn"
+              data-edit-cartella="<?= (int)$folder['idCartella'] ?>"
+              data-cartella-nome="<?= h((string)$folder['nome']) ?>"
+              data-cartella-descrizione="<?= h($folderDescription) ?>"
+              aria-label="Modifica cartella"
+              title="Modifica cartella"
+            >✎</button>
+            <button
+              type="button"
+              class="icon-btn danger"
+              data-delete-cartella="<?= (int)$folder['idCartella'] ?>"
+              data-folder-name="<?= h((string)$folder['nome']) ?>"
+              aria-label="Elimina cartella"
+            >🗑</button>
+          </div>
         </article>
       <?php endforeach; ?>
 
@@ -104,11 +119,13 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
 
 <div class="modal-layer" data-folder-modal>
   <div class="modal-card">
-    <h3>Nuova cartella</h3>
+    <h3 data-folder-modal-title>Crea nuova cartella</h3>
     <form data-folder-form>
       <input class="dark-input" name="nome" placeholder="Titolo cartella" required />
+      <textarea class="dark-textarea" name="descrizione" placeholder="Descrizione (opzionale)"></textarea>
+      <p class="muted-sm" data-folder-feedback></p>
       <div class="library-toolbar">
-        <button class="btn primary" type="submit">Crea</button>
+        <button class="btn primary" type="submit" data-folder-submit>Crea cartella</button>
         <button class="btn" type="button" data-close-folder-modal>Annulla</button>
       </div>
     </form>

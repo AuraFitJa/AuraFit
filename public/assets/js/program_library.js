@@ -19,12 +19,48 @@
 
   const folderModal = document.querySelector('[data-folder-modal]');
   const programModal = document.querySelector('[data-program-modal]');
+  const folderModalTitle = folderModal?.querySelector('[data-folder-modal-title]');
+  const folderFeedback = folderModal?.querySelector('[data-folder-feedback]');
+  const folderSubmitBtn = folderModal?.querySelector('[data-folder-submit]');
+  const folderNomeInput = folderModal?.querySelector('[name="nome"]');
+  const folderDescrizioneInput = folderModal?.querySelector('[name="descrizione"]');
+  let modalMode = 'create';
+  let editingCartellaId = null;
+
+  function resetFolderFeedback() {
+    if (folderFeedback) {
+      folderFeedback.textContent = '';
+    }
+  }
+
+  function setFolderModalState(mode, payload = {}) {
+    modalMode = mode;
+    editingCartellaId = mode === 'edit' ? Number(payload.idCartella || 0) : null;
+
+    if (folderModalTitle) {
+      folderModalTitle.textContent = mode === 'edit' ? 'Modifica cartella' : 'Crea nuova cartella';
+    }
+    if (folderSubmitBtn) {
+      folderSubmitBtn.textContent = mode === 'edit' ? 'Salva modifiche' : 'Crea cartella';
+      folderSubmitBtn.disabled = false;
+    }
+    if (folderNomeInput) {
+      folderNomeInput.value = mode === 'edit' ? (payload.nome || '') : '';
+    }
+    if (folderDescrizioneInput) {
+      folderDescrizioneInput.value = mode === 'edit' ? (payload.descrizione || '') : '';
+    }
+
+    resetFolderFeedback();
+  }
 
   document.querySelector('[data-open-folder-modal]')?.addEventListener('click', () => {
+    setFolderModalState('create');
     toggleModal(folderModal, true);
   });
 
   document.querySelector('[data-close-folder-modal]')?.addEventListener('click', () => {
+    setFolderModalState('create');
     toggleModal(folderModal, false);
   });
 
@@ -43,6 +79,7 @@
 
   folderModal?.addEventListener('click', (event) => {
     if (event.target === folderModal) {
+      setFolderModalState('create');
       toggleModal(folderModal, false);
     }
   });
@@ -57,12 +94,102 @@
   if (folderForm) {
     folderForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nome = folderForm.querySelector('[name="nome"]').value.trim();
-      if (!nome) return;
-      await postForm('createFolder', { nome });
-      window.location.reload();
+      const nome = folderNomeInput?.value.trim() || '';
+      const descrizione = folderDescrizioneInput?.value.trim() || '';
+      if (!nome) {
+        if (folderFeedback) {
+          folderFeedback.textContent = 'Inserisci un nome cartella.';
+        }
+        return;
+      }
+
+      if (folderSubmitBtn) {
+        folderSubmitBtn.disabled = true;
+      }
+      resetFolderFeedback();
+
+      try {
+        if (modalMode === 'edit') {
+          if (!editingCartellaId) {
+            throw new Error('Cartella non valida.');
+          }
+
+          const res = await fetch('api/update_cartella.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+              idCartella: editingCartellaId,
+              nome,
+              descrizione: descrizione || null
+            })
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || 'Errore aggiornamento cartella.');
+          }
+
+          const folderCard = document.querySelector(`[data-folder-card="${editingCartellaId}"]`);
+          const folderTitle = folderCard?.querySelector('[data-folder-title]');
+          const folderDescription = folderCard?.querySelector('[data-folder-description]');
+          const editBtn = folderCard?.querySelector('[data-edit-cartella]');
+          const deleteBtn = folderCard?.querySelector('[data-delete-cartella]');
+
+          if (folderTitle) {
+            folderTitle.textContent = `📁 ${nome}`;
+          }
+          if (folderDescription) {
+            folderDescription.textContent = descrizione;
+            folderDescription.hidden = !descrizione;
+          }
+          if (editBtn) {
+            editBtn.setAttribute('data-cartella-nome', nome);
+            editBtn.setAttribute('data-cartella-descrizione', descrizione);
+          }
+          if (deleteBtn) {
+            deleteBtn.setAttribute('data-folder-name', nome);
+          }
+
+          setFolderModalState('create');
+          toggleModal(folderModal, false);
+          return;
+        }
+
+        await postForm('createFolder', { nome });
+        window.location.reload();
+      } catch (error) {
+        if (folderFeedback) {
+          folderFeedback.textContent = error.message || 'Errore salvataggio cartella.';
+        }
+      } finally {
+        if (folderSubmitBtn) {
+          folderSubmitBtn.disabled = false;
+        }
+      }
     });
   }
+
+  document.querySelectorAll('[data-edit-cartella]').forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const idCartella = Number(btn.getAttribute('data-edit-cartella'));
+      if (!idCartella) {
+        return;
+      }
+
+      setFolderModalState('edit', {
+        idCartella,
+        nome: btn.getAttribute('data-cartella-nome') || '',
+        descrizione: btn.getAttribute('data-cartella-descrizione') || ''
+      });
+      toggleModal(folderModal, true);
+    });
+  });
 
   const programForm = document.querySelector('[data-program-form]');
   if (programForm) {
