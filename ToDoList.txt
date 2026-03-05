@@ -1,11 +1,11 @@
 TODO:
 !![ ]Applicare la visualizzazione dei progressi negli esercizi nella dashboard professionista
-[ ] fix bg color su dashboard cliente
 [ ] ipotetico fix/ottimizzazione su scroll card aggiungi serie esercizio assegnato
 [ ] rework tab overview
 [ ] sviluppare tab nutrizionista
 [ ] implementare openfoodfacts api
 [ ] capire come implementare image to barcode senza registrare nel db img
+[✅] fix bg color su dashboard cliente
 [✅] controllare cosa succede quando utente pro è sia nutrizionista che pt 
 [✅] capire come/se/dove utilizzare immagini esecuzione esercizi soluzione:(Non le usiamo)
 [✅work in progress] sviluppare tab allenamenti
