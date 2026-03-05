@@ -48,9 +48,18 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
 
     <div class="folder-grid">
       <?php foreach ($folders as $folder): ?>
-        <a class="folder-card folder-link" href="allenamenti.php?cartella=<?= (int)$folder['idCartella'] ?>">
-          <strong>📁 <?= h((string)$folder['nome']) ?></strong>
-        </a>
+        <article class="folder-card folder-item" data-folder-card="<?= (int)$folder['idCartella'] ?>">
+          <a class="folder-link" href="allenamenti.php?cartella=<?= (int)$folder['idCartella'] ?>">
+            <strong>📁 <?= h((string)$folder['nome']) ?></strong>
+          </a>
+          <button
+            type="button"
+            class="icon-btn danger"
+            data-delete-cartella="<?= (int)$folder['idCartella'] ?>"
+            data-folder-name="<?= h((string)$folder['nome']) ?>"
+            aria-label="Elimina cartella"
+          >🗑</button>
+        </article>
       <?php endforeach; ?>
 
       <button type="button" class="folder-card folder-create" data-open-folder-modal>
@@ -106,6 +115,19 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
   </div>
 </div>
 
+
+<div class="modal-layer" data-delete-folder-modal>
+  <div class="modal-card">
+    <h3>Eliminare cartella?</h3>
+    <p class="muted-sm">Questa azione rimuoverà la cartella. I programmi dentro non verranno eliminati.</p>
+    <p class="muted-sm" data-delete-folder-name></p>
+    <p class="muted-sm" data-delete-folder-feedback></p>
+    <div class="library-toolbar" style="justify-content:flex-end">
+      <button class="btn" type="button" data-cancel-delete-folder>Annulla</button>
+      <button class="btn danger" type="button" data-confirm-delete-folder>Elimina</button>
+    </div>
+  </div>
+</div>
 <div class="modal-layer" data-program-modal data-program-folder-id="<?= $selectedFolder ? (int)$selectedFolder['idCartella'] : 0 ?>">
   <div class="modal-card">
     <h3>Nuovo programma</h3>
