@@ -5,9 +5,10 @@ TODO:
   [ ] Tab ID-Key card Gestione ID-Key
   [ ] Tab Clienti card Gestione Clienti
 [ ] Uniformare il bg color come in Allenamenti(PT)
+[ ] Fix colore nei dropdown select da impostare come in register
 [✅] su scheda_cliente.php?idCliente=x applicare hide/show logic to card "Storico associazioni con questo cliente"
 [ ] implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
-[ ] ipotetico fix/ottimizzazione su scroll card aggiungi serie esercizio assegnato
+[ ] fix bloccare lo scroll dietro la card "Aggiungi serie allenante" in dashboard cliente
 [ ] aggiungere nel DB esercizi "italianizzati"
 [ ] rework tab overview
 [ ] sviluppare tab nutrizionista
