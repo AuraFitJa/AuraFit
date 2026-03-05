@@ -1,5 +1,9 @@
 TODO:
 [✅] Applicare la visualizzazione dei progressi negli esercizi nella dashboard professionista
+[!] REWORK Interfaccia grafica Mobile dashboard Professionista
+  [!!] Tab Scheda Cliente REWORK ASAP 
+  [ ] Tab ID-Key card Gestione ID-Key
+  [ ] Tab Clienti card Gestione Clienti
 [ ] su scheda_cliente.php?idCliente=x applicare hide/show logic to card "Storico associazioni con questo cliente"
 [ ] implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
 [ ] ipotetico fix/ottimizzazione su scroll card aggiungi serie esercizio assegnato
