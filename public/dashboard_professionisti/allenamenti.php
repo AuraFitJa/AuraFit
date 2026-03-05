@@ -159,5 +159,93 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
     </form>
   </div>
 </div>
+<style>
+  .folder-card,
+  .folder-link,
+  .folder-actions {
+    position: relative;
+  }
+
+  .folder-link {
+    z-index: 1;
+  }
+
+  .folder-actions {
+    z-index: 6;
+    pointer-events: auto;
+  }
+
+  .icon-btn {
+    position: relative;
+    z-index: 7;
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+</style>
+<script>
+  (function () {
+    let lastTouchButton = null;
+    let lastTouchAt = 0;
+
+    function getEventTarget(target) {
+      if (target instanceof Element) {
+        return target;
+      }
+      return target && target.parentElement ? target.parentElement : null;
+    }
+
+    function handleFolderAction(event, source) {
+      const target = getEventTarget(event.target);
+      if (!target) {
+        return;
+      }
+
+      const editBtn = target.closest('[data-edit-cartella]');
+      if (editBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (source === 'touchend') {
+          lastTouchButton = editBtn;
+          lastTouchAt = Date.now();
+          editBtn.click();
+        }
+        return;
+      }
+
+      const delBtn = target.closest('[data-delete-cartella]');
+      if (delBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (source === 'touchend') {
+          lastTouchButton = delBtn;
+          lastTouchAt = Date.now();
+          delBtn.click();
+        }
+      }
+    }
+
+    document.addEventListener('click', function (event) {
+      const target = getEventTarget(event.target);
+      if (!target) {
+        return;
+      }
+
+      const actionBtn = target.closest('[data-edit-cartella],[data-delete-cartella]');
+      if (actionBtn && lastTouchButton === actionBtn && Date.now() - lastTouchAt < 700) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      handleFolderAction(event, 'click');
+    }, { passive: false });
+
+    document.addEventListener('touchend', function (event) {
+      handleFolderAction(event, 'touchend');
+    }, { passive: false });
+  })();
+</script>
 <?php
 renderEnd('<script src="../assets/js/program_library.js"></script>');
