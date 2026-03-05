@@ -228,9 +228,9 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     <form method="post" style="display:flex;gap:8px;flex-wrap:wrap">
       <input type="hidden" name="action" value="generate_idkey" />
       <?php if ($isPt && $isNutrizionista): ?>
-        <select name="tipo" class="field" style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.03);color:var(--text);border:1px solid rgba(255,255,255,.12)">
-          <option value="pt">PT</option>
-          <option value="nutrizionista">Nutrizionista</option>
+        <select name="tipo" class="field" style="padding:10px 12px;border-radius:12px;background:#0b1220;color:var(--text);border:1px solid rgba(255,255,255,.12)">
+          <option value="pt" style="background:#0b1220;color:var(--text)">PT</option>
+          <option value="nutrizionista" style="background:#0b1220;color:var(--text)">Nutrizionista</option>
         </select>
       <?php elseif ($isPt): ?>
         <input type="hidden" name="tipo" value="pt" />
