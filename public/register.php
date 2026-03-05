@@ -319,13 +319,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     select {
       appearance: none;
-      background: linear-gradient(135deg, rgba(109,94,243,.15), rgba(46,225,165,.1));
+      background: #0b1220;
       color: var(--text);
     }
 
     select option {
       background: #0b1220;
-      color: #EAF0FF;
+      color: var(--text);
     }
 
     .btn {
