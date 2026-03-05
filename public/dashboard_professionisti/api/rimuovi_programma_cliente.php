@@ -76,23 +76,21 @@ try {
      FROM AssegnazioniProgramma
      WHERE cliente = ?
        AND programma = ?
-       AND stato IN ('attivo', 'attiva')
      LIMIT 1",
     [$idCliente, $idProgramma]
   )->fetch();
 
   if (!$assegnazione) {
     http_response_code(404);
-    echo json_encode(['ok' => false, 'error' => 'Assegnazione attiva non trovata.']);
+    echo json_encode(['ok' => false, 'error' => 'Assegnazione non trovata.']);
     exit;
   }
 
   Database::exec(
     "UPDATE AssegnazioniProgramma
-     SET stato = 'revocato'
+     SET stato = 'rimosso'
      WHERE cliente = ?
        AND programma = ?
-       AND stato IN ('attivo', 'attiva')
      LIMIT 1",
     [$idCliente, $idProgramma]
   );
