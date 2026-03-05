@@ -182,6 +182,7 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
             <td><?= h((string)$programma['assegnatoIl']) ?></td>
             <td style="display:flex;gap:8px;flex-wrap:wrap">
               <a class="btn" href="programma.php?id=<?= (int)$programma['idProgramma'] ?>">Apri programma</a>
+              <a class="btn" href="progressi_programma.php?idCliente=<?= (int)$idCliente ?>&idProgramma=<?= (int)$programma['idProgramma'] ?>">Visualizza Progressi</a>
               <?php if (in_array((string)$programma['stato'], ['attivo', 'attiva'], true)): ?>
                 <button
                   class="btn"
