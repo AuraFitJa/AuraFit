@@ -1,31 +1,39 @@
-TODO:
+🟩🟨🟧🟥🟦🟪
+
+LEGENDA:
+
+[🟥] = Task importante / richiede più tempo
+[🟨] = Light fix / semplice
+[🟧] = Medium effort fix
+[✅] = Completata
+[🚧] = In Sviluppo / Completamento
 
 DB:
-[ ] aggiungere/fixare nel DB esercizi "italianizzati" o "gergo palestra"
-[ ] implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
+[🚧] aggiungere/fixare nel DB esercizi "italianizzati" o "gergo palestra"
+[🟧] implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
 
 DEV:
-[ ] sviluppare tab nutrizionista
-[ ] implementare openfoodfacts api
-[ ] capire come implementare image to barcode senza registrare nel db img
-[ ] implementare verifica mail e reset password con https://www.brevo.com/
+[🟥] sviluppare tab nutrizionista
+[🟧] implementare openfoodfacts api
+[🟧] capire come implementare image to barcode senza registrare nel db img
+[🟧] implementare verifica mail e reset password con https://www.brevo.com/
 
 UI:
-[!] REWORK Interfaccia grafica Mobile dashboard Professionista
-  [!!] Tab Scheda Cliente REWORK ASAP 
-  [ ] Tab ID-Key card Gestione ID-Key
-  [ ] Tab Clienti card Gestione Clienti
+[🟥] REWORK tab overview
+[🟥] REWORK Interfaccia grafica Mobile dashboard Professionista
+  [🟧] Tab Scheda Cliente REWORK ASAP 
+  [🟧] Tab ID-Key card Gestione ID-Key
+  [🟧] Tab Clienti card Gestione Clienti
 
-[ ] fix bloccare lo scroll dietro la card "Aggiungi serie allenante" in dashboard cliente 
-[ ] fix spacing scheda cliente termina associazione
-[ ] rendere piu grandi le caselle di testo su visualizzazione desktop
-[ ] allargare le card inserimento dati su workout builder
-[ ] capire se è semplificabile l'inserimento degli esercizi es. drag drop menu
-[ ] assegnazione multipla di programma allenamento per PT
-[ ] rework tab overview
+[🟧] fix bloccare lo scroll dietro la card "Aggiungi serie allenante" in dashboard cliente 
+[🟨] fix spacing scheda cliente termina associazione
+[🟨] rendere piu grandi le caselle di testo su visualizzazione desktop
+[🟨] allargare le card inserimento dati su workout builder
+[🟧] capire se è semplificabile l'inserimento degli esercizi es. drag drop menu
+[🟧] assegnazione multipla di programma allenamento per PT
 
 GITHUB:
-[ ] rework Readme
+[🟨] rework Readme
 
 COMPLETATI:
 [✅] fix bg color su dashboard cliente
