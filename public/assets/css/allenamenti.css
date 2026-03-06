@@ -14,7 +14,7 @@ body {
   background: #0b1220;
 }
 
-.workout-shell{display:grid;gap:18px;width:min(100%,1100px);margin-inline:auto}
+.workout-shell{display:grid;gap:18px;width:min(100%,1100px);margin-inline:auto;background:#0b1220}
 .library-toolbar,.program-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .dark-input,.dark-select,.dark-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);color:#f6f7fb;border-radius:10px;padding:10px 12px;font:inherit}
 .dark-textarea{min-height:74px;resize:vertical}
