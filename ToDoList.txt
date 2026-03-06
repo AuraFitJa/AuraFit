@@ -9,14 +9,14 @@ LEGENDA:
 [🚧] = In Sviluppo / Completamento
 
 DB:
-[🚧] aggiungere/fixare nel DB esercizi "italianizzati" o "gergo palestra"
-[🟧] implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
+[🚧] Aggiungere/fixare nel DB esercizi "italianizzati" o "gergo palestra"
+[🟧] Implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
 
 DEV:
-[🟥] sviluppare tab nutrizionista
-[🟧] implementare openfoodfacts api
-[🟧] capire come implementare image to barcode senza registrare nel db img
-[🟧] implementare verifica mail e reset password con https://www.brevo.com/
+[🟥] Sviluppare tab nutrizionista
+[🟧] Implementare openfoodfacts api
+[🟧] Capire come implementare image to barcode senza registrare nel db img
+[🟧] Implementare verifica mail e reset password con https://www.brevo.com/
 
 UI:
 [🟥] REWORK tab overview
@@ -25,15 +25,17 @@ UI:
   [🟧] Tab ID-Key card Gestione ID-Key
   [🟧] Tab Clienti card Gestione Clienti
 
-[🟧] fix bloccare lo scroll dietro la card "Aggiungi serie allenante" in dashboard cliente 
-[🟨] fix spacing scheda cliente termina associazione
-[🟨] rendere piu grandi le caselle di testo su visualizzazione desktop
-[🟨] allargare le card inserimento dati su workout builder
-[🟧] capire se è semplificabile l'inserimento degli esercizi es. drag drop menu
-[🟧] assegnazione multipla di programma allenamento per PT
+[🟨] Fix spacing scheda cliente termina associazione
+[🟨] Rendere piu grandi le caselle di testo su visualizzazione desktop
+[🟨] Allargare le card inserimento dati su workout builder
+[🟨] Spostare excercise picker in alto e full-card nella visualizzazione da desktop
+[🟨] Modificare la visualizzazione degli esercizi nel workout builder, rendere minimizzabile la card
+[🟧] Fix bloccare lo scroll dietro la card "Aggiungi serie allenante" in dashboard cliente 
+[🟧] Capire se è semplificabile l'inserimento degli esercizi es. drag drop menu
+[🟧] Assegnazione multipla di programma allenamento per PT
 
 GITHUB:
-[🟨] rework Readme
+[🟨] Rework Readme
 
 COMPLETATI:
 [✅] fix bg color su dashboard cliente
