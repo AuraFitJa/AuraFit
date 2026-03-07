@@ -21,7 +21,6 @@ if (!$program) {
 }
 
 $professionistaId = ProgrammiModel::getProfessionistaIdByUserId($userId);
-$clients = $professionistaId ? ProgrammiModel::listPtClients($professionistaId) : [];
 
 $programFolderId = (int)($program['cartellaId'] ?? 0);
 $selectedFolderId = (int)($_GET['cartella'] ?? 0);
@@ -63,6 +62,7 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
   <div class="program-toolbar">
     <a href="allenamenti.php<?= $selectedFolderId > 0 ? '?cartella=' . $selectedFolderId : '' ?>" class="link-btn">← Libreria</a>
     <h2 class="section-title" style="margin:0"><?= h((string)$program['titolo']) ?></h2>
+    <button class="btn primary" type="button" data-open-assign-modal>Assegna scheda</button>
     <button class="btn" data-duplicate-program="<?= (int)$program['idProgramma'] ?>">Duplica</button>
     <button class="btn danger" data-delete-program="<?= (int)$program['idProgramma'] ?>" data-folder-id="<?= (int)$selectedFolderId ?>">Elimina</button>
   </div>
@@ -119,17 +119,7 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
 
   <div class="divider"></div>
 
-  <h3>Assegna a cliente</h3>
-  <form class="inline-form" data-assign-form>
-    <input type="hidden" name="idProgramma" value="<?= (int)$program['idProgramma'] ?>" />
-    <select class="dark-select" name="idCliente" required style="background:#0b1220;color:var(--text)">
-      <option value="" style="background:#0b1220;color:var(--text)">Seleziona cliente</option>
-      <?php foreach ($clients as $client): ?>
-        <option value="<?= (int)$client['idCliente'] ?>" style="background:#0b1220;color:var(--text)"><?= h(trim((string)$client['nome'] . ' ' . (string)$client['cognome'])) ?></option>
-      <?php endforeach; ?>
-    </select>
-    <button class="btn primary" type="submit">Assegna programma</button>
-  </form>
+  <h3>Assegnazioni correnti</h3>
 
   <ul>
     <?php foreach ($program['assegnazioni'] as $assegnazione): ?>
@@ -148,5 +138,197 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
     </div>
   </div>
 </div>
+
+<div class="assign-modal-layer" data-assign-program-modal>
+  <div class="assign-modal-card" role="dialog" aria-modal="true" aria-labelledby="assign-program-modal-title">
+    <h3 id="assign-program-modal-title" style="margin:0">Assegna scheda</h3>
+    <p class="muted" style="margin:8px 0 16px">Seleziona i clienti attivi associati al tuo profilo PT.</p>
+
+    <label class="assign-toggle-all">
+      <input type="checkbox" data-assign-toggle-all />
+      <span>Seleziona tutti / Deseleziona tutti</span>
+    </label>
+
+    <div class="assign-client-list" data-assign-client-list></div>
+    <p class="assign-feedback" data-assign-feedback></p>
+
+    <div class="library-toolbar" style="justify-content:flex-end">
+      <button class="btn" type="button" data-close-assign-modal>Chiudi</button>
+      <button class="btn primary" type="button" data-submit-assign>Assegna</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .assign-modal-layer {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 18, 0.84);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 16px;
+  }
+  .assign-modal-layer.open { display: flex; }
+  .assign-modal-card {
+    width: min(680px, 100%);
+    max-height: min(82vh, 720px);
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, rgba(18, 24, 41, 0.98), rgba(9, 13, 24, 0.98));
+    box-shadow: 0 22px 56px rgba(0, 0, 0, 0.55);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .assign-toggle-all {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(235, 243, 255, 0.92);
+    font-size: 14px;
+  }
+  .assign-client-list {
+    max-height: 330px;
+    overflow-y: auto;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .assign-client-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .assign-client-item:last-child { border-bottom: none; }
+  .assign-feedback {
+    min-height: 20px;
+    margin: 0;
+    font-size: 14px;
+    color: #fda4af;
+  }
+  .assign-feedback.ok { color: #86efac; }
+</style>
 <?php
-renderEnd('<script src="../assets/js/program_library.js"></script><script src="../assets/js/routine_editor.js"></script>');
+renderEnd('<script src="../assets/js/program_library.js"></script><script src="../assets/js/routine_editor.js"></script>
+<script>
+(function () {
+  const modal = document.querySelector("[data-assign-program-modal]");
+  const openBtn = document.querySelector("[data-open-assign-modal]");
+  const closeBtn = document.querySelector("[data-close-assign-modal]");
+  const submitBtn = document.querySelector("[data-submit-assign]");
+  const listEl = document.querySelector("[data-assign-client-list]");
+  const feedbackEl = document.querySelector("[data-assign-feedback]");
+  const toggleAll = document.querySelector("[data-assign-toggle-all]");
+  const idProgramma = ' . (int)$program['idProgramma'] . ';
+
+  function setFeedback(message, isSuccess) {
+    if (!feedbackEl) return;
+    feedbackEl.textContent = message || "";
+    feedbackEl.classList.toggle("ok", !!isSuccess);
+  }
+
+  function toggleModal(open) {
+    if (!modal) return;
+    modal.classList.toggle("open", !!open);
+  }
+
+  function renderClienti(clienti) {
+    if (!listEl) return;
+    if (!Array.isArray(clienti) || clienti.length === 0) {
+      listEl.innerHTML = "<p class=\"muted\" style=\"margin:6px\">Nessun cliente attivo associato.</p>";
+      return;
+    }
+
+    listEl.innerHTML = clienti.map((cliente) => {
+      const checked = cliente.giaAssegnato ? "checked" : "";
+      const fullName = `${cliente.nome || ""} ${cliente.cognome || ""}`.trim();
+      return `<label class=\"assign-client-item\"><input type=\"checkbox\" data-assign-cliente value=\"${Number(cliente.idCliente)}\" ${checked} /><span>${fullName}</span></label>`;
+    }).join("");
+  }
+
+  async function loadClienti() {
+    setFeedback("", false);
+    if (toggleAll) {
+      toggleAll.checked = false;
+    }
+
+    if (listEl) {
+      listEl.innerHTML = "<p class=\"muted\" style=\"margin:6px\">Caricamento clienti...</p>";
+    }
+
+    const res = await fetch(`api/get_clienti_assegnazione_programma.php?idProgramma=${encodeURIComponent(idProgramma)}`);
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "Impossibile caricare i clienti.");
+    }
+
+    renderClienti(data.clienti || []);
+  }
+
+  openBtn?.addEventListener("click", async () => {
+    toggleModal(true);
+    try {
+      await loadClienti();
+    } catch (error) {
+      setFeedback(error.message || "Errore caricamento clienti.", false);
+    }
+  });
+
+  closeBtn?.addEventListener("click", () => {
+    toggleModal(false);
+  });
+
+  modal?.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      toggleModal(false);
+    }
+  });
+
+  toggleAll?.addEventListener("change", () => {
+    const checked = toggleAll.checked;
+    document.querySelectorAll("[data-assign-cliente]").forEach((input) => {
+      input.checked = checked;
+    });
+  });
+
+  submitBtn?.addEventListener("click", async () => {
+    const selected = Array.from(document.querySelectorAll("[data-assign-cliente]:checked"))
+      .map((input) => Number(input.value))
+      .filter((value) => Number.isInteger(value) && value > 0);
+
+    if (selected.length === 0) {
+      setFeedback("Seleziona almeno un cliente.", false);
+      return;
+    }
+
+    submitBtn.disabled = true;
+    setFeedback("", false);
+
+    try {
+      const res = await fetch("api/assegna_programma_clienti.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idProgramma, clienti: selected })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || data.message || "Errore durante assegnazione.");
+      }
+
+      setFeedback(data.message || "Scheda assegnata con successo.", true);
+    } catch (error) {
+      setFeedback(error.message || "Errore durante assegnazione.", false);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+})();
+</script>');
