@@ -25,7 +25,7 @@ UI:
   [🟧] Tab ID-Key card Gestione ID-Key
   [🟧] Tab Clienti card Gestione Clienti
 
-[🟨] Fix spacing scheda cliente termina associazione
+[🚧] Fix spacing scheda cliente termina associazione
 [🟨] Rendere piu grandi le caselle di testo su visualizzazione desktop
 [🟨] Allargare le card inserimento dati su workout builder
 [🟨] Spostare excercise picker in alto e full-card nella visualizzazione da desktop
