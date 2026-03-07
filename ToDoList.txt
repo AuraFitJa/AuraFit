@@ -25,19 +25,20 @@ UI:
   [🟧] Tab ID-Key card Gestione ID-Key
   [🟧] Tab Clienti card Gestione Clienti
 
-[🚧] Fix spacing scheda cliente termina associazione
-[🟨] Rendere piu grandi le caselle di testo su visualizzazione desktop
-[🟨] Allargare le card inserimento dati su workout builder
-[🟨] Spostare excercise picker in alto e full-card nella visualizzazione da desktop
-[🟨] Modificare la visualizzazione degli esercizi nel workout builder, rendere minimizzabile la card
+[🟨] Rendere piu grandi le caselle di testo su visualizzazione desktop? tbd
+[🟨] Allargare le card inserimento dati su workout builder se possibile 
+[🟨] Far partire le card esercizi nel workout builder minimizzate
 [🟧] Fix bloccare lo scroll dietro la card "Aggiungi serie allenante" in dashboard cliente 
 [🟧] Capire se è semplificabile l'inserimento degli esercizi es. drag drop menu
-[🟧] Assegnazione multipla di programma allenamento per PT
 
 GITHUB:
 [🟨] Rework Readme
 
 COMPLETATI:
+[✅] Modificare la visualizzazione degli esercizi nel workout builder, rendere minimizzabile la card
+[✅] Assegnazione multipla di programma allenamento per PT
+[✅] Rework / Semplificazione tab workout builder
+[✅] Fix spacing scheda cliente termina associazione
 [✅] fix bg color su dashboard cliente
 [✅] controllare cosa succede quando utente pro è sia nutrizionista che pt 
 [✅] capire come/se/dove utilizzare immagini esecuzione esercizi soluzione:(Non le usiamo)
