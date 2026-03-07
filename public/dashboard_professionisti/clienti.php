@@ -163,7 +163,7 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
   <?php endforeach; ?>
 
   <table>
-    <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato associazione</th><th>Data associazione</th><th>Ultimo aggiornamento</th><th>Azioni</th></tr></thead>
+    <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato</th><th>Data associazione</th><th>Ultimo aggiornamento</th><th>Azioni</th></tr></thead>
     <tbody>
       <?php if (!$clientiAttivi): ?>
         <tr><td colspan="7" class="muted">Nessun cliente attivo associato.</td></tr>
