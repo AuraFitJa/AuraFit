@@ -100,7 +100,16 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
 
     <section class="card workout-shell" data-routine-editor data-giorno="<?= (int)$selectedRoutine['idGiorno'] ?>" style="padding:0;border:none;background:transparent;box-shadow:none">
       <div class="program-toolbar">
-        <h3 class="section-title" style="margin:0">Workout Builder · <?= h((string)$selectedRoutine['nome']) ?></h3>
+        <div class="exercise-header-row">
+          <h3 class="section-title" style="margin:0">Workout Builder · <?= h((string)$selectedRoutine['nome']) ?></h3>
+          <button
+            type="button"
+            class="action-mini"
+            data-toggle-all-exercises
+            aria-label="Minimizza o espandi tutti gli esercizi"
+            title="Minimizza o espandi tutti gli esercizi"
+          >👁</button>
+        </div>
       </div>
 
       <div class="routine-layout">
@@ -214,6 +223,34 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
     color: #fda4af;
   }
   .assign-feedback.ok { color: #86efac; }
+  .exercise-header-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .exercise-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .exercise-card.is-collapsed {
+    padding: 10px 12px;
+    min-height: 80px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .exercise-card.is-collapsed .exercise-card-body {
+    display: none;
+  }
+  .exercise-card.is-collapsed .exercise-head {
+    margin: 0;
+    align-items: center;
+  }
+  .exercise-card.is-collapsed .exercise-head h4 {
+    margin: 0;
+  }
 </style>
 <?php
 renderEnd('<script src="../assets/js/program_library.js"></script><script src="../assets/js/routine_editor.js"></script>
@@ -330,5 +367,114 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
       submitBtn.disabled = false;
     }
   });
+})();
+
+(function () {
+  const toggleAllBtn = document.querySelector("[data-toggle-all-exercises]");
+  const exerciseList = document.querySelector("[data-exercise-list]");
+  if (!toggleAllBtn || !exerciseList) return;
+
+  const cards = () => Array.from(document.querySelectorAll(".exercise-card, .exercise-block"));
+
+  function isCollapsed(card) {
+    return card.classList.contains("is-collapsed");
+  }
+
+  function collapseCard(card) {
+    card.classList.add("is-collapsed");
+    card.setAttribute("data-state", "collapsed");
+  }
+
+  function expandCard(card) {
+    card.classList.remove("is-collapsed");
+    card.setAttribute("data-state", "expanded");
+  }
+
+  function toggleCard(card) {
+    if (isCollapsed(card)) {
+      expandCard(card);
+      return;
+    }
+    collapseCard(card);
+  }
+
+  function enhanceCard(card) {
+    if (!card || card.dataset.collapsibleReady === "1") return;
+
+    card.classList.add("exercise-card");
+    card.setAttribute("data-state", "expanded");
+
+    const head = card.querySelector(".exercise-head");
+    if (!head) return;
+
+    const actionsWrap = head.lastElementChild;
+    if (actionsWrap) {
+      actionsWrap.classList.add("exercise-head-actions");
+      if (!actionsWrap.querySelector("[data-toggle-exercise]")) {
+        const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.className = "action-mini mini-action-btn";
+        toggleBtn.setAttribute("data-toggle-exercise", "");
+        toggleBtn.setAttribute("aria-label", "Minimizza o espandi esercizio");
+        toggleBtn.setAttribute("title", "Minimizza o espandi esercizio");
+        toggleBtn.textContent = "👁";
+        actionsWrap.insertBefore(toggleBtn, actionsWrap.firstElementChild);
+      }
+    }
+
+    if (!card.querySelector(".exercise-card-body")) {
+      const body = document.createElement("div");
+      body.className = "exercise-card-body";
+      const children = Array.from(card.children).filter((child) => child !== head);
+      children.forEach((child) => body.appendChild(child));
+      card.appendChild(body);
+    }
+
+    card.dataset.collapsibleReady = "1";
+  }
+
+  function enhanceAllCards() {
+    cards().forEach(enhanceCard);
+  }
+
+  toggleAllBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    const allCards = cards();
+    if (!allCards.length) return;
+
+    const allCollapsed = allCards.every((card) => isCollapsed(card));
+    allCards.forEach((card) => {
+      if (allCollapsed) {
+        expandCard(card);
+      } else {
+        collapseCard(card);
+      }
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    const singleToggleBtn = event.target.closest("[data-toggle-exercise]");
+    if (singleToggleBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const card = singleToggleBtn.closest(".exercise-card");
+      if (card) {
+        toggleCard(card);
+      }
+      return;
+    }
+
+    const card = event.target.closest(".exercise-card");
+    if (!card || !isCollapsed(card)) return;
+    if (event.target.closest("button, input, textarea, select, a, label")) return;
+    expandCard(card);
+  });
+
+  const observer = new MutationObserver(() => {
+    enhanceAllCards();
+  });
+
+  observer.observe(exerciseList, { childList: true });
+  enhanceAllCards();
 })();
 </script>');
