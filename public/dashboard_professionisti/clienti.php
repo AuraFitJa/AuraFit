@@ -142,6 +142,16 @@ if (!$dbAvailable) {
 renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
 <section class="card">
+  <style>
+    .cliente-row {
+      cursor: pointer;
+    }
+
+    .cliente-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+  </style>
+
   <h2 class="section-title">Gestione Clienti</h2>
 
   <?php foreach ($messages as $message): ?>
@@ -160,7 +170,7 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
       <?php endif; ?>
 
       <?php foreach ($clientiAttivi as $cliente): ?>
-        <tr>
+        <tr class="cliente-row" data-href="scheda_cliente.php?idCliente=<?= (int)$cliente['idCliente'] ?>">
           <td><?= h($cliente['nome']) ?></td>
           <td><?= h($cliente['email']) ?></td>
           <td><?= h($cliente['tipo']) ?></td>
@@ -168,7 +178,6 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
           <td><?= h($cliente['associazione']) ?></td>
           <td><?= h($cliente['ultimoUpdate']) ?></td>
           <td>
-            <a class="btn" href="scheda_cliente.php?idCliente=<?= (int)$cliente['idCliente'] ?>">Scheda cliente</a>
             <form method="post" style="display:inline" data-confirm-terminate-association>
               <input type="hidden" name="action" value="terminate_association" />
               <input type="hidden" name="idAssociazione" value="<?= (int)$cliente['idAssociazione'] ?>" />
@@ -295,6 +304,17 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
     pendingTerminateAssociationForm.dataset.confirmedSubmit = '1';
     pendingTerminateAssociationForm.requestSubmit();
     closeTerminateAssociationConfirmModal();
+  });
+
+  document.querySelectorAll('.cliente-row').forEach((row) => {
+    row.addEventListener('click', function (e) {
+      if (e.target.closest('button') || e.target.closest('a')) return;
+
+      const url = this.dataset.href;
+      if (url) {
+        window.location.href = url;
+      }
+    });
   });
 </script>
 <?php
