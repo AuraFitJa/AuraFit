@@ -113,7 +113,7 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
       </div>
 
       <div class="routine-layout">
-        <div>
+        <div class="routine-exercises">
           <div data-exercise-list></div>
         </div>
 
@@ -234,6 +234,23 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
     display: flex;
     align-items: center;
     gap: 6px;
+  }
+  [data-routine-editor] .routine-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  [data-routine-editor] .routine-exercises,
+  [data-routine-editor] [data-exercise-list],
+  [data-routine-editor] .exercise-card,
+  [data-routine-editor] .exercise-block,
+  [data-routine-editor] .picker {
+    width: 100%;
+    max-width: none;
+  }
+  [data-routine-editor] .picker {
+    position: static;
+    align-self: stretch;
   }
   .exercise-card.is-collapsed {
     padding: 10px 12px;
