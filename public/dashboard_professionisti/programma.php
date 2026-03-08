@@ -419,7 +419,7 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
     if (!card || card.dataset.collapsibleReady === "1") return;
 
     card.classList.add("exercise-card");
-    card.setAttribute("data-state", "expanded");
+    card.setAttribute("data-state", "collapsed");
 
     const head = card.querySelector(".exercise-head");
     if (!head) return;
@@ -448,6 +448,7 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
     }
 
     card.dataset.collapsibleReady = "1";
+    collapseCard(card);
   }
 
   function enhanceAllCards() {
