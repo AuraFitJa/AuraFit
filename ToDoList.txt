@@ -19,6 +19,7 @@ DEV:
 [🟧] Implementare verifica mail e reset password con https://www.brevo.com/
 
 UI:
+[🟥] REWORK Landing page
 [🟥] REWORK tab overview
 [🟥] REWORK Interfaccia grafica Mobile dashboard Professionista
   [🟧] Tab Scheda Cliente REWORK ASAP 
