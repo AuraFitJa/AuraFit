@@ -701,7 +701,7 @@ if ($pianoAttivoId > 0) {
       <?php endif; ?>
       <div class="library-toolbar" style="justify-content:flex-end">
         <button class="btn" type="button" data-close-modal>Annulla</button>
-        <button class="btn primary" type="submit">Crea nuovo piano alimentare</button>
+        <button class="btn primary" type="submit" <?= !$clientRows ? 'disabled' : '' ?>>Crea nuovo piano alimentare</button>
       </div>
     </form>
   </div>
