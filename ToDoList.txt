@@ -45,6 +45,7 @@ UI:
   [🟧] Tab ID-Key card Gestione ID-Key
   [🟧] Tab Clienti card Gestione Clienti
 
+[🟨] Hide/Show ID-Key su gestione ID-KEY, parte in hidden
 [🟨] Rendere piu grandi le caselle di testo su visualizzazione desktop? tbd
 [🟧] Fix bloccare lo scroll dietro la card "Aggiungi serie allenante" in dashboard cliente 
 [🟧] Capire se è semplificabile l'inserimento degli esercizi es. drag drop menu
