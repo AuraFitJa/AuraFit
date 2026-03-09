@@ -876,9 +876,31 @@ renderEnd(<<<'SCRIPT'
             },
             cache: 'no-store'
           });
-          const payload = await response.json();
-          if (!response.ok || !payload.ok) {
-            showInlineAlert('error', payload.message || 'Operazione non riuscita.');
+
+          const contentType = (response.headers.get('content-type') || '').toLowerCase();
+          let payload = null;
+
+          if (contentType.includes('application/json')) {
+            payload = await response.json();
+          } else if (response.redirected && response.url) {
+            window.location.replace(response.url);
+            return;
+          } else {
+            const raw = await response.text();
+            try {
+              payload = JSON.parse(raw);
+            } catch (parseError) {
+              if (response.ok) {
+                window.location.reload();
+                return;
+              }
+              showInlineAlert('error', 'Operazione non riuscita. Riprova.');
+              return;
+            }
+          }
+
+          if (!response.ok || !payload || !payload.ok) {
+            showInlineAlert('error', (payload && payload.message) ? payload.message : 'Operazione non riuscita.');
             return;
           }
 
