@@ -154,7 +154,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'create_plan') {
       $folderId = (int)($_POST['folder_id'] ?? 0);
-      $clienteId = (int)($_POST['cliente'] ?? 0);
+      $clienteRaw = trim((string)($_POST['cliente'] ?? ''));
+      $clienteId = $clienteRaw !== '' ? (int)$clienteRaw : 0;
+      $clienteValue = $clienteId > 0 ? $clienteId : null;
       $titolo = trim((string)($_POST['titolo'] ?? ''));
       $stato = trim((string)($_POST['stato'] ?? 'bozza'));
       $note = trim((string)($_POST['note'] ?? ''));
@@ -162,8 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if ($folderId <= 0 || $titolo === '') {
         throw new RuntimeException('Compila i campi obbligatori del piano.');
       }
-      if (!isset($clientiMap[$clienteId])) {
+      if ($clienteValue !== null && !isset($clientiMap[$clienteId])) {
         throw new RuntimeException('Cliente non valido per questo nutrizionista.');
+      }
+      if ($clienteValue === null && strtolower($stato) !== 'bozza') {
+        throw new RuntimeException('Per piani senza cliente lo stato deve essere bozza.');
       }
 
       $folder = Database::exec('SELECT idCartella FROM PianiAlimentariCartelle WHERE idCartella = ? AND professionista = ? LIMIT 1', [$folderId, $professionistaId])->fetch();
@@ -174,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       Database::exec(
         'INSERT INTO PianiAlimentari (cliente, creatoreUtente, stato, titolo, note, versione, pianoPrecedente, creatoIl, aggiornatoIl, cartellaId)
          VALUES (?, ?, ?, ?, ?, 1, NULL, NOW(), NOW(), ?)',
-        [$clienteId, $userId, $stato, $titolo, $note, $folderId]
+        [$clienteValue, $userId, $stato, $titolo, $note, $folderId]
       );
       $newPlanId = (int)Database::pdo()->lastInsertId();
       setFlash('ok', 'Piano alimentare creato.');
@@ -191,14 +196,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $ownedPlan = Database::exec(
         "SELECT p.idPianoAlim, p.cartellaId
          FROM PianiAlimentari p
-         INNER JOIN Associazioni a ON a.cliente = p.cliente
-           AND a.professionista = ?
-           AND LOWER(a.tipoAssociazione) = 'nutrizionista'
-           AND a.attivaFlag = 1
          WHERE p.idPianoAlim = ?
            AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
          LIMIT 1",
-        [$professionistaId, $planId, $userId]
+        [$planId, $userId, $professionistaId]
       )->fetch();
 
       if (!$ownedPlan) {
@@ -222,13 +234,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $original = Database::exec(
         "SELECT p.*
          FROM PianiAlimentari p
-         INNER JOIN Associazioni a ON a.cliente = p.cliente
-           AND a.professionista = ?
-           AND LOWER(a.tipoAssociazione) = 'nutrizionista'
-           AND a.attivaFlag = 1
-         WHERE p.idPianoAlim = ? AND p.creatoreUtente = ?
+         WHERE p.idPianoAlim = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
          LIMIT 1",
-        [$professionistaId, $planId, $userId]
+        [$planId, $userId, $professionistaId]
       )->fetch();
 
       if (!$original) {
@@ -300,13 +320,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $ownedPlan = Database::exec(
         "SELECT p.idPianoAlim, p.cartellaId
          FROM PianiAlimentari p
-         INNER JOIN Associazioni a ON a.cliente = p.cliente
-           AND a.professionista = ?
-           AND LOWER(a.tipoAssociazione) = 'nutrizionista'
-           AND a.attivaFlag = 1
-         WHERE p.idPianoAlim = ? AND p.creatoreUtente = ?
+         WHERE p.idPianoAlim = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
          LIMIT 1",
-        [$professionistaId, $planId, $userId]
+        [$planId, $userId, $professionistaId]
       )->fetch();
 
       if (!$ownedPlan) {
@@ -407,15 +435,22 @@ if ($cartellaAttiva) {
     "SELECT p.idPianoAlim, p.titolo, p.note, p.stato, p.versione, p.aggiornatoIl,
             p.cartellaId, c.idCliente, u.nome, u.cognome
      FROM PianiAlimentari p
-     INNER JOIN Clienti c ON c.idCliente = p.cliente
-     INNER JOIN Utenti u ON u.idUtente = c.idUtente
-     INNER JOIN Associazioni a ON a.cliente = c.idCliente
-       AND a.professionista = ?
-       AND LOWER(a.tipoAssociazione) = 'nutrizionista'
-       AND a.attivaFlag = 1
+     LEFT JOIN Clienti c ON c.idCliente = p.cliente
+     LEFT JOIN Utenti u ON u.idUtente = c.idUtente
      WHERE p.cartellaId = ? AND p.creatoreUtente = ?
+       AND (
+         p.cliente IS NULL
+         OR EXISTS (
+           SELECT 1
+           FROM Associazioni a
+           WHERE a.cliente = p.cliente
+             AND a.professionista = ?
+             AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+             AND a.attivaFlag = 1
+         )
+       )
      ORDER BY p.aggiornatoIl DESC, p.idPianoAlim DESC",
-    [$professionistaId, (int)$cartellaAttiva['idCartella'], $userId]
+    [(int)$cartellaAttiva['idCartella'], $userId, $professionistaId]
   )->fetchAll();
 }
 
@@ -426,15 +461,23 @@ if ($pianoAttivoId > 0) {
     "SELECT p.idPianoAlim, p.titolo, p.note, p.stato, p.versione, p.cartellaId, p.cliente,
             p.aggiornatoIl, u.nome, u.cognome
      FROM PianiAlimentari p
-     INNER JOIN Clienti c ON c.idCliente = p.cliente
-     INNER JOIN Utenti u ON u.idUtente = c.idUtente
-     INNER JOIN Associazioni a ON a.cliente = c.idCliente
-       AND a.professionista = ?
-       AND LOWER(a.tipoAssociazione) = 'nutrizionista'
-       AND a.attivaFlag = 1
-     WHERE p.idPianoAlim = ? AND p.creatoreUtente = ?
+     LEFT JOIN Clienti c ON c.idCliente = p.cliente
+     LEFT JOIN Utenti u ON u.idUtente = c.idUtente
+     WHERE p.idPianoAlim = ?
+       AND p.creatoreUtente = ?
+       AND (
+         p.cliente IS NULL
+         OR EXISTS (
+           SELECT 1
+           FROM Associazioni a
+           WHERE a.cliente = p.cliente
+             AND a.professionista = ?
+             AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+             AND a.attivaFlag = 1
+         )
+       )
      LIMIT 1",
-    [$professionistaId, $pianoAttivoId, $userId]
+    [$pianoAttivoId, $userId, $professionistaId]
   )->fetch();
 
   if (!$pianoAttivo) {
@@ -511,7 +554,7 @@ if ($pianoAttivoId > 0) {
           <h4><?= h((string)$piano['titolo']) ?></h4>
           <p class="muted-sm"><?= h(mb_strimwidth((string)($piano['note'] ?? ''), 0, 140, '…')) ?></p>
           <div class="program-meta nutrition-preview">
-            <span>Cliente: <?= h(trim((string)$piano['cognome'] . ' ' . (string)$piano['nome'])) ?></span><br>
+            <span>Cliente: <?= $piano['idCliente'] ? h(trim((string)$piano['cognome'] . ' ' . (string)$piano['nome'])) : 'Non associato (bozza)' ?></span><br>
             <span>Stato: <?= h((string)$piano['stato']) ?> · v<?= (int)$piano['versione'] ?></span><br>
             <span>Aggiornato: <?= h((string)$piano['aggiornatoIl']) ?></span>
           </div>
@@ -620,8 +663,8 @@ if ($pianoAttivoId > 0) {
       <input type="hidden" name="action" value="create_plan" />
       <input type="hidden" name="folder_id" data-create-plan-folder-id value="<?= (int)$cartellaAttivaId ?>" />
       <input class="dark-input" type="text" name="titolo" placeholder="Nome piano" required />
-      <select class="dark-input" name="cliente" required>
-        <option value="">Seleziona cliente</option>
+      <select class="dark-input" name="cliente">
+        <option value="">Nessun cliente (bozza)</option>
         <?php foreach ($clientRows as $cliente): ?>
           <option value="<?= (int)$cliente['idCliente'] ?>"><?= h(trim((string)$cliente['cognome'] . ' ' . (string)$cliente['nome'])) ?></option>
         <?php endforeach; ?>
@@ -633,7 +676,7 @@ if ($pianoAttivoId > 0) {
       </select>
       <textarea class="dark-textarea" name="note" placeholder="Descrizione"></textarea>
       <?php if (!$clientRows): ?>
-        <p class="muted-sm">Nessun cliente associato disponibile per creare piani.</p>
+        <p class="muted-sm">Nessun cliente associato disponibile: puoi creare comunque una bozza non assegnata.</p>
       <?php endif; ?>
       <div class="library-toolbar" style="justify-content:flex-end">
         <button class="btn" type="button" data-close-modal>Annulla</button>
