@@ -34,6 +34,26 @@ function redirectNutrition(array $params = []): void {
   exit;
 }
 
+function isAjaxRequest(): bool {
+  return strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest'
+    || str_contains(strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? '')), 'application/json');
+}
+
+function completeNutritionAction(string $message, array $params = []): void {
+  if (isAjaxRequest()) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+      'ok' => true,
+      'message' => $message,
+      'redirect' => 'nutrizione.php' . (($query = http_build_query($params)) !== '' ? ('?' . $query) : ''),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
+
+  setFlash('ok', $message);
+  redirectNutrition($params);
+}
+
 function setFlash(string $type, string $message): void {
   $_SESSION['nutrizione_flash'] = ['type' => $type, 'message' => $message];
 }
@@ -43,6 +63,10 @@ function getFlash(): ?array {
   unset($_SESSION['nutrizione_flash']);
   return is_array($flash) ? $flash : null;
 }
+
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 if (!$isNutrizionista) {
   renderStart('Nutrizione', 'nutrizione', $email, $roleBadge, $isPt, $isNutrizionista);
@@ -122,8 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $maxOrdine = Database::exec('SELECT COALESCE(MAX(ordine), 0) AS m FROM PianiAlimentariCartelle WHERE professionista = ?', [$professionistaId])->fetch();
       $ordine = ((int)($maxOrdine['m'] ?? 0)) + 1;
       Database::exec('INSERT INTO PianiAlimentariCartelle (professionista, nome, ordine, creataIl) VALUES (?, ?, ?, NOW())', [$professionistaId, $nome, $ordine]);
-      setFlash('ok', 'Cartella creata con successo.');
-      redirectNutrition();
+      completeNutritionAction('Cartella creata con successo.');
     }
 
     if ($action === 'rename_folder') {
@@ -137,8 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         throw new RuntimeException('Cartella non trovata.');
       }
       Database::exec('UPDATE PianiAlimentariCartelle SET nome = ? WHERE idCartella = ? AND professionista = ? LIMIT 1', [$nome, $folderId, $professionistaId]);
-      setFlash('ok', 'Cartella rinominata.');
-      redirectNutrition();
+      completeNutritionAction('Cartella rinominata.');
     }
 
     if ($action === 'delete_folder') {
@@ -152,8 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
       Database::exec('UPDATE PianiAlimentari SET cartellaId = NULL WHERE cartellaId = ?', [$folderId]);
       Database::exec('DELETE FROM PianiAlimentariCartelle WHERE idCartella = ? AND professionista = ? LIMIT 1', [$folderId, $professionistaId]);
-      setFlash('ok', 'Cartella eliminata.');
-      redirectNutrition();
+      completeNutritionAction('Cartella eliminata.');
     }
 
     if ($action === 'create_plan') {
@@ -203,8 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       $newPlanId = (int)Database::pdo()->lastInsertId();
-      setFlash('ok', 'Piano alimentare creato.');
-      redirectNutrition(['cartella' => $folderId, 'piano' => $newPlanId]);
+      completeNutritionAction('Piano alimentare creato.', ['cartella' => $folderId, 'piano' => $newPlanId]);
     }
 
     if ($action === 'update_plan') {
@@ -239,8 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       Database::exec('UPDATE PianiAlimentari SET titolo = ?, note = ?, aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [$titolo, $note, $planId]);
-      setFlash('ok', 'Piano aggiornato.');
-      redirectNutrition(['cartella' => (int)$ownedPlan['cartellaId'], 'piano' => $planId]);
+      completeNutritionAction('Piano aggiornato.', ['cartella' => (int)$ownedPlan['cartellaId'], 'piano' => $planId]);
     }
 
     if ($action === 'duplicate_plan') {
@@ -328,8 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       $pdo->commit();
-      setFlash('ok', 'Piano duplicato con successo.');
-      redirectNutrition(['cartella' => (int)$original['cartellaId'], 'piano' => $newPlanId]);
+      completeNutritionAction('Piano duplicato con successo.', ['cartella' => (int)$original['cartellaId'], 'piano' => $newPlanId]);
     }
 
     if ($action === 'delete_plan') {
@@ -363,8 +381,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       Database::exec('DELETE FROM PianiAlimentari WHERE idPianoAlim = ? LIMIT 1', [$planId]);
-      setFlash('ok', 'Piano eliminato.');
-      redirectNutrition(['cartella' => (int)$ownedPlan['cartellaId']]);
+      completeNutritionAction('Piano eliminato.', ['cartella' => (int)$ownedPlan['cartellaId']]);
     }
 
     if ($action === 'assign_plan') {
@@ -403,14 +420,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
       }
 
-      setFlash('ok', 'Piano assegnato al cliente.');
-      redirectNutrition(['cartella' => (int)$plan['cartellaId'], 'piano' => $planId]);
+      completeNutritionAction('Piano assegnato al cliente.', ['cartella' => (int)$plan['cartellaId'], 'piano' => $planId]);
     }
   } catch (Throwable $e) {
     if (Database::pdo()->inTransaction()) {
       Database::pdo()->rollBack();
     }
-    setFlash('error', $e->getMessage());
     $redirect = [];
     if (!empty($_POST['folder_id'])) {
       $redirect['cartella'] = (int)$_POST['folder_id'];
@@ -418,6 +433,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['plan_id'])) {
       $redirect['piano'] = (int)$_POST['plan_id'];
     }
+
+    if (isAjaxRequest()) {
+      header('Content-Type: application/json; charset=utf-8');
+      http_response_code(422);
+      echo json_encode([
+        'ok' => false,
+        'message' => $e->getMessage(),
+        'redirect' => 'nutrizione.php' . (($query = http_build_query($redirect)) !== '' ? ('?' . $query) : ''),
+      ], JSON_UNESCAPED_UNICODE);
+      exit;
+    }
+
+    setFlash('error', $e->getMessage());
     redirectNutrition($redirect);
   }
 }
@@ -701,7 +729,7 @@ if ($pianoAttivoId > 0) {
       <?php endif; ?>
       <div class="library-toolbar" style="justify-content:flex-end">
         <button class="btn" type="button" data-close-modal>Annulla</button>
-        <button class="btn primary" type="submit" <?= !$clientRows ? 'disabled' : '' ?>>Crea nuovo piano alimentare</button>
+        <button class="btn primary" type="submit">Crea nuovo piano alimentare</button>
       </div>
     </form>
   </div>
@@ -818,6 +846,52 @@ renderEnd(<<<'SCRIPT'
     });
 
     document.querySelector('[data-open-assign-plan]')?.addEventListener('click', function () { openModal('assign-plan'); });
+
+    const alertStrip = document.querySelector('.alert-strip');
+    function showInlineAlert(type, message) {
+      if (!message) return;
+      if (!alertStrip) {
+        window.alert(message);
+        return;
+      }
+      alertStrip.textContent = message;
+      alertStrip.classList.remove('ok', 'error');
+      alertStrip.classList.add(type === 'ok' ? 'ok' : 'error');
+      alertStrip.style.display = '';
+    }
+
+    document.querySelectorAll('form[method="post"]').forEach(function (form) {
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const actionButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+        actionButtons.forEach(function (btn) { btn.disabled = true; });
+
+        try {
+          const response = await fetch(window.location.href, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json'
+            },
+            cache: 'no-store'
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok) {
+            showInlineAlert('error', payload.message || 'Operazione non riuscita.');
+            return;
+          }
+
+          showInlineAlert('ok', payload.message || 'Operazione completata.');
+          const nextUrl = payload.redirect || window.location.href;
+          window.location.replace(nextUrl + (nextUrl.includes('?') ? '&' : '?') + '_ts=' + Date.now());
+        } catch (error) {
+          showInlineAlert('error', 'Errore di rete. Riprova.');
+        } finally {
+          actionButtons.forEach(function (btn) { btn.disabled = false; });
+        }
+      });
+    });
   })();
 </script>
 SCRIPT
