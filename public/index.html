@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b0d12" />
   <link rel="apple-touch-icon" href="/media/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <title>AuraFit — Gestione clienti, workout e diet builder</title>
+  <title>AuraFit — Gestione clienti, workout builder e diet builder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,88 +15,67 @@
       --bg: #0b0d12;
       --bg-soft: #11141b;
       --surface: #141922;
-      --surface-2: #1a202b;
+      --surface-2: #191f29;
+      --surface-3: #10151d;
       --stroke: rgba(255,255,255,0.08);
       --stroke-soft: rgba(255,255,255,0.05);
       --text: #f5f7fb;
       --muted: #aab3c3;
-      --muted-2: #7e8899;
+      --muted-2: #7f8898;
       --primary: #8bb8ff;
       --primary-strong: #6aa0ff;
       --success: #7ad7a2;
       --warning: #f4cf7b;
-      --shadow: 0 16px 36px rgba(0,0,0,0.28);
-      --radius-xl: 28px;
-      --radius-lg: 22px;
-      --radius-md: 18px;
-      --radius-sm: 14px;
-      --container: 430px;
+      --shadow: 0 24px 60px rgba(0,0,0,0.28);
+      --radius-xl: 34px;
+      --radius-lg: 26px;
+      --radius-md: 20px;
+      --radius-sm: 16px;
+      --container: 1180px;
     }
 
     * { box-sizing: border-box; }
-
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       letter-spacing: -0.02em;
-      background: linear-gradient(180deg, #0d1016 0%, #0a0c11 100%);
       color: var(--text);
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-    }
-
-    .app {
-      width: 100%;
-      max-width: var(--container);
-      min-height: 100vh;
       background:
-        radial-gradient(circle at top center, rgba(139, 184, 255, 0.10), transparent 28%),
+        radial-gradient(circle at top center, rgba(139, 184, 255, 0.08), transparent 28%),
         linear-gradient(180deg, #0d1016 0%, #0a0c11 100%);
-      position: relative;
-      overflow-x: hidden;
     }
 
-    .shell {
-      padding: 18px 18px 40px;
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    .container { width: min(var(--container), calc(100% - 48px)); margin: 0 auto; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(10, 12, 17, 0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
     }
 
-    .statusbar {
-      width: 132px;
-      height: 34px;
-      margin: 0 auto 18px;
-      background: #000;
-      border-radius: 999px;
-      opacity: 0.95;
-    }
+    .nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 82px; }
 
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 28px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
 
     .brand-mark {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       display: grid;
       place-items: center;
-      background: linear-gradient(180deg, #8bb8ff, #6aa0ff);
-      box-shadow: 0 10px 24px rgba(106, 160, 255, 0.22);
+      background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+      box-shadow: 0 12px 28px rgba(106, 160, 255, 0.22);
       overflow: hidden;
       padding: 6px;
+      flex: 0 0 auto;
     }
 
     .brand-mark img {
@@ -105,658 +84,387 @@
       object-fit: contain;
     }
 
-    .brand-copy strong {
-      display: block;
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1.1;
-    }
+    .brand-copy strong { display: block; font-size: 18px; line-height: 1.05; font-weight: 800; }
+    .brand-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; font-weight: 500; }
 
-    .brand-copy span {
-      display: block;
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .top-link {
-      text-decoration: none;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px 12px;
-      border: 1px solid var(--stroke);
-      border-radius: 999px;
-      background: rgba(255,255,255,0.03);
-    }
-
-    .hero {
-      padding: 28px 22px;
-      border-radius: 30px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
-      border: 1px solid var(--stroke);
-      box-shadow: var(--shadow);
-      margin-bottom: 18px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(139, 184, 255, 0.10);
-      border: 1px solid rgba(139, 184, 255, 0.15);
-      color: #dce9ff;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 18px;
-    }
-
-    h1, h2, h3, p {
-      margin: 0;
-    }
-
-    .hero h1 {
-      font-size: 40px;
-      line-height: 0.98;
-      font-weight: 800;
-      margin-bottom: 14px;
-    }
-
-    .hero p {
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.58;
-      max-width: 32ch;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 24px 0 26px;
-    }
+    .nav-links { display: flex; align-items: center; gap: 28px; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 48px;
-      padding: 0 18px;
-      border-radius: 999px;
-      border: 1px solid transparent;
-      font-size: 14px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: transform .18s ease, opacity .18s ease;
+      display: inline-flex; align-items: center; justify-content: center; min-height: 50px; padding: 0 20px;
+      border-radius: 999px; border: 1px solid transparent; font-size: 14px; font-weight: 700;
+      transition: transform .18s ease, opacity .18s ease, background .18s ease; cursor: pointer;
     }
-
+    .btn:hover { opacity: 0.96; }
     .btn:active { transform: scale(0.98); }
 
-    .btn-primary {
-      background: linear-gradient(180deg, var(--primary), var(--primary-strong));
-      color: #08101d;
-      box-shadow: 0 12px 24px rgba(106, 160, 255, 0.22);
+    .btn-primary { background: linear-gradient(180deg, var(--primary), var(--primary-strong)); color: #07101b; box-shadow: 0 14px 30px rgba(106, 160, 255, 0.20); }
+    .btn-secondary { background: rgba(255,255,255,0.035); border-color: var(--stroke); color: var(--text); }
+    .btn-ghost { background: transparent; border-color: var(--stroke); color: var(--muted); }
+
+    .hero { padding: 44px 0 22px; }
+    .hero-shell { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 28px; align-items: stretch; }
+
+    .hero-copy, .hero-visual { border-radius: var(--radius-xl); border: 1px solid var(--stroke); box-shadow: var(--shadow); }
+    .hero-copy { padding: 42px; background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02)); }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 999px;
+      background: rgba(139, 184, 255, 0.10); border: 1px solid rgba(139, 184, 255, 0.16);
+      color: #dbe8fd; font-size: 12px; font-weight: 700; margin-bottom: 22px;
     }
 
-    .btn-secondary {
-      background: rgba(255,255,255,0.035);
-      border-color: var(--stroke);
-      color: var(--text);
-    }
+    h1, h2, h3, p { margin: 0; }
 
-    .hero-preview {
-      border-radius: 24px;
-      background: #10151d;
-      border: 1px solid rgba(255,255,255,0.06);
-      padding: 16px;
-    }
+    .hero-copy h1 { font-size: clamp(54px, 6vw, 78px); line-height: 0.94; letter-spacing: -0.05em; max-width: 11ch; margin-bottom: 18px; font-weight: 800; }
+    .hero-copy p { font-size: 17px; line-height: 1.68; color: var(--muted); max-width: 38ch; }
 
-    .preview-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
+    .hero-actions { display: flex; gap: 14px; margin: 28px 0 30px; flex-wrap: wrap; }
 
-    .preview-title {
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 700;
-    }
+    .hero-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .point-card { padding: 16px; border-radius: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+    .point-card strong { display: block; font-size: 15px; margin-bottom: 6px; }
+    .point-card span { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; }
 
-    .preview-pill {
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.05);
-      color: var(--text);
-      font-size: 11px;
-      font-weight: 700;
-    }
+    .hero-visual { padding: 22px; background: #10151d; display: flex; flex-direction: column; gap: 16px; }
+    .visual-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; }
+    .visual-top strong { font-size: 15px; font-weight: 700; }
+    .visual-top span { color: var(--muted); font-size: 12px; font-weight: 600; }
 
-    .preview-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
+    .visual-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat-card { padding: 18px 16px; border-radius: 22px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05); }
+    .stat-card .value { display: block; font-size: 30px; line-height: 1; font-weight: 800; margin-bottom: 8px; }
+    .stat-card .label { display: block; color: var(--muted); font-size: 12px; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
 
-    .mini-card {
-      padding: 14px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 18px;
-    }
-
-    .mini-label {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .mini-value {
-      font-size: 26px;
-      line-height: 1;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .mini-sub {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .mini-stack {
-      display: grid;
-      gap: 10px;
-    }
+    .visual-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 12px; }
+    .panel { padding: 18px; border-radius: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+    .panel h3 { font-size: 16px; margin-bottom: 14px; font-weight: 700; }
+    .panel-stack { display: grid; gap: 10px; }
 
     .mini-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 13px 14px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
     }
-
-    .mini-row strong {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      margin-bottom: 3px;
-    }
-
-    .mini-row span {
-      color: var(--muted);
-      font-size: 12px;
-    }
+    .mini-row strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .mini-row span { display: block; color: var(--muted); font-size: 12px; }
 
     .mini-tag {
-      color: #dce9ff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(139, 184, 255, 0.10);
-      border: 1px solid rgba(139, 184, 255, 0.16);
-      white-space: nowrap;
+      color: #dbe8fd; font-size: 11px; font-weight: 700; padding: 7px 10px; border-radius: 999px;
+      background: rgba(139, 184, 255, 0.10); border: 1px solid rgba(139, 184, 255, 0.16); white-space: nowrap;
     }
 
-    section {
-      margin-top: 18px;
-    }
+    .builder-list { display: grid; gap: 10px; }
+    .builder-card { padding: 14px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+    .builder-card small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+    .builder-card strong { display: block; font-size: 14px; margin-bottom: 5px; }
+    .builder-card span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    section { padding: 22px 0; }
 
     .section-card {
-      padding: 24px 20px;
-      border-radius: 28px;
+      padding: 34px; border-radius: var(--radius-xl);
       background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-      border: 1px solid var(--stroke-soft);
-      box-shadow: var(--shadow);
+      border: 1px solid var(--stroke-soft); box-shadow: var(--shadow);
     }
 
-    .section-head {
-      margin-bottom: 18px;
-    }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .section-head .left { max-width: 620px; }
 
-    .section-head .kicker {
-      display: inline-block;
-      color: var(--primary);
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
+    .kicker { display: inline-block; margin-bottom: 12px; color: var(--primary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .section-head h2 { font-size: 42px; line-height: 1.02; margin-bottom: 12px; font-weight: 800; letter-spacing: -0.04em; }
+    .section-head p { color: var(--muted); font-size: 16px; line-height: 1.65; max-width: 42ch; }
 
-    .section-head h2 {
-      font-size: 28px;
-      line-height: 1.08;
-      margin-bottom: 10px;
-      font-weight: 800;
-    }
+    .section-note { color: var(--muted-2); font-size: 13px; font-weight: 600; }
 
-    .section-head p {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-      max-width: 34ch;
-    }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature-card { padding: 24px; border-radius: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+    .feature-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); font-size: 20px; margin-bottom: 16px; }
+    .feature-card h3 { font-size: 22px; margin-bottom: 10px; font-weight: 700; }
+    .feature-card p { color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 14px; }
+    .feature-card small { color: #dbe5f6; font-size: 13px; font-weight: 600; }
 
-    .feature-list {
-      display: grid;
-      gap: 12px;
-    }
+    .workflow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .workflow-card { padding: 24px; border-radius: 24px; background: #111720; border: 1px solid rgba(255,255,255,0.05); }
+    .workflow-card .step { color: var(--primary); font-size: 12px; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .workflow-card h3 { font-size: 22px; margin-bottom: 10px; font-weight: 700; }
+    .workflow-card p { color: var(--muted); font-size: 15px; line-height: 1.62; margin-bottom: 16px; }
 
-    .feature-item {
-      padding: 16px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.05);
-    }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 8px 11px; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); color: var(--text); font-size: 12px; font-weight: 600; }
 
-    .feature-icon {
-      width: 42px;
-      height: 42px;
-      display: grid;
-      place-items: center;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.05);
-      font-size: 18px;
-      margin-bottom: 14px;
-    }
+    .preview-layout { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 16px; }
+    .preview-surface { padding: 22px; border-radius: 26px; background: #10151d; border: 1px solid rgba(255,255,255,0.06); }
 
-    .feature-item h3 {
-      font-size: 18px;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
+    .preview-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .preview-header strong { font-size: 16px; font-weight: 700; }
+    .preview-header span { color: var(--muted); font-size: 12px; font-weight: 600; }
 
-    .feature-item p {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-      margin-bottom: 12px;
-    }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+    .metric-card { padding: 16px 14px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+    .metric-card .n { display: block; font-size: 24px; line-height: 1; font-weight: 800; margin-bottom: 7px; }
+    .metric-card .t { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; line-height: 1.4; }
 
-    .feature-item small {
-      color: #d8e3f7;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .workflow {
-      display: grid;
-      gap: 12px;
-    }
-
-    .workflow-card {
-      padding: 18px;
-      border-radius: 22px;
-      background: #111720;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .workflow-card .step {
-      color: var(--primary);
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .workflow-card h3 {
-      font-size: 19px;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    .workflow-card p {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-
-    .workflow-meta {
-      display: inline-flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .chip {
-      padding: 8px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.05);
-      color: var(--text);
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .preview-panel {
-      padding: 18px;
-      border-radius: 24px;
-      background: #10151d;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .panel-header strong {
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .panel-header span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .metric-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .metric-card {
-      padding: 14px 12px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .metric-card .n {
-      display: block;
-      font-size: 22px;
-      line-height: 1;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .metric-card .t {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      line-height: 1.4;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .list-card {
-      display: grid;
-      gap: 10px;
-    }
-
+    .list-card { display: grid; gap: 10px; }
     .list-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
     }
+    .list-item strong { display: block; font-size: 14px; margin-bottom: 5px; }
+    .list-item span { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; }
 
-    .list-item strong {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 4px;
-    }
-
-    .list-item span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex: 0 0 auto;
-    }
-
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
     .dot-blue { background: var(--primary); }
     .dot-green { background: var(--success); }
     .dot-yellow { background: var(--warning); }
 
-    .benefits {
-      display: grid;
-      gap: 10px;
-      margin-top: 6px;
-    }
+    .preview-side { display: grid; gap: 12px; }
+    .side-card { padding: 20px; border-radius: 22px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+    .side-card small { display: block; color: var(--primary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin-bottom: 10px; }
+    .side-card strong { display: block; font-size: 18px; margin-bottom: 8px; }
+    .side-card p { color: var(--muted); font-size: 14px; line-height: 1.6; }
 
-    .benefit {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      padding: 14px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
+    .benefits-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .benefit-card { padding: 22px; border-radius: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+    .benefit-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: rgba(139, 184, 255, 0.10); color: var(--primary); font-size: 14px; font-weight: 800; margin-bottom: 16px; }
+    .benefit-card h3 { font-size: 19px; margin-bottom: 9px; font-weight: 700; }
+    .benefit-card p { color: var(--muted); font-size: 15px; line-height: 1.6; }
 
-    .benefit:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .benefit-mark {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: rgba(139, 184, 255, 0.10);
-      color: var(--primary);
-      font-size: 13px;
-      font-weight: 800;
-      flex: 0 0 auto;
-      margin-top: 1px;
-    }
-
-    .benefit strong {
-      display: block;
-      font-size: 15px;
-      margin-bottom: 5px;
-    }
-
-    .benefit p {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .cta {
-      padding: 28px 22px;
-      border-radius: 30px;
+    .cta-card {
+      padding: 44px 36px; border-radius: var(--radius-xl);
       background: linear-gradient(180deg, rgba(139, 184, 255, 0.10), rgba(255,255,255,0.03));
-      border: 1px solid rgba(139, 184, 255, 0.12);
-      box-shadow: var(--shadow);
-      text-align: center;
+      border: 1px solid rgba(139, 184, 255, 0.12); box-shadow: var(--shadow); text-align: center;
+    }
+    .cta-card h2 { font-size: 54px; line-height: 0.98; max-width: 12ch; margin: 0 auto 16px; letter-spacing: -0.04em; font-weight: 800; }
+    .cta-card p { color: var(--muted); font-size: 17px; line-height: 1.65; max-width: 38ch; margin: 0 auto 24px; }
+
+    .cta-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    .footer { padding: 14px 0 42px; color: var(--muted-2); font-size: 13px; text-align: center; line-height: 1.6; }
+
+    @media (max-width: 1100px) {
+      .hero-shell, .preview-layout, .features-grid, .workflow-grid, .benefits-grid { grid-template-columns: 1fr; }
+      .hero-points, .visual-stats, .metrics { grid-template-columns: repeat(3, 1fr); }
+      .visual-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-note { margin-top: 12px; }
     }
 
-    .cta h2 {
-      font-size: 30px;
-      line-height: 1.06;
-      margin-bottom: 12px;
-      font-weight: 800;
-    }
+    @media (max-width: 820px) {
+      .container { width: min(var(--container), calc(100% - 28px)); }
+      .nav { min-height: 72px; }
+      .nav-links, .nav-actions .btn-primary { display: none; }
+      .nav-actions { margin-left: auto; }
+      .nav-actions .btn-ghost { min-height: 42px; padding: 0 14px; font-size: 13px; color: var(--text); background: rgba(255,255,255,0.05); }
+      .brand-copy span { display: none; }
+      .brand-copy strong { font-size: 16px; }
 
-    .cta p {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-      margin: 0 auto 20px;
-      max-width: 30ch;
-    }
-
-    .footer {
-      padding: 18px 6px 0;
-      text-align: center;
-      color: var(--muted-2);
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
-    @media (min-width: 431px) {
-      body {
-        padding: 20px 0;
-      }
-
-      .app {
-        min-height: auto;
-        border-left: 1px solid rgba(255,255,255,0.04);
-        border-right: 1px solid rgba(255,255,255,0.04);
-      }
+      .hero-copy h1, .section-head h2, .cta-card h2 { max-width: none; }
+      .hero-points, .visual-stats, .metrics { grid-template-columns: 1fr; }
+      .hero-copy, .section-card, .cta-card { padding: 24px; }
     }
   </style>
 </head>
 <body>
-  <main class="app">
-    <div class="shell">
-      <div class="statusbar"></div>
+  <header class="site-header">
+    <div class="container nav">
+      <a href="#" class="brand">
+        <div class="brand-mark">
+          <img src="/media/logo.png" alt="Logo AuraFit" />
+        </div>
+        <div class="brand-copy">
+          <strong>AuraFit</strong>
+          <span>Clienti, workout builder e diet builder</span>
+        </div>
+      </a>
 
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark">
-            <img src="/media/logo.png" alt="Logo AuraFit" />
+      <nav class="nav-links">
+        <a href="#features">Funzionalità</a>
+        <a href="#workflow">Come funziona</a>
+        <a href="#preview">Anteprima</a>
+        <a href="#cta">Prova AuraFit</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="/login.php">Accedi</a>
+        <a class="btn btn-primary" href="#cta">Inizia ora</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-shell">
+        <div class="hero-copy">
+          <div class="eyebrow">Un unico spazio per lavorare meglio</div>
+          <h1>La gestione clienti, finalmente più chiara.</h1>
+          <p>
+            AuraFit riunisce gestione centralizzata clienti, workout builder e diet builder
+            in una dashboard essenziale, ordinata e pensata per lavorare ogni giorno con meno attrito.
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#cta">Prova AuraFit</a>
+            <a class="btn btn-secondary" href="#preview">Vedi la piattaforma</a>
           </div>
-          <div class="brand-copy">
-            <strong>AuraFit</strong>
-            <span>Clienti, workout e diet builder</span>
+
+          <div class="hero-points">
+            <div class="point-card">
+              <strong>Clienti sotto controllo</strong>
+              <span>Una vista centrale per gestire persone, percorsi e assegnazioni.</span>
+            </div>
+            <div class="point-card">
+              <strong>Workout builder</strong>
+              <span>Programmi più ordinati da costruire, aggiornare e consultare.</span>
+            </div>
+            <div class="point-card">
+              <strong>Diet builder</strong>
+              <span>Piani alimentari più leggibili e integrati nel flusso di lavoro.</span>
+            </div>
           </div>
         </div>
-        <a class="top-link" href="#cta">Scopri</a>
-      </header>
 
-      <section class="hero">
-        <div class="eyebrow">Un unico spazio per lavorare meglio</div>
-        <h1>La gestione clienti, finalmente semplice.</h1>
-        <p>
-          Organizza i clienti, costruisci schede di allenamento e prepara piani alimentari in una dashboard chiara,
-          veloce e pensata per lavorare ogni giorno senza confusione.
-        </p>
-
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#cta">Inizia ora</a>
-          <a class="btn btn-secondary" href="#preview">Vedi come funziona</a>
-        </div>
-
-        <div class="hero-preview" id="preview">
-          <div class="preview-top">
-            <div class="preview-title">Dashboard mobile</div>
-            <div class="preview-pill">Tutto sotto controllo</div>
+        <div class="hero-visual">
+          <div class="visual-top">
+            <strong>Panoramica operativa</strong>
+            <span>Desktop dashboard</span>
           </div>
 
-          <div class="preview-grid">
-            <div class="mini-card">
-              <div class="mini-label">Clienti attivi</div>
-              <div class="mini-value">48</div>
-              <div class="mini-sub">Anagrafica, assegnazioni e stato sempre visibili.</div>
+          <div class="visual-stats">
+            <div class="stat-card">
+              <span class="value">48</span>
+              <span class="label">Clienti attivi</span>
             </div>
-            <div class="mini-card">
-              <div class="mini-label">Builder</div>
-              <div class="mini-value">2</div>
-              <div class="mini-sub">Workout e diet builder in uno spazio ordinato.</div>
+            <div class="stat-card">
+              <span class="value">12</span>
+              <span class="label">Workout attivi</span>
+            </div>
+            <div class="stat-card">
+              <span class="value">9</span>
+              <span class="label">Diet plan</span>
             </div>
           </div>
 
-          <div class="mini-stack">
-            <div class="mini-row">
-              <div>
-                <strong>Workout builder</strong>
-                <span>Schede, giorni ed esercizi in pochi tap</span>
+          <div class="visual-grid">
+            <div class="panel">
+              <h3>Gestione centralizzata</h3>
+              <div class="panel-stack">
+                <div class="mini-row">
+                  <div>
+                    <strong>Clienti organizzati per priorità</strong>
+                    <span>Anagrafica, percorsi e stato sempre in vista</span>
+                  </div>
+                  <div class="mini-tag">Chiaro</div>
+                </div>
+                <div class="mini-row">
+                  <div>
+                    <strong>Accesso rapido ai builder</strong>
+                    <span>Workout e nutrizione nello stesso flusso operativo</span>
+                  </div>
+                  <div class="mini-tag">Veloce</div>
+                </div>
+                <div class="mini-row">
+                  <div>
+                    <strong>Meno schermate dispersive</strong>
+                    <span>Le azioni principali restano sempre facili da trovare</span>
+                  </div>
+                  <div class="mini-tag">Pulito</div>
+                </div>
               </div>
-              <div class="mini-tag">Rapido</div>
             </div>
-            <div class="mini-row">
-              <div>
-                <strong>Diet builder</strong>
-                <span>Piani alimentari organizzati per cliente</span>
+
+            <div class="panel">
+              <h3>Strumenti principali</h3>
+              <div class="builder-list">
+                <div class="builder-card">
+                  <small>Workout builder</small>
+                  <strong>Programmi e struttura ordinata</strong>
+                  <span>Schede, giorni e progressione gestiti in modo più lineare.</span>
+                </div>
+                <div class="builder-card">
+                  <small>Diet builder</small>
+                  <strong>Piani alimentari più leggibili</strong>
+                  <span>Una base semplice per lavorare meglio sulla nutrizione.</span>
+                </div>
               </div>
-              <div class="mini-tag">Ordinato</div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section>
+    <section id="features">
+      <div class="container">
         <div class="section-card">
           <div class="section-head">
-            <span class="kicker">Per il lavoro quotidiano</span>
-            <h2>Tre aree chiare. Zero rumore.</h2>
-            <p>
-              AuraFit per mobile mette in primo piano quello che serve davvero: clienti, programmazione allenamenti e piani alimentari.
-            </p>
+            <div class="left">
+              <span class="kicker">Funzionalità principali</span>
+              <h2>Tre aree chiare. Zero rumore.</h2>
+              <p>
+                La piattaforma mette al centro quello che serve davvero: clienti, programmazione allenamenti
+                e piani alimentari. Tutto in una struttura più leggibile e coerente.
+              </p>
+            </div>
+            <div class="section-note">Pensata per un utilizzo quotidiano, non per una demo piena di effetti.</div>
           </div>
 
-          <div class="feature-list">
-            <article class="feature-item">
+          <div class="features-grid">
+            <article class="feature-card">
               <div class="feature-icon">👥</div>
               <h3>Gestione centralizzata clienti</h3>
               <p>
-                Tutti i clienti in un unico flusso operativo, con accesso rapido ai dati essenziali e ai percorsi assegnati.
+                Tutti i clienti in un unico spazio operativo, con accesso rapido ai dati essenziali
+                e ai percorsi già assegnati.
               </p>
-              <small>Una vista ordinata per lavorare senza passare da mille schermate.</small>
+              <small>Una vista ordinata per lavorare senza navigazione dispersiva.</small>
             </article>
 
-            <article class="feature-item">
+            <article class="feature-card">
               <div class="feature-icon">🏋️</div>
               <h3>Workout builder</h3>
               <p>
-                Costruisci schede e programmi in modo più lineare, con una struttura chiara e facile da aggiornare nel tempo.
+                Costruisci schede e programmi in modo più lineare, con una struttura chiara e facile
+                da aggiornare nel tempo.
               </p>
-              <small>Meno clic inutili, più controllo sulla programmazione.</small>
+              <small>Meno attrito operativo, più controllo sulla programmazione.</small>
             </article>
 
-            <article class="feature-item">
+            <article class="feature-card">
               <div class="feature-icon">🥗</div>
               <h3>Diet builder</h3>
               <p>
-                Crea e organizza i piani alimentari mantenendo ogni cliente dentro un flusso semplice, leggibile e coerente.
+                Organizza i piani alimentari in un flusso semplice, leggibile e coerente con il resto
+                della piattaforma.
               </p>
-              <small>Una base pulita per gestire meglio nutrizione e assegnazioni.</small>
+              <small>Una base più pulita per gestire nutrizione e assegnazioni.</small>
             </article>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section>
+    <section id="workflow">
+      <div class="container">
         <div class="section-card">
           <div class="section-head">
-            <span class="kicker">Come si usa</span>
-            <h2>Un flusso mobile più naturale.</h2>
-            <p>
-              Ogni schermata è pensata per ridurre attrito e mantenere subito visibili le azioni principali.
-            </p>
+            <div class="left">
+              <span class="kicker">Come funziona</span>
+              <h2>Un flusso desktop più naturale.</h2>
+              <p>
+                Ogni area accompagna il lavoro in modo semplice: apri il cliente, costruisci il workout,
+                organizza il piano alimentare. Senza UI caotiche.
+              </p>
+            </div>
           </div>
 
-          <div class="workflow">
+          <div class="workflow-grid">
             <article class="workflow-card">
               <div class="step">01 · Clienti</div>
               <h3>Apri il cliente giusto in pochi secondi</h3>
               <p>
-                Cerca, seleziona e lavora da un solo punto di accesso. Meno navigazione dispersiva, più continuità operativa.
+                Una base centrale per cercare, selezionare e lavorare da un solo punto di accesso,
+                senza passare da mille schermate.
               </p>
-              <div class="workflow-meta">
+              <div class="chip-row">
                 <span class="chip">Vista pulita</span>
                 <span class="chip">Azioni rapide</span>
               </div>
@@ -766,9 +474,10 @@
               <div class="step">02 · Workout builder</div>
               <h3>Costruisci il programma con una struttura chiara</h3>
               <p>
-                Parti dal cliente e prepara la scheda in un builder ordinato, pensato per restare leggibile anche su mobile.
+                Parti dal cliente e prepara la scheda in un builder ordinato, pensato per restare
+                leggibile e veloce anche quando il lavoro cresce.
               </p>
-              <div class="workflow-meta">
+              <div class="chip-row">
                 <span class="chip">Programmi ordinati</span>
                 <span class="chip">Aggiornamenti rapidi</span>
               </div>
@@ -778,126 +487,179 @@
               <div class="step">03 · Diet builder</div>
               <h3>Gestisci i piani alimentari senza confusione</h3>
               <p>
-                Organizza i piani in modo più lineare e mantieni il contesto del cliente sempre al centro del lavoro.
+                Organizza i piani con una UI più lineare e mantieni sempre il contesto del cliente
+                al centro del processo.
               </p>
-              <div class="workflow-meta">
+              <div class="chip-row">
                 <span class="chip">Piani leggibili</span>
                 <span class="chip">Gestione centralizzata</span>
               </div>
             </article>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section>
+    <section id="preview">
+      <div class="container">
         <div class="section-card">
           <div class="section-head">
-            <span class="kicker">Anteprima interfaccia</span>
-            <h2>Una dashboard che si legge subito.</h2>
-            <p>
-              Niente elementi inutili, niente sovraccarico visivo. Solo le informazioni che servono per lavorare bene da mobile.
-            </p>
+            <div class="left">
+              <span class="kicker">Anteprima interfaccia</span>
+              <h2>Una dashboard che si legge subito.</h2>
+              <p>
+                Niente sovraccarico visivo. Solo elementi utili, gerarchie più chiare e una composizione
+                più facile da interpretare a colpo d’occhio.
+              </p>
+            </div>
           </div>
 
-          <div class="preview-panel">
-            <div class="panel-header">
-              <strong>Panoramica operativa</strong>
-              <span>Mobile first</span>
+          <div class="preview-layout">
+            <div class="preview-surface">
+              <div class="preview-header">
+                <strong>Panoramica operativa</strong>
+                <span>Desktop first</span>
+              </div>
+
+              <div class="metrics">
+                <div class="metric-card">
+                  <span class="n">48</span>
+                  <span class="t">Clienti gestiti</span>
+                </div>
+                <div class="metric-card">
+                  <span class="n">12</span>
+                  <span class="t">Workout attivi</span>
+                </div>
+                <div class="metric-card">
+                  <span class="n">9</span>
+                  <span class="t">Diet plan attivi</span>
+                </div>
+              </div>
+
+              <div class="list-card">
+                <div class="list-item">
+                  <div>
+                    <strong>Clienti organizzati per priorità</strong>
+                    <span>Accesso immediato a percorsi, schede e piani alimentari</span>
+                  </div>
+                  <div class="dot dot-blue"></div>
+                </div>
+
+                <div class="list-item">
+                  <div>
+                    <strong>Workout builder più lineare</strong>
+                    <span>Una struttura più semplice da leggere e aggiornare</span>
+                  </div>
+                  <div class="dot dot-green"></div>
+                </div>
+
+                <div class="list-item">
+                  <div>
+                    <strong>Diet builder più ordinato</strong>
+                    <span>Piani alimentari gestiti senza schermate troppo dense</span>
+                  </div>
+                  <div class="dot dot-yellow"></div>
+                </div>
+              </div>
             </div>
 
-            <div class="metric-row">
-              <div class="metric-card">
-                <span class="n">48</span>
-                <span class="t">Clienti</span>
+            <div class="preview-side">
+              <div class="side-card">
+                <small>Gestione clienti</small>
+                <strong>Tutto in un unico flusso</strong>
+                <p>
+                  Una base centrale per trovare subito il cliente corretto e muoversi rapidamente
+                  tra allenamento e nutrizione.
+                </p>
               </div>
-              <div class="metric-card">
-                <span class="n">12</span>
-                <span class="t">Workout attivi</span>
-              </div>
-              <div class="metric-card">
-                <span class="n">9</span>
-                <span class="t">Diet plan</span>
-              </div>
-            </div>
 
-            <div class="list-card">
-              <div class="list-item">
-                <div>
-                  <strong>Clienti organizzati per priorità</strong>
-                  <span>Accesso immediato a schede e piani alimentari</span>
-                </div>
-                <div class="dot dot-blue"></div>
+              <div class="side-card">
+                <small>Workout builder</small>
+                <strong>Più struttura, meno confusione</strong>
+                <p>
+                  Il builder aiuta a mantenere ordine nella programmazione, anche quando i programmi
+                  diventano più articolati.
+                </p>
               </div>
-              <div class="list-item">
-                <div>
-                  <strong>Workout builder più lineare</strong>
-                  <span>Una struttura più facile da leggere e aggiornare</span>
-                </div>
-                <div class="dot dot-green"></div>
-              </div>
-              <div class="list-item">
-                <div>
-                  <strong>Diet builder più ordinato</strong>
-                  <span>Piani alimentari gestiti senza schermate caotiche</span>
-                </div>
-                <div class="dot dot-yellow"></div>
+
+              <div class="side-card">
+                <small>Diet builder</small>
+                <strong>Una UI più facile da seguire</strong>
+                <p>
+                  I piani alimentari entrano in una struttura più pulita, coerente e facile da gestire
+                  nel lavoro di ogni giorno.
+                </p>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section>
+    <section>
+      <div class="container">
         <div class="section-card">
           <div class="section-head">
-            <span class="kicker">Perché funziona</span>
-            <h2>Più semplicità. Più controllo.</h2>
-            <p>
-              Una landing mobile pulita deve far capire subito il valore del prodotto. Qui il messaggio è semplice e concreto.
-            </p>
+            <div class="left">
+              <span class="kicker">Perché funziona</span>
+              <h2>Più semplicità. Più controllo.</h2>
+              <p>
+                Una landing chiara deve spiegare subito il valore del prodotto: meno complessità visiva,
+                più ordine operativo e un messaggio diretto.
+              </p>
+            </div>
           </div>
 
-          <div class="benefits">
-            <div class="benefit">
+          <div class="benefits-grid">
+            <article class="benefit-card">
               <div class="benefit-mark">✓</div>
-              <div>
-                <strong>Tutto in un unico spazio</strong>
-                <p>Clienti, schede e piani alimentari raccolti in un’esperienza coerente.</p>
-              </div>
-            </div>
-            <div class="benefit">
+              <h3>Tutto in un unico spazio</h3>
+              <p>
+                Clienti, schede e piani alimentari raccolti in un’esperienza coerente e più facile da gestire.
+              </p>
+            </article>
+
+            <article class="benefit-card">
               <div class="benefit-mark">✓</div>
-              <div>
-                <strong>Workout builder più rapido da usare</strong>
-                <p>Una struttura più chiara aiuta a costruire e aggiornare i programmi con meno attrito.</p>
-              </div>
-            </div>
-            <div class="benefit">
+              <h3>Workout builder più rapido</h3>
+              <p>
+                Una struttura più chiara aiuta a costruire e aggiornare i programmi con meno attrito operativo.
+              </p>
+            </article>
+
+            <article class="benefit-card">
               <div class="benefit-mark">✓</div>
-              <div>
-                <strong>Diet builder più leggibile</strong>
-                <p>La nutrizione entra in un flusso più ordinato, con una UI più semplice da seguire.</p>
-              </div>
-            </div>
+              <h3>Diet builder più leggibile</h3>
+              <p>
+                La nutrizione entra in un flusso ordinato, con una UI più semplice da seguire e mantenere.
+              </p>
+            </article>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section id="cta">
-        <div class="cta">
+    <section id="cta">
+      <div class="container">
+        <div class="cta-card">
           <h2>Porta ordine nel tuo lavoro quotidiano.</h2>
           <p>
-            AuraFit riunisce gestione clienti, workout builder e diet builder in una dashboard mobile più pulita e più facile da usare.
+            AuraFit unisce gestione clienti, workout builder e diet builder in una dashboard più pulita,
+            leggibile e pronta per l’uso quotidiano.
           </p>
-          <a class="btn btn-primary" href="#">Prova AuraFit</a>
-        </div>
-      </section>
 
-      <footer class="footer">
-        AuraFit · Mobile landing concept<br>
-        Gestione centralizzata clienti, workout builder e diet builder.
-      </footer>
-    </div>
+          <div class="cta-actions">
+            <a class="btn btn-primary" href="#">Prova AuraFit</a>
+            <a class="btn btn-secondary" href="#features">Scopri le funzionalità</a>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer class="footer">
+    AuraFit · Landing page desktop concept<br>
+    Gestione centralizzata clienti, workout builder e diet builder.
+  </footer>
 </body>
 </html>
