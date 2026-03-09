@@ -22,6 +22,10 @@ ALTER TABLE PianiAlimentari
   ADD CONSTRAINT fk_piani_alimentari_cartella
   FOREIGN KEY (cartellaId) REFERENCES PianiAlimentariCartelle(idCartella)
   ON DELETE SET NULL;
+
+-- necessario per bozze senza cliente associato
+ALTER TABLE PianiAlimentari
+  MODIFY COLUMN cliente BIGINT NULL;
 */
 
 function redirectNutrition(array $params = []): void {
@@ -167,8 +171,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if ($clienteValue !== null && !isset($clientiMap[$clienteId])) {
         throw new RuntimeException('Cliente non valido per questo nutrizionista.');
       }
-      if ($clienteValue === null && strtolower($stato) !== 'bozza') {
-        throw new RuntimeException('Per piani senza cliente lo stato deve essere bozza.');
+
+      if ($clienteValue === null) {
+        $stato = 'bozza';
       }
 
       $folder = Database::exec('SELECT idCartella FROM PianiAlimentariCartelle WHERE idCartella = ? AND professionista = ? LIMIT 1', [$folderId, $professionistaId])->fetch();
@@ -176,11 +181,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         throw new RuntimeException('Cartella non trovata.');
       }
 
-      Database::exec(
-        'INSERT INTO PianiAlimentari (cliente, creatoreUtente, stato, titolo, note, versione, pianoPrecedente, creatoIl, aggiornatoIl, cartellaId)
-         VALUES (?, ?, ?, ?, ?, 1, NULL, NOW(), NOW(), ?)',
-        [$clienteValue, $userId, $stato, $titolo, $note, $folderId]
-      );
+      try {
+        if ($clienteValue === null) {
+          Database::exec(
+            'INSERT INTO PianiAlimentari (creatoreUtente, stato, titolo, note, versione, pianoPrecedente, creatoIl, aggiornatoIl, cartellaId)
+             VALUES (?, ?, ?, ?, 1, NULL, NOW(), NOW(), ?)',
+            [$userId, $stato, $titolo, $note, $folderId]
+          );
+        } else {
+          Database::exec(
+            'INSERT INTO PianiAlimentari (cliente, creatoreUtente, stato, titolo, note, versione, pianoPrecedente, creatoIl, aggiornatoIl, cartellaId)
+             VALUES (?, ?, ?, ?, ?, 1, NULL, NOW(), NOW(), ?)',
+            [$clienteValue, $userId, $stato, $titolo, $note, $folderId]
+          );
+        }
+      } catch (Throwable $createError) {
+        if ($clienteValue === null) {
+          throw new RuntimeException('Il database corrente richiede un cliente obbligatorio per il piano. Rendi nullable PianiAlimentari.cliente per supportare bozze senza cliente.');
+        }
+        throw $createError;
+      }
+
       $newPlanId = (int)Database::pdo()->lastInsertId();
       setFlash('ok', 'Piano alimentare creato.');
       redirectNutrition(['cartella' => $folderId, 'piano' => $newPlanId]);
