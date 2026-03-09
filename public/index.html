@@ -1,1064 +1,903 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="AuraFit" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0d12" />
   <link rel="apple-touch-icon" href="/media/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <title>AuraFit — Web app premium per gestire i clienti di PT e Nutrizionisti</title>
-  <meta name="description" content="AuraFit è la web app per Personal Trainer e Nutrizionisti: gestione clienti, programmi, piani alimentari, chat e report. Sicura e GDPR-ready." />
-  <meta property="og:title" content="AuraFit — Web app premium per gestire i clienti di PT e Nutrizionisti" />
-  <meta property="og:description" content="Gestisci clienti, allenamenti, nutrizione, chat e progressi da un’unica dashboard. AuraFit è sicura e GDPR-ready." />
-  <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#0B0F19" />
-
+  <title>AuraFit — Gestione clienti, workout e diet builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-  :root{
-    --bg:#070A12;
-    --card: rgba(255,255,255,.06);
-    --card2: rgba(255,255,255,.09);
-    --text:#EAF0FF;
-    --muted: rgba(234,240,255,.68);
-    --line: rgba(234,240,255,.12);
-    --brand1:#6D5EF3;
-    --brand2:#2EE1A5;
-    --brand3:#4CC9F0;
-    --shadow: 0 18px 60px rgba(0,0,0,.45);
-    --radius: 18px;
-    --radius2: 24px;
-    --max: 1160px;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-    --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  }
-
-  *{box-sizing:border-box}
-  html, body { height: 100%; width:100%; max-width:100%; overflow-x:hidden; }
-
-  body{
-    margin:0;
-    padding-top: env(safe-area-inset-top);
-    padding-right: env(safe-area-inset-right);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    font-family: var(--sans);
-    color: var(--text);
-    background: var(--bg);
-    overflow-x:hidden;
-    position: relative;
-  }
-
-  /* Layer fisso con l'effetto (non crea bande tra sezioni) */
-  body::before{
-    content:"";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-
-    /* più “wellness/premium”: meno contrasti “fintech”, stessa palette */
-    background:
-      radial-gradient(1200px 800px at 18% -12%, rgba(109,94,243,.28), transparent 58%),
-      radial-gradient(1100px 700px at 92% 12%, rgba(76,201,240,.16), transparent 58%),
-      radial-gradient(900px 700px at 55% 98%, rgba(46,225,165,.12), transparent 60%);
-  }
-
-  /* Velo per uniformare */
-  body::after{
-    content:"";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events:none;
-
-    background:
-      radial-gradient(1200px 700px at 50% 40%, rgba(255,255,255,.035), transparent 62%);
-  }
-
-  a{color:inherit; text-decoration:none}
-  .container{width:100%; max-width: var(--max); margin:0 auto; padding:0 18px}
-
-  .pill{
-    display:inline-flex; align-items:center; gap:10px;
-    padding:10px 12px;
-    border: 1px solid var(--line);
-    background: rgba(255,255,255,.04);
-    border-radius: 999px;
-    color: var(--muted);
-    font-size: 13px;
-    letter-spacing:.2px;
-    backdrop-filter: blur(10px);
-  }
-  .pill b{color:var(--text)}
-
-  .topbar{
-    position: sticky; top:0; z-index:50;
-    background: rgba(7,10,18,.55);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(255,255,255,.06);
-  }
-  .nav{
-    display:flex; align-items:center; justify-content:space-between;
-    height:72px;
-  }
-  .brand{
-    display:flex; align-items:center; gap:10px;
-    font-weight: 700;
-    letter-spacing:.2px;
-  }
-  .logo{
-    width:34px;height:34px;border-radius: 10px;
-    background: linear-gradient(135deg, var(--brand1), var(--brand2));
-    box-shadow: 0 10px 30px rgba(109,94,243,.18);
-    position:relative;
-    overflow:hidden;
-  }
-  .logo-img{
-    height: 34px;
-    width: auto;
-    display: block;
-    filter: drop-shadow(0 6px 20px rgba(109,94,243,.30));
-  }
-
-  .navlinks{display:flex; align-items:center; gap:16px}
-  .navlinks a{
-    color: var(--muted);
-    padding:10px 10px;
-    border-radius: 12px;
-    transition: background .2s ease, color .2s ease;
-    font-size: 14px;
-  }
-  .navlinks a:hover{background: rgba(255,255,255,.06); color: var(--text)}
-
-  .actions{display:flex; align-items:center; gap:10px}
-  .btn{
-    display:inline-flex; align-items:center; justify-content:center; gap:10px;
-    padding:12px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.07);
-    background: rgba(255,255,255,.04);
-    color: var(--text);
-    font-weight: 650;
-    font-size: 14px;
-    cursor:pointer;
-    transition: transform .15s ease, background .2s ease, border-color .2s ease, filter .2s ease;
-    white-space:nowrap;
-  }
-  .btn:hover{background: rgba(255,255,255,.07)}
-  .btn:active{transform: translateY(1px)}
-  .btn.primary{
-    /* più premium: gradiente meno “neon-fintech”, stessa palette */
-    border-color: rgba(109,94,243,.55);
-    background: linear-gradient(135deg, rgba(109,94,243,.92), rgba(76,201,240,.72));
-    color: #061018;
-    box-shadow: 0 18px 50px rgba(109,94,243,.16);
-  }
-  .btn.primary:hover{filter:saturate(1.04) contrast(1.02)}
-  .btn.ghost{background: transparent;}
-
-  .menuBtn{
-    display:none;
-    width:42px;height:42px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.07);
-    background: rgba(255,255,255,.04);
-    color: var(--text);
-    cursor:pointer;
-  }
-
-  .mobileMenu{
-    display:none;
-    padding: 10px 0 14px;
-    border-top: 1px solid rgba(255,255,255,.06);
-  }
-  @media (min-width: 981px){
-    .mobileMenu{ display:none !important; }
-  }
-  @media (max-width: 980px){
-    .mobileMenu.open{ display:block; }
-  }
-
-  /* Hero */
-  .hero{ padding: 64px 0 26px; }
-  .heroGrid{
-    display:grid;
-    grid-template-columns: 1.1fr .9fr;
-    gap: 22px;
-    align-items: start;
-  }
-  h1{
-    margin: 18px 0 10px;
-    font-size: clamp(34px, 4.6vw, 58px);
-    line-height: 1.02;
-    letter-spacing: -0.02em;
-  }
-  .lead{
-    margin: 0 0 18px;
-    color: var(--muted);
-    font-size: clamp(15px, 1.25vw, 18px);
-    line-height: 1.55;
-    max-width: 60ch;
-  }
-  .heroCtas{display:flex; flex-wrap:wrap; gap:10px; margin-top: 18px}
-  .micro{
-    margin-top: 14px;
-    display:flex; flex-wrap:wrap; gap:10px;
-    color: rgba(234,240,255,.62);
-    font-size: 13px;
-  }
-  .micro span{
-    border: 1px solid rgba(255,255,255,.07);
-    padding: 8px 10px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.03);
-  }
-
-  /* Panels / Cards */
-  .panel,
-  .card,
-  .callout,
-  .priceCard,
-  .faq{
-    border: none;
-    box-shadow:
-      0 10px 40px rgba(0,0,0,.35),
-      inset 0 0 0 1px rgba(255,255,255,.04);
-  }
-
-  .panel{
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-    border-radius: var(--radius2);
-    overflow:hidden;
-  }
-  .panelTop{
-    padding: 18px 18px 0;
-    display:flex; align-items:center; justify-content:space-between;
-    gap:14px;
-  }
-  .panelTitle{
-    font-weight: 800;
-    letter-spacing:.2px;
-    display:flex; align-items:center; gap:10px;
-  }
-  .dot{
-    width:10px;height:10px;border-radius:99px;
-    background: var(--brand3);
-    box-shadow: 0 0 0 6px rgba(76,201,240,.10);
-  }
-  .panelBody{padding: 16px 18px 18px}
-
-  .mock{
-    border: none;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-    border-radius: 16px;
-    background: rgba(7,10,18,.42);
-    overflow:hidden;
-  }
-  .mockHeader{
-    display:flex; align-items:center; gap:8px;
-    padding: 12px 14px;
-    border-bottom: 1px solid rgba(255,255,255,.06);
-    color: rgba(234,240,255,.65);
-    font-size: 12px;
-  }
-  .bubble{width:10px;height:10px;border-radius:99px; background: rgba(234,240,255,.22)}
-
-  /* Mock “premium CRM”: meno KPI finanziari, più gestione clienti */
-  .mockGrid{
-    padding: 14px;
-    display:grid;
-    grid-template-columns: 1.05fr .95fr;
-    gap: 12px;
-  }
-  .tile{
-    border: none;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-    background: rgba(255,255,255,.04);
-    border-radius: 16px;
-    padding: 14px;
-    min-height: 120px;
-    position:relative;
-    overflow:hidden;
-  }
-  .tile:after{
-    content:"";
-    position:absolute; inset:-45%;
-    background: radial-gradient(circle at 30% 30%, rgba(109,94,243,.18), transparent 58%);
-    transform: rotate(14deg);
-    pointer-events:none;
-  }
-  .kpi{
-    font-size: 12px;
-    color: rgba(234,240,255,.70);
-    margin-bottom: 10px;
-    position:relative;
-    z-index:1;
-    letter-spacing:.2px;
-  }
-  .big{
-    font-size: 26px;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    position:relative;
-    z-index:1;
-  }
-  .small{
-    margin-top: 8px;
-    color: rgba(234,240,255,.72);
-    font-size: 13px;
-    position:relative;
-    z-index:1;
-    line-height: 1.45;
-  }
-  .miniList{
-    margin-top: 10px;
-    display:grid;
-    gap:8px;
-    position:relative;
-    z-index:1;
-  }
-  .row{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:10px;
-    padding: 9px 10px;
-    border-radius: 12px;
-    background: rgba(255,255,255,.03);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
-  }
-  .row .name{color: rgba(234,240,255,.86); font-size: 13px; font-weight: 650}
-  .row .tag{
-    font-size: 12px;
-    color: rgba(234,240,255,.72);
-    padding: 4px 8px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.04);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
-    white-space: nowrap;
-  }
-  .tag.ok{
-    background: rgba(46,225,165,.10);
-    box-shadow: inset 0 0 0 1px rgba(46,225,165,.22);
-  }
-  .tag.attn{
-    background: rgba(76,201,240,.10);
-    box-shadow: inset 0 0 0 1px rgba(76,201,240,.22);
-  }
-
-  section{
-    padding: 56px 0;
-    position: relative;
-  }
-
-  .sectionHead{
-    display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
-    margin-bottom: 18px;
-  }
-  .sectionHead h2{
-    margin:0;
-    font-size: clamp(22px, 2.3vw, 34px);
-    letter-spacing: -0.01em;
-  }
-  .sectionHead p{
-    margin:0;
-    color: var(--muted);
-    max-width: 70ch;
-    line-height: 1.5;
-    font-size: 14.5px;
-  }
-
-  .grid3{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-  }
-  .card{
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-    border-radius: var(--radius);
-    padding: 18px;
-    backdrop-filter: blur(14px);
-  }
-  .card .icon{
-    width:42px;height:42px;border-radius: 14px;
-    display:grid; place-items:center;
-    background: rgba(255,255,255,.06);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-    margin-bottom: 12px;
-  }
-  .card h3{margin:0 0 8px; font-size: 16px}
-  .card p{margin:0; color: var(--muted); line-height: 1.6; font-size: 14px}
-
-  .split{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    align-items: stretch;
-  }
-  .list{
-    margin: 0;
-    padding-left: 18px;
-    color: var(--muted);
-    line-height: 1.75;
-    font-size: 14px;
-  }
-  .callout{
-    background: linear-gradient(135deg, rgba(109,94,243,.16), rgba(46,225,165,.08));
-    border-radius: var(--radius2);
-    padding: 18px;
-  }
-  .callout h3{margin:0 0 6px}
-  .callout p{margin:0; color: var(--muted); line-height:1.6}
-
-  /* Pricing */
-  .pricing{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-  }
-  .priceCard{
-    background: rgba(255,255,255,.04);
-    border-radius: var(--radius2);
-    padding: 18px;
-    position:relative;
-    overflow:hidden;
-  }
-  .badge{
-    display:inline-flex; align-items:center;
-    font-size: 12px;
-    color: rgba(6,16,24,.92);
-    background: linear-gradient(135deg, rgba(109,94,243,.9), rgba(76,201,240,.70));
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-weight: 800;
-    letter-spacing:.2px;
-  }
-  .price{
-    margin-top: 12px;
-    font-size: 34px;
-    font-weight: 950;
-    letter-spacing: -0.02em;
-  }
-  .price small{font-size: 14px; color: rgba(234,240,255,.65); font-weight: 650}
-  .hr{
-    height:1px;
-    background: rgba(255,255,255,.06);
-    margin: 14px 0
-  }
-  .ul{
-    list-style:none; padding:0; margin:0;
-    display:grid; gap:10px;
-    color: rgba(234,240,255,.72);
-    font-size: 14px;
-    line-height:1.35;
-  }
-  .ul li{display:flex; gap:10px}
-  .check{
-    width:18px;height:18px;border-radius: 6px;
-    background: rgba(46,225,165,.14);
-    box-shadow: inset 0 0 0 1px rgba(46,225,165,.28);
-    display:grid; place-items:center;
-    flex: 0 0 auto;
-    margin-top: 1px;
-  }
-
-  /* FAQ */
-  .faq{
-    border-radius: var(--radius2);
-    overflow:hidden;
-    background: rgba(255,255,255,.03);
-  }
-  .faqItem{border-top: 1px solid rgba(255,255,255,.06)}
-  .faqItem:first-child{border-top:0}
-  .faqQ{
-    width:100%;
-    text-align:left;
-    padding: 16px 16px;
-    background: transparent;
-    border:0;
-    color: var(--text);
-    display:flex; align-items:center; justify-content:space-between;
-    font-weight: 800;
-    font-size: 14.5px;
-    cursor:pointer;
-  }
-  .faqA{
-    padding: 0 16px 16px;
-    color: var(--muted);
-    line-height: 1.7;
-    font-size: 14px;
-    display:none;
-  }
-  .faqItem.open .faqA{display:block}
-  .chev{opacity:.7}
-
-  footer{
-    padding: 34px 0 46px;
-    border-top: 1px solid rgba(255,255,255,.06);
-    color: rgba(234,240,255,.65);
-  }
-  .footGrid{
-    display:grid;
-    grid-template-columns: 1.2fr .8fr .8fr;
-    gap: 14px;
-    align-items:start;
-  }
-  .footGrid a{color: rgba(234,240,255,.72)}
-  .footGrid a:hover{color: var(--text)}
-  .fineprint{
-    margin-top: 18px;
-    font-size: 12.5px;
-    color: rgba(234,240,255,.52);
-    line-height: 1.6;
-  }
-
-  /* Mobile */
-  @media (max-width: 980px){
-    .heroGrid{grid-template-columns: 1fr}
-    .panel{order:2}
-    .grid3{grid-template-columns: 1fr}
-    .split{grid-template-columns: 1fr}
-    .pricing{grid-template-columns: 1fr}
-    .footGrid{grid-template-columns: 1fr}
-    .navlinks{display:none}
-    .menuBtn{display:inline-grid; place-items:center}
-
-    .mobileMenu a{
-      display:block;
-      padding: 12px 10px;
-      border-radius: 12px;
-      color: var(--muted);
+    :root {
+      --bg: #0b0d12;
+      --bg-soft: #11141b;
+      --surface: #141922;
+      --surface-2: #1a202b;
+      --stroke: rgba(255,255,255,0.08);
+      --stroke-soft: rgba(255,255,255,0.05);
+      --text: #f5f7fb;
+      --muted: #aab3c3;
+      --muted-2: #7e8899;
+      --primary: #8bb8ff;
+      --primary-strong: #6aa0ff;
+      --success: #7ad7a2;
+      --warning: #f4cf7b;
+      --shadow: 0 16px 36px rgba(0,0,0,0.28);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --container: 430px;
     }
-    .mobileMenu a:hover{background: rgba(255,255,255,.05); color: var(--text)}
-    .actions .btn.ghost{display:none}
-  }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      letter-spacing: -0.02em;
+      background: linear-gradient(180deg, #0d1016 0%, #0a0c11 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: var(--container);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top center, rgba(139, 184, 255, 0.10), transparent 28%),
+        linear-gradient(180deg, #0d1016 0%, #0a0c11 100%);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .shell {
+      padding: 18px 18px 40px;
+    }
+
+    .statusbar {
+      width: 132px;
+      height: 34px;
+      margin: 0 auto 18px;
+      background: #000;
+      border-radius: 999px;
+      opacity: 0.95;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #8bb8ff, #6aa0ff);
+      box-shadow: 0 10px 24px rgba(106, 160, 255, 0.22);
+      overflow: hidden;
+      padding: 6px;
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .brand-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .top-link {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 12px;
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .hero {
+      padding: 28px 22px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(139, 184, 255, 0.10);
+      border: 1px solid rgba(139, 184, 255, 0.15);
+      color: #dce9ff;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    .hero h1 {
+      font-size: 40px;
+      line-height: 0.98;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.58;
+      max-width: 32ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 24px 0 26px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .18s ease, opacity .18s ease;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+      color: #08101d;
+      box-shadow: 0 12px 24px rgba(106, 160, 255, 0.22);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.035);
+      border-color: var(--stroke);
+      color: var(--text);
+    }
+
+    .hero-preview {
+      border-radius: 24px;
+      background: #10151d;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 16px;
+    }
+
+    .preview-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .preview-title {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .preview-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .mini-card {
+      padding: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 18px;
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .mini-value {
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .mini-sub {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .mini-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .mini-row strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .mini-row span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mini-tag {
+      color: #dce9ff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(139, 184, 255, 0.10);
+      border: 1px solid rgba(139, 184, 255, 0.16);
+      white-space: nowrap;
+    }
+
+    section {
+      margin-top: 18px;
+    }
+
+    .section-card {
+      padding: 24px 20px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--stroke-soft);
+      box-shadow: var(--shadow);
+    }
+
+    .section-head {
+      margin-bottom: 18px;
+    }
+
+    .section-head .kicker {
+      display: inline-block;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .section-head h2 {
+      font-size: 28px;
+      line-height: 1.08;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    .section-head p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      max-width: 34ch;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .feature-item {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    .feature-item h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .feature-item p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+
+    .feature-item small {
+      color: #d8e3f7;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .workflow {
+      display: grid;
+      gap: 12px;
+    }
+
+    .workflow-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: #111720;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .workflow-card .step {
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .workflow-card h3 {
+      font-size: 19px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .workflow-card p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+
+    .workflow-meta {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .preview-panel {
+      padding: 18px;
+      border-radius: 24px;
+      background: #10151d;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .panel-header strong {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .panel-header span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .metric-card {
+      padding: 14px 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .metric-card .n {
+      display: block;
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .metric-card .t {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .list-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .list-item strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .list-item span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .dot-blue { background: var(--primary); }
+    .dot-green { background: var(--success); }
+    .dot-yellow { background: var(--warning); }
+
+    .benefits {
+      display: grid;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .benefit {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .benefit:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .benefit-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(139, 184, 255, 0.10);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 800;
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+
+    .benefit strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+
+    .benefit p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .cta {
+      padding: 28px 22px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, rgba(139, 184, 255, 0.10), rgba(255,255,255,0.03));
+      border: 1px solid rgba(139, 184, 255, 0.12);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .cta h2 {
+      font-size: 30px;
+      line-height: 1.06;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .cta p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      margin: 0 auto 20px;
+      max-width: 30ch;
+    }
+
+    .footer {
+      padding: 18px 6px 0;
+      text-align: center;
+      color: var(--muted-2);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (min-width: 431px) {
+      body {
+        padding: 20px 0;
+      }
+
+      .app {
+        min-height: auto;
+        border-left: 1px solid rgba(255,255,255,0.04);
+        border-right: 1px solid rgba(255,255,255,0.04);
+      }
+    }
   </style>
 </head>
-
 <body>
-  <header class="topbar">
-    <div class="container">
-      <nav class="nav" aria-label="Top navigation">
-        <a class="brand" href="../public/">
-          <img
-            src="media/logo.png"
-            alt="AuraFit"
-            class="logo-img"
-          />
-          <span>AuraFit</span>
-        </a>
+  <main class="app">
+    <div class="shell">
+      <div class="statusbar"></div>
 
-        <div class="navlinks" aria-label="Primary">
-          <a href="#funzionalita">Funzionalità</a>
-          <a href="#come-funziona">Come funziona</a>
-          <a href="#sicurezza">Sicurezza</a>
-          <a href="#piani">Piani</a>
-          <a href="#faq">FAQ</a>
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">
+            <img src="/media/logo.png" alt="Logo AuraFit" />
+          </div>
+          <div class="brand-copy">
+            <strong>AuraFit</strong>
+            <span>Clienti, workout e diet builder</span>
+          </div>
+        </div>
+        <a class="top-link" href="#cta">Scopri</a>
+      </header>
+
+      <section class="hero">
+        <div class="eyebrow">Un unico spazio per lavorare meglio</div>
+        <h1>La gestione clienti, finalmente semplice.</h1>
+        <p>
+          Organizza i clienti, costruisci schede di allenamento e prepara piani alimentari in una dashboard chiara,
+          veloce e pensata per lavorare ogni giorno senza confusione.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#cta">Inizia ora</a>
+          <a class="btn btn-secondary" href="#preview">Vedi come funziona</a>
         </div>
 
-        <div class="actions">
-          <a class="btn ghost" href="login.php">Accedi</a>
-          <a class="btn primary" href="register.php?tipo=professionista">Inizia come Professionista</a>
-          <button class="menuBtn" id="menuBtn" aria-label="Apri menu">☰</button>
-        </div>
-      </nav>
+        <div class="hero-preview" id="preview">
+          <div class="preview-top">
+            <div class="preview-title">Dashboard mobile</div>
+            <div class="preview-pill">Tutto sotto controllo</div>
+          </div>
 
-      <div class="mobileMenu" id="mobileMenu" aria-label="Mobile menu">
-        <a href="#funzionalita">Funzionalità</a>
-        <a href="#come-funziona">Come funziona</a>
-        <a href="#sicurezza">Sicurezza</a>
-        <a href="#piani">Piani</a>
-        <a href="#faq">FAQ</a>
-        <a href="login.php">Accedi</a>
-        <a href="register.php?tipo=professionista">Inizia come Professionista</a>
-      </div>
+          <div class="preview-grid">
+            <div class="mini-card">
+              <div class="mini-label">Clienti attivi</div>
+              <div class="mini-value">48</div>
+              <div class="mini-sub">Anagrafica, assegnazioni e stato sempre visibili.</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">Builder</div>
+              <div class="mini-value">2</div>
+              <div class="mini-sub">Workout e diet builder in uno spazio ordinato.</div>
+            </div>
+          </div>
+
+          <div class="mini-stack">
+            <div class="mini-row">
+              <div>
+                <strong>Workout builder</strong>
+                <span>Schede, giorni ed esercizi in pochi tap</span>
+              </div>
+              <div class="mini-tag">Rapido</div>
+            </div>
+            <div class="mini-row">
+              <div>
+                <strong>Diet builder</strong>
+                <span>Piani alimentari organizzati per cliente</span>
+              </div>
+              <div class="mini-tag">Ordinato</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-card">
+          <div class="section-head">
+            <span class="kicker">Per il lavoro quotidiano</span>
+            <h2>Tre aree chiare. Zero rumore.</h2>
+            <p>
+              AuraFit per mobile mette in primo piano quello che serve davvero: clienti, programmazione allenamenti e piani alimentari.
+            </p>
+          </div>
+
+          <div class="feature-list">
+            <article class="feature-item">
+              <div class="feature-icon">👥</div>
+              <h3>Gestione centralizzata clienti</h3>
+              <p>
+                Tutti i clienti in un unico flusso operativo, con accesso rapido ai dati essenziali e ai percorsi assegnati.
+              </p>
+              <small>Una vista ordinata per lavorare senza passare da mille schermate.</small>
+            </article>
+
+            <article class="feature-item">
+              <div class="feature-icon">🏋️</div>
+              <h3>Workout builder</h3>
+              <p>
+                Costruisci schede e programmi in modo più lineare, con una struttura chiara e facile da aggiornare nel tempo.
+              </p>
+              <small>Meno clic inutili, più controllo sulla programmazione.</small>
+            </article>
+
+            <article class="feature-item">
+              <div class="feature-icon">🥗</div>
+              <h3>Diet builder</h3>
+              <p>
+                Crea e organizza i piani alimentari mantenendo ogni cliente dentro un flusso semplice, leggibile e coerente.
+              </p>
+              <small>Una base pulita per gestire meglio nutrizione e assegnazioni.</small>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-card">
+          <div class="section-head">
+            <span class="kicker">Come si usa</span>
+            <h2>Un flusso mobile più naturale.</h2>
+            <p>
+              Ogni schermata è pensata per ridurre attrito e mantenere subito visibili le azioni principali.
+            </p>
+          </div>
+
+          <div class="workflow">
+            <article class="workflow-card">
+              <div class="step">01 · Clienti</div>
+              <h3>Apri il cliente giusto in pochi secondi</h3>
+              <p>
+                Cerca, seleziona e lavora da un solo punto di accesso. Meno navigazione dispersiva, più continuità operativa.
+              </p>
+              <div class="workflow-meta">
+                <span class="chip">Vista pulita</span>
+                <span class="chip">Azioni rapide</span>
+              </div>
+            </article>
+
+            <article class="workflow-card">
+              <div class="step">02 · Workout builder</div>
+              <h3>Costruisci il programma con una struttura chiara</h3>
+              <p>
+                Parti dal cliente e prepara la scheda in un builder ordinato, pensato per restare leggibile anche su mobile.
+              </p>
+              <div class="workflow-meta">
+                <span class="chip">Programmi ordinati</span>
+                <span class="chip">Aggiornamenti rapidi</span>
+              </div>
+            </article>
+
+            <article class="workflow-card">
+              <div class="step">03 · Diet builder</div>
+              <h3>Gestisci i piani alimentari senza confusione</h3>
+              <p>
+                Organizza i piani in modo più lineare e mantieni il contesto del cliente sempre al centro del lavoro.
+              </p>
+              <div class="workflow-meta">
+                <span class="chip">Piani leggibili</span>
+                <span class="chip">Gestione centralizzata</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-card">
+          <div class="section-head">
+            <span class="kicker">Anteprima interfaccia</span>
+            <h2>Una dashboard che si legge subito.</h2>
+            <p>
+              Niente elementi inutili, niente sovraccarico visivo. Solo le informazioni che servono per lavorare bene da mobile.
+            </p>
+          </div>
+
+          <div class="preview-panel">
+            <div class="panel-header">
+              <strong>Panoramica operativa</strong>
+              <span>Mobile first</span>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-card">
+                <span class="n">48</span>
+                <span class="t">Clienti</span>
+              </div>
+              <div class="metric-card">
+                <span class="n">12</span>
+                <span class="t">Workout attivi</span>
+              </div>
+              <div class="metric-card">
+                <span class="n">9</span>
+                <span class="t">Diet plan</span>
+              </div>
+            </div>
+
+            <div class="list-card">
+              <div class="list-item">
+                <div>
+                  <strong>Clienti organizzati per priorità</strong>
+                  <span>Accesso immediato a schede e piani alimentari</span>
+                </div>
+                <div class="dot dot-blue"></div>
+              </div>
+              <div class="list-item">
+                <div>
+                  <strong>Workout builder più lineare</strong>
+                  <span>Una struttura più facile da leggere e aggiornare</span>
+                </div>
+                <div class="dot dot-green"></div>
+              </div>
+              <div class="list-item">
+                <div>
+                  <strong>Diet builder più ordinato</strong>
+                  <span>Piani alimentari gestiti senza schermate caotiche</span>
+                </div>
+                <div class="dot dot-yellow"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-card">
+          <div class="section-head">
+            <span class="kicker">Perché funziona</span>
+            <h2>Più semplicità. Più controllo.</h2>
+            <p>
+              Una landing mobile pulita deve far capire subito il valore del prodotto. Qui il messaggio è semplice e concreto.
+            </p>
+          </div>
+
+          <div class="benefits">
+            <div class="benefit">
+              <div class="benefit-mark">✓</div>
+              <div>
+                <strong>Tutto in un unico spazio</strong>
+                <p>Clienti, schede e piani alimentari raccolti in un’esperienza coerente.</p>
+              </div>
+            </div>
+            <div class="benefit">
+              <div class="benefit-mark">✓</div>
+              <div>
+                <strong>Workout builder più rapido da usare</strong>
+                <p>Una struttura più chiara aiuta a costruire e aggiornare i programmi con meno attrito.</p>
+              </div>
+            </div>
+            <div class="benefit">
+              <div class="benefit-mark">✓</div>
+              <div>
+                <strong>Diet builder più leggibile</strong>
+                <p>La nutrizione entra in un flusso più ordinato, con una UI più semplice da seguire.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cta">
+        <div class="cta">
+          <h2>Porta ordine nel tuo lavoro quotidiano.</h2>
+          <p>
+            AuraFit riunisce gestione clienti, workout builder e diet builder in una dashboard mobile più pulita e più facile da usare.
+          </p>
+          <a class="btn btn-primary" href="#">Prova AuraFit</a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        AuraFit · Mobile landing concept<br>
+        Gestione centralizzata clienti, workout builder e diet builder.
+      </footer>
     </div>
-  </header>
-
-  <main>
-    <!-- HERO -->
-    <section class="hero">
-      <div class="container">
-        <span class="pill">
-          <span aria-hidden="true">✨</span>
-          <b>Web app</b> premium per la gestione clienti di <b>Personal Trainer</b> e <b>Nutrizionisti</b>
-        </span>
-
-        <div class="heroGrid">
-          <div>
-            <h1>
-              La tua dashboard professionale.<br/>
-              Clienti, piani e progressi — tutto in ordine.
-            </h1>
-
-            <p class="lead">
-              AuraFit è lo spazio di lavoro per chi segue clienti nel fitness e nella nutrizione.
-              Gestisci programmi, diari, chat e report in un’unica piattaforma: più controllo, più continuità, meno caos operativo.
-            </p>
-
-            <div class="heroCtas">
-              <a class="btn primary" href="register.php?tipo=professionista">Crea account Professionista</a>
-              <a class="btn" href="register.php?tipo=cliente">Accedi come Cliente</a>
-              <a class="btn ghost" href="#come-funziona">Come funziona →</a>
-            </div>
-
-            <div class="micro" role="list">
-              <span role="listitem">👥 Gestione clienti centralizzata</span>
-              <span role="listitem">📩 Chat integrata e notifiche</span>
-              <span role="listitem">📊 Report automatici</span>
-              <span role="listitem">🔐 Sicuro & GDPR-ready</span>
-            </div>
-          </div>
-
-          <!-- DASHBOARD PREVIEW (modificato: più “CRM studio”, meno “fintech”) -->
-          <aside class="panel" aria-label="Preview dashboard">
-            <div class="panelTop">
-              <div class="panelTitle"><span class="dot"></span> Studio dashboard</div>
-              <span class="pill"><span aria-hidden="true">●</span> Area riservata</span>
-            </div>
-
-            <div class="panelBody">
-              <div class="mock">
-                <div class="mockHeader">
-                  <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
-                  <span style="margin-left:10px;">studio / clienti</span>
-                </div>
-
-                <div class="mockGrid">
-                  <div class="tile">
-                    <div class="kpi">Clienti attivi</div>
-                    <div class="big">24</div>
-                    <div class="small">Panoramica rapida su check-in e stato dei piani.</div>
-
-                    <div class="miniList" aria-label="Clienti recenti">
-                      <div class="row">
-                        <div class="name">Martina R.</div>
-                        <div class="tag ok">check-in ok</div>
-                      </div>
-                      <div class="row">
-                        <div class="name">Luca V.</div>
-                        <div class="tag attn">da rivedere</div>
-                      </div>
-                      <div class="row">
-                        <div class="name">Sara P.</div>
-                        <div class="tag ok">aderenza alta</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="tile">
-                    <div class="kpi">Da gestire · questa settimana</div>
-                    <div class="big">6</div>
-                    <div class="small">Check-in, modifiche piani e messaggi in attesa.</div>
-
-                    <div class="miniList" aria-label="To-do">
-                      <div class="row">
-                        <div class="name">2 piani</div>
-                        <div class="tag attn">revisione</div>
-                      </div>
-                      <div class="row">
-                        <div class="name">3 messaggi</div>
-                        <div class="tag">rispondi</div>
-                      </div>
-                      <div class="row">
-                        <div class="name">1 follow-up</div>
-                        <div class="tag">promemoria</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="tile">
-                    <div class="kpi">Aderenza media</div>
-                    <div class="big">82%</div>
-                    <div class="small">Allenamento + nutrizione, con storico e trend.</div>
-                  </div>
-
-                  <div class="tile">
-                    <div class="kpi">Report</div>
-                    <div class="big">Automatici</div>
-                    <div class="small">Riepiloghi chiari per aggiornare i piani con metodo.</div>
-                  </div>
-                </div>
-              </div>
-
-              <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-                <a class="btn" href="login.php">Accedi</a>
-                <a class="btn primary" href="register.php?tipo=professionista">Crea account</a>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <!-- FEATURES -->
-    <section id="funzionalita">
-      <div class="container">
-        <div class="sectionHead">
-          <div>
-            <h2>Progettata per lavorare meglio, ogni giorno</h2>
-            <p>
-              AuraFit è una piattaforma verticale: gestione clienti, programmi, piani alimentari,
-              comunicazione e monitoraggio in un’unica esperienza coerente. Niente strumenti “a pezzi”.
-            </p>
-          </div>
-        </div>
-
-        <div class="grid3">
-          <article class="card">
-            <div class="icon">👥</div>
-            <h3>Gestione clienti</h3>
-            <p>
-              Anagrafiche, stato del percorso, attività recenti e priorità in un’unica vista.
-              Perfetta per seguire pochi clienti o scalare su volumi più alti.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="icon">🏋️</div>
-            <h3>Programmi di allenamento</h3>
-            <p>
-              Crea e assegna schede con esercizi, serie, ripetizioni, carichi e note.
-              Il cliente compila il diario: tu vedi tutto, subito.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="icon">🥗</div>
-            <h3>Piani alimentari + diario</h3>
-            <p>
-              Gestisci piani e diari nutrizionali in modo ordinato.
-              Supporto AI per stimare i macro da foto (opzionale), sempre modificabile e supervisionato.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="icon">💬</div>
-            <h3>Chat integrata</h3>
-            <p>
-              Conversazioni professionali collegate al percorso: messaggi, notifiche e storico.
-              Stop a chat disperse e informazioni che si perdono.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="icon">📊</div>
-            <h3>Progressi e report</h3>
-            <p>
-              Grafici e report automatici su performance, parametri fisici e aderenza.
-              Più chiarezza nelle decisioni, più fiducia nel percorso.
-            </p>
-          </article>
-
-          <article class="card">
-            <div class="icon">🔑</div>
-            <h3>ID-Key, ruoli e collaborazione</h3>
-            <p>
-              Associa clienti tramite ID-Key. Ruoli PT/Nutrizionista con permessi differenziati
-              e accesso incrociato in sola lettura dove serve.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section id="come-funziona">
-      <div class="container">
-        <div class="sectionHead">
-          <div>
-            <h2>Come funziona</h2>
-            <p>Due esperienze dedicate: professionista e cliente. Setup rapido, lavoro ordinato.</p>
-          </div>
-        </div>
-
-        <div class="split">
-          <div class="callout">
-            <h3>Per Personal Trainer / Nutrizionisti</h3>
-            <p style="margin-bottom:12px;">
-              Il tuo workspace: clienti, piani, check-in e comunicazione. Un flusso pulito, replicabile, professionale.
-            </p>
-            <ol class="list">
-              <li>Crea l’account professionista e imposta il profilo.</li>
-              <li>Genera l’ID-Key e associa i clienti (PT e/o Nutrizionista).</li>
-              <li>Assegna programmi e/o piani alimentari, con revisioni rapide.</li>
-              <li>Monitora aderenza e progressi con grafici e report.</li>
-              <li>Gestisci comunicazioni e follow-up in chat, con notifiche.</li>
-            </ol>
-            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-              <a class="btn primary" href="register.php?tipo=professionista">Inizia come Professionista</a>
-              <a class="btn" href="#piani">Vedi i piani</a>
-            </div>
-          </div>
-
-          <div class="callout">
-            <h3>Per Clienti</h3>
-            <p style="margin-bottom:12px;">
-              Un’esperienza semplice e guidata: compila i diari, ricevi feedback e vedi i risultati nel tempo.
-            </p>
-            <ol class="list">
-              <li>Crea l’account e completa i dati.</li>
-              <li>Inserisci l’ID-Key del tuo PT/Nutrizionista (anche più tardi).</li>
-              <li>Compila diario allenamenti e alimentare (anche con foto).</li>
-              <li>Ricevi feedback e aggiornamenti direttamente in piattaforma.</li>
-            </ol>
-            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-              <a class="btn" href="register.php?tipo=cliente">Registrati (Cliente)</a>
-              <a class="btn ghost" href="login.php">Hai già un account?</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECURITY -->
-    <section id="sicurezza">
-      <div class="container">
-        <div class="sectionHead">
-          <div>
-            <h2>Dati protetti. Struttura professionale.</h2>
-            <p>
-              AuraFit è progettato per gestire dati sensibili in ambito fitness e nutrizione:
-              accessi basati sui ruoli, consensi e principi GDPR.
-            </p>
-          </div>
-        </div>
-
-        <div class="grid3">
-          <article class="card">
-            <div class="icon">🔒</div>
-            <h3>Controllo accessi</h3>
-            <p>
-              Ruoli e permessi per proteggere dati personali, fisici e nutrizionali.
-              Ogni utente vede ciò che deve vedere.
-            </p>
-          </article>
-          <article class="card">
-            <div class="icon">🛡️</div>
-            <h3>GDPR-ready</h3>
-            <p>
-              Gestione consensi e diritti dell’utente (accesso e cancellazione).
-              Trasparenza sul trattamento dei dati.
-            </p>
-          </article>
-          <article class="card">
-            <div class="icon">⚙️</div>
-            <h3>Esperienza affidabile</h3>
-            <p>
-              Interfaccia responsive e pensata per l’uso quotidiano:
-              veloce su web e comoda su mobile.
-            </p>
-          </article>
-        </div>
-
-        <p class="fineprint" style="margin-top:14px;">
-          Nota: le funzionalità AI hanno scopo di supporto informativo e non sostituiscono il giudizio professionale.
-        </p>
-      </div>
-    </section>
-
-    <!-- PRICING -->
-    <section id="piani">
-      <div class="container">
-        <div class="sectionHead">
-          <div>
-            <h2>Piani per professionisti</h2>
-            <p>
-              AuraFit è gratuito per i clienti. I professionisti scelgono un piano in base a volumi e strumenti:
-              più clienti, più automazioni, più reportistica. Pensato per crescere con te.
-            </p>
-          </div>
-        </div>
-
-        <div class="pricing">
-          <div class="priceCard">
-            <div class="badge">Clienti</div>
-            <div class="price">€0 <small>/ mese</small></div>
-            <div class="hr"></div>
-            <ul class="ul">
-              <li><span class="check">✓</span><span>Dashboard personale</span></li>
-              <li><span class="check">✓</span><span>Diario allenamenti & alimentare</span></li>
-              <li><span class="check">✓</span><span>Chat con professionista</span></li>
-              <li><span class="check">✓</span><span>Grafici e progressi</span></li>
-            </ul>
-            <div style="margin-top:14px;">
-              <a class="btn" href="register.php?tipo=cliente">Crea account Cliente</a>
-            </div>
-          </div>
-
-          <div class="priceCard" style="border-color: rgba(109,94,243,.32);">
-            <div class="badge">Professional</div>
-            <div class="price">€— <small>/ mese</small></div>
-            <div class="hr"></div>
-            <ul class="ul">
-              <li><span class="check">✓</span><span>Gestione clienti + ID-Key</span></li>
-              <li><span class="check">✓</span><span>Programmi e piani personalizzati</span></li>
-              <li><span class="check">✓</span><span>Notifiche e promemoria</span></li>
-              <li><span class="check">✓</span><span>Report periodici</span></li>
-            </ul>
-            <div style="margin-top:14px;">
-              <a class="btn primary" href="register.php?tipo=professionista">Attiva come Professionista</a>
-            </div>
-          </div>
-
-          <div class="priceCard">
-            <div class="badge">Studio</div>
-            <div class="price">€— <small>/ mese</small></div>
-            <div class="hr"></div>
-            <ul class="ul">
-              <li><span class="check">✓</span><span>Team e collaborazione</span></li>
-              <li><span class="check">✓</span><span>Automazioni avanzate</span></li>
-              <li><span class="check">✓</span><span>Limiti estesi</span></li>
-              <li><span class="check">✓</span><span>Supporto prioritario</span></li>
-            </ul>
-            <div style="margin-top:14px;">
-              <a class="btn" href="#faq">Parliamone</a>
-            </div>
-          </div>
-        </div>
-
-        <p class="fineprint">
-          * Prezzi placeholder: puoi mantenerlo “gratis per clienti + abbonamenti per professionisti” e definire soglie per numero clienti/ID-Key.
-        </p>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq">
-      <div class="container">
-        <div class="sectionHead">
-          <div>
-            <h2>FAQ</h2>
-            <p>Risposte rapide, senza giri.</p>
-          </div>
-        </div>
-
-        <div class="faq" role="list">
-          <div class="faqItem open" role="listitem">
-            <button class="faqQ" type="button">
-              AuraFit è pensato più per clienti o per professionisti?
-              <span class="chev">⌄</span>
-            </button>
-            <div class="faqA">
-              AuraFit nasce come web app di gestione clienti per Personal Trainer e Nutrizionisti.
-              I clienti accedono per seguire il percorso, ma la struttura e i flussi sono progettati per il lavoro del professionista.
-            </div>
-          </div>
-
-          <div class="faqItem" role="listitem">
-            <button class="faqQ" type="button">
-              La stima dei macro tramite AI è obbligatoria?
-              <span class="chev">⌄</span>
-            </button>
-            <div class="faqA">
-              No. È un supporto opzionale: puoi inserire manualmente i pasti oppure usare la foto per velocizzare.
-              I valori restano modificabili e sotto supervisione professionale.
-            </div>
-          </div>
-
-          <div class="faqItem" role="listitem">
-            <button class="faqQ" type="button">
-              Cosa succede quando termina l’associazione con un professionista?
-              <span class="chev">⌄</span>
-            </button>
-            <div class="faqA">
-              Alla cessazione dell’associazione la chat viene disabilitata. Lo storico rimane consultabile dove previsto,
-              e i programmi passati possono restare visibili al cliente in modalità consultazione.
-            </div>
-          </div>
-
-          <div class="faqItem" role="listitem">
-            <button class="faqQ" type="button">
-              Come trattate privacy e cancellazione account?
-              <span class="chev">⌄</span>
-            </button>
-            <div class="faqA">
-              AuraFit supporta gestione consensi e diritti dell’utente (accesso e cancellazione), con attenzione alla conformità GDPR.
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="btn primary" href="register.php?tipo=professionista">Inizia come Professionista</a>
-          <a class="btn" href="login.php">Accedi</a>
-        </div>
-      </div>
-    </section>
   </main>
-
-  <footer>
-    <div class="container">
-      <div class="footGrid">
-        <div>
-          <div class="brand" style="margin-bottom:10px;">
-            <img
-              src="media/logo.png"
-              alt="AuraFit"
-              class="logo-img"
-            />
-            <span>AuraFit</span>
-          </div>
-
-          <div style="color: rgba(234,240,255,.72); line-height:1.6;">
-            Web app per la gestione clienti di Personal Trainer e Nutrizionisti:
-            programmi, piani alimentari, chat e report in un’unica piattaforma.
-          </div>
-
-          <div class="fineprint">
-            © <span id="year"></span> AuraFit. Tutti i diritti riservati.
-          </div>
-        </div>
-
-        <div>
-          <div style="font-weight:900; margin-bottom:10px;">Prodotto</div>
-          <div style="display:grid; gap:8px;">
-            <a href="#funzionalita">Funzionalità</a>
-            <a href="#piani">Piani</a>
-            <a href="#sicurezza">Sicurezza</a>
-            <a href="login.php">Login</a>
-          </div>
-        </div>
-
-        <div>
-          <div style="font-weight:900; margin-bottom:10px;">Legale</div>
-          <div style="display:grid; gap:8px;">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Cookie Policy</a>
-            <a href="#">Termini</a>
-          </div>
-          <div class="fineprint">
-            Le funzionalità AI hanno scopo informativo e non sostituiscono il giudizio professionale.
-          </div>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    // Navbar mobile
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (menuBtn && mobileMenu) {
-      menuBtn.addEventListener('click', () => {
-        mobileMenu.classList.toggle('open');
-      });
-      mobileMenu.querySelectorAll('a').forEach(a => {
-        a.addEventListener('click', () => mobileMenu.classList.remove('open'));
-      });
-    }
-
-    // FAQ accordion
-    document.querySelectorAll('.faqItem .faqQ').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = btn.closest('.faqItem');
-        const isOpen = item.classList.contains('open');
-        document.querySelectorAll('.faqItem').forEach(x => x.classList.remove('open'));
-        if (!isOpen) item.classList.add('open');
-      });
-    });
-
-    // year
-    document.getElementById('year').textContent = new Date().getFullYear();
-  </script>
 </body>
 </html>
