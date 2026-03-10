@@ -28,9 +28,19 @@ ALTER TABLE PianiAlimentari
   MODIFY COLUMN cliente BIGINT NULL;
 */
 
+
+function nutritionBasePath(): string {
+  $scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '/public/dashboard_professionisti/nutrizione.php');
+  $dir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+  if ($dir === '' || $dir === '.') {
+    return '/nutrizione.php';
+  }
+  return $dir . '/nutrizione.php';
+}
+
 function redirectNutrition(array $params = []): void {
   $query = http_build_query($params);
-  header('Location: nutrizione.php' . ($query !== '' ? ('?' . $query) : ''));
+  header('Location: ' . nutritionBasePath() . ($query !== '' ? ('?' . $query) : ''));
   exit;
 }
 
@@ -45,7 +55,7 @@ function completeNutritionAction(string $message, array $params = []): void {
     echo json_encode([
       'ok' => true,
       'message' => $message,
-      'redirect' => 'nutrizione.php' . (($query = http_build_query($params)) !== '' ? ('?' . $query) : ''),
+      'redirect' => nutritionBasePath() . (($query = http_build_query($params)) !== '' ? ('?' . $query) : ''),
     ], JSON_UNESCAPED_UNICODE);
     exit;
   }
@@ -448,7 +458,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       echo json_encode([
         'ok' => false,
         'message' => $e->getMessage(),
-        'redirect' => 'nutrizione.php' . (($query = http_build_query($redirect)) !== '' ? ('?' . $query) : ''),
+        'redirect' => nutritionBasePath() . (($query = http_build_query($redirect)) !== '' ? ('?' . $query) : ''),
       ], JSON_UNESCAPED_UNICODE);
       exit;
     }
