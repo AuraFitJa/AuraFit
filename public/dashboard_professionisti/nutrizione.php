@@ -656,7 +656,7 @@ if ($pianoAttivoId > 0) {
           <input type="hidden" name="plan_id" value="<?= (int)$pianoAttivo['idPianoAlim'] ?>">
           <button type="submit" class="btn">Duplica</button>
         </form>
-        <button type="button" class="btn danger" data-open-delete-plan data-plan-id="<?= (int)$pianoAttivo['idPianoAlim'] ?>" data-plan-name="<?= h((string)$pianoAttivo['titolo']) ?>">Elimina</button>
+        <button type="button" class="btn danger" data-open-delete-plan data-plan-id="<?= (int)$pianoAttivo['idPianoAlim'] ?>" data-folder-id="<?= (int)$pianoAttivo['cartellaId'] ?>" data-plan-name="<?= h((string)$pianoAttivo['titolo']) ?>">Elimina</button>
       </div>
 
       <?php if ($assegnazioneAttiva): ?>
@@ -757,10 +757,10 @@ if ($pianoAttivoId > 0) {
   <div class="modal-card">
     <h3>Elimina piano alimentare</h3>
     <p class="muted-sm">Confermi l'eliminazione del piano <strong data-delete-plan-name></strong>?</p>
-    <form method="post" style="display:flex;justify-content:flex-end;gap:10px">
+    <form method="post" data-delete-plan-form style="display:flex;justify-content:flex-end;gap:10px">
       <input type="hidden" name="action" value="delete_plan" />
       <input type="hidden" name="plan_id" data-delete-plan-id />
-      <input type="hidden" name="folder_id" value="<?= (int)$cartellaAttivaId ?>" />
+      <input type="hidden" name="folder_id" data-delete-plan-folder-id value="<?= (int)$cartellaAttivaId ?>" />
       <button class="btn" type="button" data-close-modal>Annulla</button>
       <button class="btn danger" type="submit">Elimina</button>
     </form>
@@ -859,9 +859,68 @@ renderEnd(<<<'SCRIPT'
       const trigger = event.currentTarget;
       const target = document.querySelector('[data-delete-plan-name]');
       const input = document.querySelector('[data-delete-plan-id]');
+      const folderInput = document.querySelector('[data-delete-plan-folder-id]');
       if (target) target.textContent = trigger.getAttribute('data-plan-name') || '';
       if (input) input.value = trigger.getAttribute('data-plan-id') || '';
+      if (folderInput) folderInput.value = trigger.getAttribute('data-folder-id') || folderInput.value || '';
       openModal('delete-plan');
+    });
+
+    const deletePlanForm = document.querySelector('form[data-delete-plan-form]');
+    deletePlanForm?.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const submitButton = deletePlanForm.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+
+      const folderId = deletePlanForm.querySelector('[data-delete-plan-folder-id]')?.value || '';
+      const fallbackTarget = folderId && Number(folderId) > 0
+        ? `nutrizione.php?cartella=${encodeURIComponent(folderId)}`
+        : 'nutrizione.php';
+
+      try {
+        const response = await fetch(window.location.href, {
+          method: 'POST',
+          body: new FormData(deletePlanForm),
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          },
+          cache: 'no-store'
+        });
+
+        const contentType = (response.headers.get('content-type') || '').toLowerCase();
+        let payload = null;
+
+        if (contentType.includes('application/json')) {
+          payload = await response.json();
+        } else if (response.redirected && response.url) {
+          window.location.href = response.url;
+          return;
+        } else {
+          const raw = await response.text();
+          try {
+            payload = JSON.parse(raw);
+          } catch (parseError) {
+            if (response.ok) {
+              window.location.href = fallbackTarget;
+              return;
+            }
+            showInlineAlert('error', 'Operazione non riuscita.');
+            return;
+          }
+        }
+
+        if (!response.ok || !payload || !payload.ok) {
+          showInlineAlert('error', (payload && payload.message) ? payload.message : 'Operazione non riuscita.');
+          return;
+        }
+
+        window.location.href = (payload.redirect && typeof payload.redirect === 'string') ? payload.redirect : fallbackTarget;
+      } catch (error) {
+        showInlineAlert('error', 'Errore di rete. Riprova.');
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
     });
 
     document.querySelector('[data-open-assign-plan]')?.addEventListener('click', function () { openModal('assign-plan'); });
@@ -880,6 +939,7 @@ renderEnd(<<<'SCRIPT'
     }
 
     document.querySelectorAll('form[method="post"]').forEach(function (form) {
+      if (form.matches('[data-delete-plan-form]')) return;
       form.addEventListener('submit', async function (event) {
         event.preventDefault();
         const actionButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
