@@ -232,14 +232,92 @@
     });
   }
 
+  const duplicateProgramModal = document.querySelector('[data-duplicate-program-modal]');
+  const duplicateProgramTitleInput = document.querySelector('[data-duplicate-program-title]');
+  const duplicateProgramFeedback = document.querySelector('[data-duplicate-program-feedback]');
+  const cancelDuplicateProgramBtn = document.querySelector('[data-cancel-duplicate-program]');
+  const confirmDuplicateProgramBtn = document.querySelector('[data-confirm-duplicate-program]');
+  let duplicateProgramId = null;
+
+  function setDuplicateProgramFeedback(message) {
+    if (duplicateProgramFeedback) {
+      duplicateProgramFeedback.textContent = message || '';
+      duplicateProgramFeedback.classList.remove('ok');
+    }
+  }
+
+  function closeDuplicateProgramModal() {
+    toggleModal(duplicateProgramModal, false);
+    duplicateProgramId = null;
+    setDuplicateProgramFeedback('');
+    if (duplicateProgramTitleInput) {
+      duplicateProgramTitleInput.value = 'Copia programma';
+    }
+    if (confirmDuplicateProgramBtn) {
+      confirmDuplicateProgramBtn.disabled = false;
+      confirmDuplicateProgramBtn.textContent = 'Duplica';
+    }
+  }
+
   document.querySelectorAll('[data-duplicate-program]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', () => {
       const idProgramma = btn.getAttribute('data-duplicate-program');
-      const titolo = prompt('Titolo della copia', 'Copia programma');
-      if (!titolo) return;
-      await postForm('duplicateProgram', { idProgramma, titolo });
-      window.location.reload();
+      if (!idProgramma) {
+        return;
+      }
+
+      duplicateProgramId = idProgramma;
+      setDuplicateProgramFeedback('');
+      if (duplicateProgramTitleInput) {
+        duplicateProgramTitleInput.value = 'Copia programma';
+      }
+      toggleModal(duplicateProgramModal, true);
+      duplicateProgramTitleInput?.focus();
+      duplicateProgramTitleInput?.select();
     });
+  });
+
+  duplicateProgramModal?.addEventListener('click', (event) => {
+    if (event.target === duplicateProgramModal) {
+      closeDuplicateProgramModal();
+    }
+  });
+
+  cancelDuplicateProgramBtn?.addEventListener('click', () => {
+    closeDuplicateProgramModal();
+  });
+
+  confirmDuplicateProgramBtn?.addEventListener('click', async () => {
+    if (!duplicateProgramId) {
+      return;
+    }
+
+    const titolo = duplicateProgramTitleInput?.value.trim() || '';
+    if (!titolo) {
+      setDuplicateProgramFeedback('Inserisci un titolo valido.');
+      duplicateProgramTitleInput?.focus();
+      return;
+    }
+
+    confirmDuplicateProgramBtn.disabled = true;
+    confirmDuplicateProgramBtn.textContent = 'Duplicazione...';
+    setDuplicateProgramFeedback('');
+
+    try {
+      await postForm('duplicateProgram', { idProgramma: duplicateProgramId, titolo });
+      window.location.reload();
+    } catch (error) {
+      setDuplicateProgramFeedback(error.message || 'Errore durante duplicazione programma.');
+      confirmDuplicateProgramBtn.disabled = false;
+      confirmDuplicateProgramBtn.textContent = 'Duplica';
+    }
+  });
+
+  duplicateProgramTitleInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      confirmDuplicateProgramBtn?.click();
+    }
   });
 
 
