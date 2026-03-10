@@ -551,6 +551,12 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       extraToDelete: [],
     };
 
+    const scrollLockState = {
+      locked: false,
+      bodyOverflow: '',
+      htmlOverflow: '',
+    };
+
     const apiBase = 'api';
 
     function setFeedback(message, isError) {
@@ -561,14 +567,14 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     function openModal() {
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
+      lockBackgroundScroll();
       state.open = true;
     }
 
     function closeModal() {
       overlay.classList.remove('open');
       overlay.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
+      unlockBackgroundScroll();
       state.open = false;
       state.current = null;
       state.data = null;
@@ -578,6 +584,22 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       prescribedTableBody.innerHTML = '';
       performedPrescribedBody.innerHTML = '';
       performedExtraBody.innerHTML = '';
+    }
+
+    function lockBackgroundScroll() {
+      if (scrollLockState.locked) return;
+      scrollLockState.bodyOverflow = document.body.style.overflow;
+      scrollLockState.htmlOverflow = document.documentElement.style.overflow;
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      scrollLockState.locked = true;
+    }
+
+    function unlockBackgroundScroll() {
+      if (!scrollLockState.locked) return;
+      document.body.style.overflow = scrollLockState.bodyOverflow;
+      document.documentElement.style.overflow = scrollLockState.htmlOverflow;
+      scrollLockState.locked = false;
     }
 
     function valOrDash(value) {
