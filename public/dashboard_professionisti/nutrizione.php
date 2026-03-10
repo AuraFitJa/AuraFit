@@ -884,6 +884,11 @@ renderEnd(<<<'SCRIPT'
       const submitButton = deletePlanForm.querySelector('button[type="submit"]');
       if (submitButton) submitButton.disabled = true;
 
+      const folderId = deletePlanForm.querySelector('[data-delete-plan-folder-id]')?.value || '';
+      const fallbackTarget = folderId && Number(folderId) > 0
+        ? `nutrizione.php?cartella=${encodeURIComponent(folderId)}`
+        : 'nutrizione.php';
+
       try {
         const response = await fetch(window.location.href, {
           method: 'POST',
@@ -895,17 +900,34 @@ renderEnd(<<<'SCRIPT'
           cache: 'no-store'
         });
 
-        const payload = await response.json();
+        const contentType = (response.headers.get('content-type') || '').toLowerCase();
+        let payload = null;
+
+        if (contentType.includes('application/json')) {
+          payload = await response.json();
+        } else if (response.redirected && response.url) {
+          window.location.href = response.url;
+          return;
+        } else {
+          const raw = await response.text();
+          try {
+            payload = JSON.parse(raw);
+          } catch (parseError) {
+            if (response.ok) {
+              window.location.href = fallbackTarget;
+              return;
+            }
+            showInlineAlert('error', 'Operazione non riuscita.');
+            return;
+          }
+        }
+
         if (!response.ok || !payload || !payload.ok) {
           showInlineAlert('error', (payload && payload.message) ? payload.message : 'Operazione non riuscita.');
           return;
         }
 
-        const folderId = deletePlanForm.querySelector('[data-delete-plan-folder-id]')?.value || '';
-        const target = folderId && Number(folderId) > 0
-          ? `nutrizione.php?cartella=${encodeURIComponent(folderId)}`
-          : 'nutrizione.php';
-        window.location.href = target;
+        window.location.href = (payload.redirect && typeof payload.redirect === 'string') ? payload.redirect : fallbackTarget;
       } catch (error) {
         showInlineAlert('error', 'Errore di rete. Riprova.');
       } finally {
