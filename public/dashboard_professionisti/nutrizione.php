@@ -640,13 +640,6 @@ if ($pianoAttivoId > 0) {
         </article>
       <?php endforeach; ?>
 
-      <?php if (!$pianiCartella): ?>
-        <article class="program-card nutrition-plan-card">
-          <h4>Nessun piano in cartella</h4>
-          <p class="muted-sm">Crea un nuovo piano alimentare per iniziare.</p>
-        </article>
-      <?php endif; ?>
-
       <button type="button" class="program-card add-program-card" data-open-create-plan data-folder-id="<?= (int)$cartellaAttiva['idCartella'] ?>">
         <div>
           <div class="create-plus">＋</div>
