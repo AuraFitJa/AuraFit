@@ -337,7 +337,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
       <div style="margin-top:14px">
         <label class="muted" for="generatedIdKeyField" style="display:block;margin-bottom:6px">Nuova ID-Key</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input id="generatedIdKeyField" class="field" type="text" value="<?= h($generatedIdKey) ?>" readonly style="flex:1;min-width:220px" />
+          <input id="generatedIdKeyField" class="field" type="text" value="<?= h($generatedIdKey) ?>" readonly style="flex:1;min-width:220px;background:rgba(11,18,32,.92);border:1px solid rgba(255,255,255,.14);border-radius:12px;color:var(--text);font-weight:700;letter-spacing:.03em;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);" />
           <button class="btn" type="button" data-copy-generated-idkey>Copia key</button>
         </div>
         <p class="muted" data-generated-idkey-feedback style="margin:8px 0 0;min-height:20px"></p>
