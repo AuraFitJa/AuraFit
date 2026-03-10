@@ -352,6 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete_plan') {
       $planId = (int)($_POST['plan_id'] ?? 0);
+      $requestedFolderId = (int)($_POST['folder_id'] ?? 0);
       if ($planId <= 0) {
         throw new RuntimeException('Piano non valido.');
       }
@@ -382,8 +383,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       Database::exec('DELETE FROM PianiAlimentari WHERE idPianoAlim = ? LIMIT 1', [$planId]);
 
-      $redirectParams = ['cartella' => (int)$ownedPlan['cartellaId']];
-      if ((int)$ownedPlan['cartellaId'] > 0) {
+      $targetFolderId = (int)$ownedPlan['cartellaId'];
+      if ($targetFolderId <= 0 && $requestedFolderId > 0) {
+        $targetFolderId = $requestedFolderId;
+      }
+
+      $redirectParams = [];
+      if ($targetFolderId > 0) {
+        $redirectParams['cartella'] = $targetFolderId;
         $nextPlan = Database::exec(
           "SELECT p.idPianoAlim
            FROM PianiAlimentari p
@@ -402,7 +409,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              )
            ORDER BY p.aggiornatoIl DESC, p.idPianoAlim DESC
            LIMIT 1",
-          [(int)$ownedPlan['cartellaId'], $userId, $professionistaId]
+          [$targetFolderId, $userId, $professionistaId]
         )->fetch();
 
         if ($nextPlan) {
@@ -771,6 +778,7 @@ if ($pianoAttivoId > 0) {
     <form method="post" style="display:flex;justify-content:flex-end;gap:10px">
       <input type="hidden" name="action" value="delete_plan" />
       <input type="hidden" name="plan_id" data-delete-plan-id />
+      <input type="hidden" name="folder_id" value="<?= (int)$cartellaAttivaId ?>" />
       <button class="btn" type="button" data-close-modal>Annulla</button>
       <button class="btn danger" type="submit">Elimina</button>
     </form>
