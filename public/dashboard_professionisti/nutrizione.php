@@ -381,7 +381,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       Database::exec('DELETE FROM PianiAlimentari WHERE idPianoAlim = ? LIMIT 1', [$planId]);
-      completeNutritionAction('Piano eliminato.', ['cartella' => (int)$ownedPlan['cartellaId']]);
+
+      $redirectParams = ['cartella' => (int)$ownedPlan['cartellaId']];
+      if ((int)$ownedPlan['cartellaId'] > 0) {
+        $nextPlan = Database::exec(
+          "SELECT p.idPianoAlim
+           FROM PianiAlimentari p
+           WHERE p.cartellaId = ?
+             AND p.creatoreUtente = ?
+             AND (
+               p.cliente IS NULL
+               OR EXISTS (
+                 SELECT 1
+                 FROM Associazioni a
+                 WHERE a.cliente = p.cliente
+                   AND a.professionista = ?
+                   AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                   AND a.attivaFlag = 1
+               )
+             )
+           ORDER BY p.aggiornatoIl DESC, p.idPianoAlim DESC
+           LIMIT 1",
+          [(int)$ownedPlan['cartellaId'], $userId, $professionistaId]
+        )->fetch();
+
+        if ($nextPlan) {
+          $redirectParams['piano'] = (int)$nextPlan['idPianoAlim'];
+        }
+      }
+
+      completeNutritionAction('Piano eliminato.', $redirectParams);
     }
 
     if ($action === 'assign_plan') {
