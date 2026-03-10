@@ -3,6 +3,7 @@ require __DIR__ . '/common.php';
 
 $messages = [];
 $errors = [];
+$generatedIdKey = null;
 $idKeys = [];
 $idKeysEliminate = [];
 $canGenerateIdKey = false;
@@ -166,7 +167,7 @@ if (!$dbAvailable) {
               'INSERT INTO IdKey (codice, professionista, tipoKey, stato) VALUES (?, ?, ?, ?)',
               [$generated, $professionistaId, $tipoInput, 'attiva']
             );
-            $messages[] = 'Nuova ID-Key generata: ' . $generated;
+            $generatedIdKey = $generated;
           }
         }
       }
@@ -323,6 +324,31 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     </table>
   </div>
 </section>
+
+<?php if ($generatedIdKey !== null): ?>
+  <div class="profile-modal open" data-idkey-generated-modal aria-hidden="false">
+    <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="idkey-generated-title" style="width:min(520px,100%);">
+      <div class="profile-modal-head">
+        <div>
+          <h3 id="idkey-generated-title" class="section-title" style="margin:0">ID-Key generata con successo</h3>
+          <p class="muted" style="margin:8px 0 0">La nuova ID-Key è pronta per essere condivisa con il cliente.</p>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <label class="muted" for="generatedIdKeyField" style="display:block;margin-bottom:6px">Nuova ID-Key</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="generatedIdKeyField" class="field" type="text" value="<?= h($generatedIdKey) ?>" readonly style="flex:1;min-width:220px" />
+          <button class="btn" type="button" data-copy-generated-idkey>Copia key</button>
+        </div>
+        <p class="muted" data-generated-idkey-feedback style="margin:8px 0 0;min-height:20px"></p>
+      </div>
+      <div class="toolbar" style="justify-content:flex-end;gap:10px;margin-top:14px">
+        <button class="btn primary" type="button" data-close-generated-idkey>Chiudi</button>
+      </div>
+    </div>
+  </div>
+<?php endif; ?>
+
 <div class="profile-modal" data-idkey-confirm-modal aria-hidden="true">
   <div class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="idkey-confirm-title" style="width:min(520px,100%);">
     <div class="profile-modal-head">
@@ -401,6 +427,67 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     pendingDeleteIdKeyForm.dataset.confirmedSubmit = '1';
     pendingDeleteIdKeyForm.requestSubmit();
     closeIdKeyConfirmModal();
+  });
+
+  const idKeyGeneratedModal = document.querySelector('[data-idkey-generated-modal]');
+  const generatedIdKeyField = document.getElementById('generatedIdKeyField');
+  const copyGeneratedIdKeyBtn = document.querySelector('[data-copy-generated-idkey]');
+  const closeGeneratedIdKeyBtn = document.querySelector('[data-close-generated-idkey]');
+  const generatedIdKeyFeedback = document.querySelector('[data-generated-idkey-feedback]');
+
+  const closeGeneratedIdKeyModal = () => {
+    idKeyGeneratedModal?.classList.remove('open');
+    idKeyGeneratedModal?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  };
+
+  if (idKeyGeneratedModal?.classList.contains('open')) {
+    document.body.style.overflow = 'hidden';
+    generatedIdKeyField?.focus();
+    generatedIdKeyField?.select();
+  }
+
+  closeGeneratedIdKeyBtn?.addEventListener('click', closeGeneratedIdKeyModal);
+  idKeyGeneratedModal?.addEventListener('click', (event) => {
+    if (event.target === idKeyGeneratedModal) {
+      closeGeneratedIdKeyModal();
+    }
+  });
+
+  copyGeneratedIdKeyBtn?.addEventListener('click', async () => {
+    if (!generatedIdKeyField) {
+      return;
+    }
+
+    const keyValue = generatedIdKeyField.value;
+    let copied = false;
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(keyValue);
+        copied = true;
+      } catch (error) {
+        copied = false;
+      }
+    }
+
+    if (!copied) {
+      generatedIdKeyField.focus();
+      generatedIdKeyField.select();
+      copied = document.execCommand('copy');
+    }
+
+    if (generatedIdKeyFeedback) {
+      generatedIdKeyFeedback.textContent = copied
+        ? 'ID-Key copiata negli appunti.'
+        : 'Copia non riuscita. Seleziona la key e copia manualmente.';
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && idKeyGeneratedModal?.classList.contains('open')) {
+      closeGeneratedIdKeyModal();
+    }
   });
 </script>
 <?php
