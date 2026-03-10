@@ -148,6 +148,27 @@ renderStart('Programma', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 </div>
 
+<div class="modal-layer" data-duplicate-program-modal>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="duplicate-program-modal-title">
+    <h3 id="duplicate-program-modal-title">Duplica programma</h3>
+    <p class="muted" style="margin:8px 0 12px">Inserisci il titolo della copia.</p>
+    <input
+      class="dark-input"
+      type="text"
+      data-duplicate-program-title
+      value="Copia programma"
+      placeholder="Titolo della copia"
+      maxlength="120"
+      autocomplete="off"
+    />
+    <p class="assign-feedback" data-duplicate-program-feedback></p>
+    <div class="library-toolbar" style="justify-content:flex-end">
+      <button class="btn" type="button" data-cancel-duplicate-program>Annulla</button>
+      <button class="btn primary" type="button" data-confirm-duplicate-program>Duplica</button>
+    </div>
+  </div>
+</div>
+
 <div class="assign-modal-layer" data-assign-program-modal>
   <div class="assign-modal-card" role="dialog" aria-modal="true" aria-labelledby="assign-program-modal-title">
     <h3 id="assign-program-modal-title" style="margin:0">Assegna scheda</h3>
