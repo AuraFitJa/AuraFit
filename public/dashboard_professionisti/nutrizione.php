@@ -388,35 +388,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $targetFolderId = $requestedFolderId;
       }
 
-      $redirectParams = [];
-      if ($targetFolderId > 0) {
-        $redirectParams['cartella'] = $targetFolderId;
-        $nextPlan = Database::exec(
-          "SELECT p.idPianoAlim
-           FROM PianiAlimentari p
-           WHERE p.cartellaId = ?
-             AND p.creatoreUtente = ?
-             AND (
-               p.cliente IS NULL
-               OR EXISTS (
-                 SELECT 1
-                 FROM Associazioni a
-                 WHERE a.cliente = p.cliente
-                   AND a.professionista = ?
-                   AND LOWER(a.tipoAssociazione) = 'nutrizionista'
-                   AND a.attivaFlag = 1
-               )
-             )
-           ORDER BY p.aggiornatoIl DESC, p.idPianoAlim DESC
-           LIMIT 1",
-          [$targetFolderId, $userId, $professionistaId]
-        )->fetch();
-
-        if ($nextPlan) {
-          $redirectParams['piano'] = (int)$nextPlan['idPianoAlim'];
-        }
-      }
-
+      $redirectParams = $targetFolderId > 0 ? ['cartella' => $targetFolderId] : [];
       completeNutritionAction('Piano eliminato.', $redirectParams);
     }
 
