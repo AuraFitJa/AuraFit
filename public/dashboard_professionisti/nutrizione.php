@@ -398,8 +398,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $targetFolderId = $requestedFolderId;
       }
 
-      $redirectParams = $targetFolderId > 0 ? ['cartella' => $targetFolderId] : [];
-      completeNutritionAction('Piano eliminato.', $redirectParams);
+      $redirectUrl = 'nutrizione.php' . ($targetFolderId > 0 ? ('?cartella=' . $targetFolderId) : '');
+      if (isAjaxRequest()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+          'ok' => true,
+          'message' => 'Piano eliminato.',
+          'redirect' => $redirectUrl,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+      }
+
+      setFlash('ok', 'Piano eliminato.');
+      header('Location: ' . $redirectUrl);
+      exit;
     }
 
     if ($action === 'assign_plan') {
