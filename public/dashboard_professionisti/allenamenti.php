@@ -99,6 +99,16 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
           }
         ?>
         <article class="program-card" data-open-program="<?= (int)$program['idProgramma'] ?>" data-folder-id="<?= (int)$selectedFolder['idCartella'] ?>">
+          <div class="program-actions">
+            <button
+              type="button"
+              class="icon-btn danger"
+              data-delete-program="<?= (int)$program['idProgramma'] ?>"
+              data-folder-id="<?= (int)$selectedFolder['idCartella'] ?>"
+              aria-label="Elimina scheda"
+              title="Elimina scheda"
+            >🗑</button>
+          </div>
           <h4><?= h((string)$program['titolo']) ?></h4>
           <p class="muted-sm"><?= h((string)($program['descrizione'] ?? '')) ?></p>
           <div class="program-meta">
@@ -146,6 +156,18 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
     </div>
   </div>
 </div>
+
+<div class="modal-layer" data-delete-program-modal>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-program-modal-title">
+    <h3 id="delete-program-modal-title">Conferma eliminazione</h3>
+    <p class="muted-sm">Questa azione eliminerà definitivamente la scheda. Vuoi continuare?</p>
+    <div class="library-toolbar" style="justify-content:flex-end">
+      <button class="btn" type="button" data-cancel-delete-program>Annulla</button>
+      <button class="btn danger" type="button" data-confirm-delete-program>Elimina scheda</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-layer" data-program-modal data-program-folder-id="<?= $selectedFolder ? (int)$selectedFolder['idCartella'] : 0 ?>">
   <div class="modal-card">
     <h3>Nuovo programma</h3>
@@ -163,7 +185,8 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
 <style>
   .folder-card,
   .folder-link,
-  .folder-actions {
+  .folder-actions,
+  .program-card {
     position: relative;
   }
 
@@ -181,6 +204,19 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
     z-index: 7;
     pointer-events: auto;
     touch-action: manipulation;
+  }
+
+  .program-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 6;
+  }
+
+  .program-card h4,
+  .program-card p,
+  .program-card .program-meta {
+    padding-right: 38px;
   }
 </style>
 <script>

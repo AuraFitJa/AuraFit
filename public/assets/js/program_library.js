@@ -210,7 +210,11 @@
   }
 
   document.querySelectorAll('[data-open-program]').forEach((card) => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('[data-delete-program]')) {
+        return;
+      }
+
       const id = card.getAttribute('data-open-program');
       const folderId = card.getAttribute('data-folder-id');
       const params = new URLSearchParams({ id });
@@ -422,7 +426,10 @@
   let deleteProgramPayload = null;
 
   document.querySelectorAll('[data-delete-program]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
       const idProgramma = btn.getAttribute('data-delete-program');
       const folderId = btn.getAttribute('data-folder-id') || '0';
       if (!idProgramma) return;
