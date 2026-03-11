@@ -84,6 +84,7 @@
         : '';
       const block = document.createElement('article');
       block.className = 'exercise-block';
+      block.setAttribute('data-exercise-id', ex.idEsercizioGiorno);
       block.innerHTML = `
         <div class="exercise-head">
           <div>
