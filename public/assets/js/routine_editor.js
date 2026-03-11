@@ -84,6 +84,7 @@
         : '';
       const block = document.createElement('article');
       block.className = 'exercise-block';
+      block.setAttribute('data-exercise-id', ex.idEsercizioGiorno);
       block.innerHTML = `
         <div class="exercise-head">
           <div>
@@ -200,8 +201,21 @@
 
     const addSet = e.target.closest('[data-add-set]');
     if (addSet) {
-      await api('addSet', 'POST', { idEsercizioGiorno: addSet.getAttribute('data-add-set') });
+      const exerciseId = addSet.getAttribute('data-add-set');
+      const exerciseCard = addSet.closest('.exercise-card, .exercise-block');
+      const keepExpanded = !!exerciseCard && !exerciseCard.classList.contains('is-collapsed');
+
+      await api('addSet', 'POST', { idEsercizioGiorno: exerciseId });
       await refresh();
+
+      if (keepExpanded) {
+        const refreshedButton = document.querySelector(`[data-add-set="${exerciseId}"]`);
+        const refreshedCard = refreshedButton?.closest('.exercise-card, .exercise-block');
+        if (refreshedCard) {
+          refreshedCard.classList.remove('is-collapsed');
+          refreshedCard.setAttribute('data-state', 'expanded');
+        }
+      }
       return;
     }
 

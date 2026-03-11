@@ -418,14 +418,28 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
     return card.classList.contains("is-collapsed");
   }
 
+  const expandedExerciseCards = new Set();
+
+  function getCardId(card) {
+    return String(card?.getAttribute("data-exercise-id") || "").trim();
+  }
+
   function collapseCard(card) {
     card.classList.add("is-collapsed");
     card.setAttribute("data-state", "collapsed");
+    const cardId = getCardId(card);
+    if (cardId) {
+      expandedExerciseCards.delete(cardId);
+    }
   }
 
   function expandCard(card) {
     card.classList.remove("is-collapsed");
     card.setAttribute("data-state", "expanded");
+    const cardId = getCardId(card);
+    if (cardId) {
+      expandedExerciseCards.add(cardId);
+    }
   }
 
   function toggleCard(card) {
@@ -440,7 +454,6 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
     if (!card || card.dataset.collapsibleReady === "1") return;
 
     card.classList.add("exercise-card");
-    card.setAttribute("data-state", "collapsed");
 
     const head = card.querySelector(".exercise-head");
     if (!head) return;
@@ -469,6 +482,13 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
     }
 
     card.dataset.collapsibleReady = "1";
+
+    const cardId = getCardId(card);
+    if (cardId && expandedExerciseCards.has(cardId)) {
+      expandCard(card);
+      return;
+    }
+
     collapseCard(card);
   }
 
