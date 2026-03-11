@@ -136,12 +136,13 @@ renderStart('Allenamenti', 'allenamenti', $email, $roleBadge, $isPt, $isNutrizio
 <div class="modal-layer" data-delete-folder-modal>
   <div class="modal-card">
     <h3>Eliminare cartella?</h3>
-    <p class="muted-sm">Questa azione rimuoverà la cartella. I programmi dentro non verranno eliminati.</p>
+    <p class="muted-sm">Questa azione eliminerà la cartella e tutti i programmi contenuti al suo interno.</p>
     <p class="muted-sm" data-delete-folder-name></p>
+    <p class="muted-sm">L'operazione non può essere annullata.</p>
     <p class="muted-sm" data-delete-folder-feedback></p>
     <div class="library-toolbar" style="justify-content:flex-end">
       <button class="btn" type="button" data-cancel-delete-folder>Annulla</button>
-      <button class="btn danger" type="button" data-confirm-delete-folder>Elimina</button>
+      <button class="btn danger" type="button" data-confirm-delete-folder>Elimina cartella e programmi</button>
     </div>
   </div>
 </div>

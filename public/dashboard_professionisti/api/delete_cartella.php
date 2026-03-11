@@ -52,7 +52,9 @@ try {
   $pdo->beginTransaction();
 
   Database::exec(
-    'UPDATE ProgrammiAllenamento SET cartellaId = NULL WHERE cartellaId = ? AND creatoreUtente = ?',
+    "UPDATE ProgrammiAllenamento
+     SET stato = 'archiviato', aggiornatoIl = NOW()
+     WHERE cartellaId = ? AND creatoreUtente = ?",
     [$idCartella, $userId]
   );
 

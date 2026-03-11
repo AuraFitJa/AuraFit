@@ -327,6 +327,7 @@
   const deleteFolderName = document.querySelector('[data-delete-folder-name]');
   const deleteFolderFeedback = document.querySelector('[data-delete-folder-feedback]');
   let deleteFolderId = null;
+  const confirmDeleteFolderDefaultText = confirmDeleteFolderBtn?.textContent || 'Elimina';
 
   function resetDeleteFolderModalState() {
     if (deleteFolderFeedback) {
@@ -334,7 +335,7 @@
     }
     if (confirmDeleteFolderBtn) {
       confirmDeleteFolderBtn.disabled = false;
-      confirmDeleteFolderBtn.textContent = 'Elimina';
+      confirmDeleteFolderBtn.textContent = confirmDeleteFolderDefaultText;
     }
   }
 
@@ -411,7 +412,7 @@
         deleteFolderFeedback.textContent = error.message || 'Errore eliminazione cartella.';
       }
       confirmDeleteFolderBtn.disabled = false;
-      confirmDeleteFolderBtn.textContent = 'Elimina';
+      confirmDeleteFolderBtn.textContent = confirmDeleteFolderDefaultText;
     }
   });
 
