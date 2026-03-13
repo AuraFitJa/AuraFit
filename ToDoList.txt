@@ -1,7 +1,5 @@
 🟩🟨🟧🟥🟦🟪
-
 LEGENDA:
-
 [🟨] = Light fix / semplice
 [🟧] = Medium effort fix
 [🟥] = Task importante / richiede più tempo
@@ -9,11 +7,12 @@ LEGENDA:
 [🚧] = In Sviluppo / Completamento
 [❔] = Fattibile? / Da capire
 
-DB:
+🗃️DB:
 [🚧] Aggiungere/fixare nel DB esercizi "italianizzati" o "gergo palestra"
 [🟧] Implementare la funzionalita di poter dedicere quale tipo di serie se working set / dropset / warm up
 
-DEV:
+👨🏻‍💻DEV:
+[🟥][❔] Capire come implementare anamnesi pazienti con form builder per pt e view
 [🟥] Sviluppare tab nutrizionista
   [✅]Creazione cartelle
     [🚧]Creazione piano
@@ -38,7 +37,7 @@ DEV:
 [🟧][❔] Capire come implementare image to barcode senza registrare nel db img
 [🟧] Implementare verifica mail e reset password con https://www.brevo.com/
 
-UI:
+✨UI:
 [🟥] REWORK Landing page
 [🟥] REWORK tab overview
 [🟥] REWORK Interfaccia grafica Mobile dashboard Professionista
@@ -53,10 +52,10 @@ UI:
 
 https://docs.google.com/spreadsheets/d/1zMYUkfVuTkHn08iiC5KoDcMnN8hps987pJr2_2iWnGo/edit?gid=2027036950#gid=2027036950
 
-GITHUB:
+👾GITHUB:
 [🟨] Rework Readme
 
-COMPLETATI:
+✅COMPLETATI:
 [✅] Modificare la visualizzazione degli esercizi nel workout builder, rendere minimizzabile la card
 [✅] Allargare le card inserimento dati su workout builder se possibile 
 [✅] Far partire le card esercizi nel workout builder minimizzate
@@ -72,3 +71,4 @@ COMPLETATI:
 [✅] Uniformare il bg color
 [✅] Fix colore nei dropdown select da impostare come in register
 [✅] su scheda_cliente.php?idCliente=x applicare hide/show logic to card "Storico associazioni con questo cliente"
+
