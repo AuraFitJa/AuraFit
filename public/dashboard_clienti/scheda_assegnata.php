@@ -108,6 +108,10 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     width: 100%;
     min-width: 600px;
   }
+  .set-table .notes-col {
+    min-width: 280px;
+    width: 40%;
+  }
   .exercise-block {
     cursor: pointer;
     transition: transform .18s ease, box-shadow .18s ease;
@@ -359,11 +363,31 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
               <?php endif; ?>
 
               <?php if (!empty($exercise['serie'])): ?>
+                <?php
+                  $hasTargetReps = false;
+                  $hasRepsMin = false;
+                  $hasRepsMax = false;
+                  foreach ($exercise['serie'] as $serieRow) {
+                    if ($serieRow['targetReps'] !== null && $serieRow['targetReps'] !== '') {
+                      $hasTargetReps = true;
+                    }
+                    if ($serieRow['repsMin'] !== null && $serieRow['repsMin'] !== '') {
+                      $hasRepsMin = true;
+                    }
+                    if ($serieRow['repsMax'] !== null && $serieRow['repsMax'] !== '') {
+                      $hasRepsMax = true;
+                    }
+                  }
+                ?>
                 <div class="set-table-wrap" style="margin-top:10px">
                   <table class="set-table">
                     <thead>
                       <tr>
-                        <th>#</th><th>Kg</th><th>Reps</th><th>Min</th><th>Max</th><th>RPE</th><th>Rec</th><th>Tempo</th><th>Note</th>
+                        <th>#</th><th>Kg</th>
+                        <?php if ($hasTargetReps): ?><th>Reps</th><?php endif; ?>
+                        <?php if ($hasRepsMin): ?><th>Rep Min</th><?php endif; ?>
+                        <?php if ($hasRepsMax): ?><th>Rep Max</th><?php endif; ?>
+                        <th>RPE</th><th>Rec</th><th class="notes-col">Note</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -371,13 +395,12 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
                         <tr>
                           <td><?= h((string)$serie['numeroSerie']) ?></td>
                           <td><?= h((string)($serie['targetCarico'] ?? '—')) ?></td>
-                          <td><?= h((string)($serie['targetReps'] ?? '—')) ?></td>
-                          <td><?= h((string)($serie['repsMin'] ?? '—')) ?></td>
-                          <td><?= h((string)($serie['repsMax'] ?? '—')) ?></td>
+                          <?php if ($hasTargetReps): ?><td><?= h((string)($serie['targetReps'] ?? '')) ?></td><?php endif; ?>
+                          <?php if ($hasRepsMin): ?><td><?= h((string)($serie['repsMin'] ?? '')) ?></td><?php endif; ?>
+                          <?php if ($hasRepsMax): ?><td><?= h((string)($serie['repsMax'] ?? '')) ?></td><?php endif; ?>
                           <td><?= h((string)($serie['targetRPE'] ?? '—')) ?></td>
                           <td><?= h((string)($serie['recuperoSecondi'] ?? '—')) ?></td>
-                          <td><?= h((string)($serie['tempo'] ?? '—')) ?></td>
-                          <td><?= h((string)($serie['note'] ?? '')) ?></td>
+                          <td class="notes-col"><?= h((string)($serie['note'] ?? '')) ?></td>
                         </tr>
                       <?php endforeach; ?>
                     </tbody>
@@ -411,9 +434,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       <div class="set-table-wrap">
         <table class="set-table" id="exerciseModalPrescribedTable">
           <thead>
-            <tr>
-              <th>#</th><th>Kg</th><th>Reps</th><th>Min</th><th>Max</th><th>RPE</th><th>Rec</th><th>Tempo</th><th>Note</th>
-            </tr>
+            <tr></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -425,7 +446,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       <table class="exercise-form-table" id="performedPrescribedTable">
         <thead>
           <tr>
-            <th>Serie</th><th>Reps</th><th>Carico</th><th>RPE</th><th>Completata</th><th>Note</th>
+            <th>Serie</th><th>Carico</th><th>Reps</th><th>RPE</th><th>Completata</th><th>Note</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -439,7 +460,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       <table class="exercise-form-table" id="performedExtraTable">
         <thead>
           <tr>
-            <th>#</th><th>Reps</th><th>Carico</th><th>RPE</th><th>Completata</th><th>Note</th><th></th>
+            <th>#</th><th>Carico</th><th>Reps</th><th>RPE</th><th>Completata</th><th>Note</th><th></th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -542,6 +563,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     const prescribedTableBody = document.querySelector('#exerciseModalPrescribedTable tbody');
     const performedPrescribedBody = document.querySelector('#performedPrescribedTable tbody');
     const performedExtraBody = document.querySelector('#performedExtraTable tbody');
+    const prescribedTableHeadRow = document.querySelector('#exerciseModalPrescribedTable thead tr');
     const feedback = document.getElementById('exerciseModalFeedback');
 
     const state = {
@@ -645,8 +667,8 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       row.dataset.seriePrescrittaId = String(serieId);
       row.innerHTML = `
         <td>${escapeHtml(label)}</td>
-        <td><input type="number" min="0" step="1" data-field="repsEffettive" value="${valOrDash(values.repsEffettive).replace('—', '')}"></td>
         <td><input type="number" min="0" step="0.5" data-field="caricoEffettivo" value="${valOrDash(values.caricoEffettivo).replace('—', '')}"></td>
+        <td><input type="number" min="0" step="1" data-field="repsEffettive" value="${valOrDash(values.repsEffettive).replace('—', '')}"></td>
         <td><input type="number" min="0" step="0.5" data-field="rpeEffettivo" value="${valOrDash(values.rpeEffettivo).replace('—', '')}"></td>
         <td><input type="checkbox" data-field="completata" ${values.completata === undefined || Number(values.completata) === 1 ? 'checked' : ''}></td>
         <td><input type="text" data-field="note" value="${(values.note || '').replace(/"/g, '&quot;')}"></td>
@@ -661,8 +683,8 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       }
       row.innerHTML = `
         <td><input type="number" min="1" step="1" data-field="numeroSerie" value="${item.numeroSerie || ''}"></td>
-        <td><input type="number" min="0" step="1" data-field="repsEffettive" value="${item.repsEffettive ?? ''}"></td>
         <td><input type="number" min="0" step="0.5" data-field="caricoEffettivo" value="${item.caricoEffettivo ?? ''}"></td>
+        <td><input type="number" min="0" step="1" data-field="repsEffettive" value="${item.repsEffettive ?? ''}"></td>
         <td><input type="number" min="0" step="0.5" data-field="rpeEffettivo" value="${item.rpeEffettivo ?? ''}"></td>
         <td><input type="checkbox" data-field="completata" ${item.completata === undefined || Number(item.completata) === 1 ? 'checked' : ''}></td>
         <td><input type="text" data-field="note" value="${(item.note || '').replace(/"/g, '&quot;')}"></td>
@@ -681,18 +703,33 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       performedExtraBody.innerHTML = '';
 
       const prescritteById = (payload.svolte && payload.svolte.prescritteById) || {};
-      (payload.seriePrescritte || []).forEach((serie) => {
+      const seriePrescritte = payload.seriePrescritte || [];
+      const hasTargetReps = seriePrescritte.some((serie) => serie.targetReps !== null && serie.targetReps !== undefined && String(serie.targetReps) !== '');
+      const hasRepsMin = seriePrescritte.some((serie) => serie.repsMin !== null && serie.repsMin !== undefined && String(serie.repsMin) !== '');
+      const hasRepsMax = seriePrescritte.some((serie) => serie.repsMax !== null && serie.repsMax !== undefined && String(serie.repsMax) !== '');
+
+      prescribedTableHeadRow.innerHTML = `
+        <th>#</th>
+        <th>Kg</th>
+        ${hasTargetReps ? '<th>Reps</th>' : ''}
+        ${hasRepsMin ? '<th>Rep Min</th>' : ''}
+        ${hasRepsMax ? '<th>Rep Max</th>' : ''}
+        <th>RPE</th>
+        <th>Rec</th>
+        <th class="notes-col">Note</th>
+      `;
+
+      seriePrescritte.forEach((serie) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${escapeHtml(valOrDash(serie.numeroSerie))}</td>
           <td>${escapeHtml(valOrDash(serie.targetCarico))}</td>
-          <td>${escapeHtml(valOrDash(serie.targetReps))}</td>
-          <td>${escapeHtml(valOrDash(serie.repsMin))}</td>
-          <td>${escapeHtml(valOrDash(serie.repsMax))}</td>
+          ${hasTargetReps ? `<td>${escapeHtml(serie.targetReps ?? '')}</td>` : ''}
+          ${hasRepsMin ? `<td>${escapeHtml(serie.repsMin ?? '')}</td>` : ''}
+          ${hasRepsMax ? `<td>${escapeHtml(serie.repsMax ?? '')}</td>` : ''}
           <td>${escapeHtml(valOrDash(serie.targetRPE))}</td>
           <td>${escapeHtml(valOrDash(serie.recuperoSecondi))}</td>
-          <td>${escapeHtml(valOrDash(serie.tempo))}</td>
-          <td>${escapeHtml(valOrDash(serie.note))}</td>
+          <td class="notes-col">${escapeHtml(valOrDash(serie.note))}</td>
         `;
         prescribedTableBody.appendChild(tr);
 
