@@ -159,10 +159,9 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
       </p>
     </div>
 
-    <h3>Ultimi programmi assegnati</h3>
+    <h3>Programmi di allenamento assegnati</h3>
     <div class="toolbar" style="justify-content:flex-end;gap:10px;margin-bottom:10px">
       <?php if ($ultimoProgramma): ?>
-        <a class="btn" href="programma.php?id=<?= (int)$ultimoProgramma['idProgramma'] ?>">Vai al programma assegnato</a>
       <?php else: ?>
         <a class="btn primary" href="allenamenti.php">+ Assegna programma</a>
       <?php endif; ?>
