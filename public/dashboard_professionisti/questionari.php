@@ -63,7 +63,7 @@ if (!$dbAvailable) {
         if ($selectedQuestionario) {
           $domande = Database::exec('SELECT * FROM QuestionarioDomande WHERE questionario = ? ORDER BY ordine ASC', [$selectedId])->fetchAll();
           if ($domande) {
-            $ids = array_map(static fn($d) => (int)$d['idDomanda'], $domande);
+            $ids = array_map(static function ($d) { return (int)$d['idDomanda']; }, $domande);
             $in = implode(',', array_fill(0, count($ids), '?'));
             $ops = Database::exec("SELECT * FROM QuestionarioOpzioni WHERE domanda IN ($in) ORDER BY ordine ASC", $ids)->fetchAll();
             foreach ($ops as $o) {

@@ -17,7 +17,7 @@ if(!$dbAvailable){$errors[]=$dbError??'DB non disponibile.';} else {
         } else { $idCompilazione=(int)$draft['idCompilazione']; }
 
         $domande=Database::exec('SELECT * FROM QuestionarioDomande WHERE questionario=? ORDER BY ordine ASC',[$assegnazione['questionario']])->fetchAll();
-        if($domande){$ids=array_map(static fn($d)=>(int)$d['idDomanda'],$domande);$in=implode(',',array_fill(0,count($ids),'?'));$ops=Database::exec("SELECT * FROM QuestionarioOpzioni WHERE domanda IN ($in) ORDER BY ordine ASC",$ids)->fetchAll();foreach($ops as $o){$opzioni[(int)$o['domanda']][]=$o;}}
+        if($domande){$ids=array_map(static function ($d) { return (int)$d['idDomanda']; },$domande);$in=implode(',',array_fill(0,count($ids),'?'));$ops=Database::exec("SELECT * FROM QuestionarioOpzioni WHERE domanda IN ($in) ORDER BY ordine ASC",$ids)->fetchAll();foreach($ops as $o){$opzioni[(int)$o['domanda']][]=$o;}}
         $risp=Database::exec('SELECT * FROM QuestionarioRisposte WHERE compilazione=?',[$idCompilazione])->fetchAll();
         foreach($risp as $r){$answers[(int)$r['domanda']]=$r;}
       }

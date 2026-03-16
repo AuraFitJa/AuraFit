@@ -188,6 +188,7 @@ function renderStart(string $title, string $activeTab, string $email, string $ro
     'idkey' => ['label' => 'Gestione ID-Key', 'href' => 'idkey.php', 'visible' => true],
     'allenamenti' => ['label' => 'Allenamenti (PT)', 'href' => 'allenamenti.php', 'visible' => $isPt],
     'nutrizione' => ['label' => 'Nutrizione (Nutrizionista)', 'href' => 'nutrizione.php', 'visible' => $isNutrizionista],
+    'questionari' => ['label' => 'Questionari', 'href' => 'questionari.php', 'visible' => true],
     'accessi' => ['label' => 'Accessi incrociati', 'href' => 'accessi.php', 'visible' => true],
     'report' => ['label' => 'Monitoraggio & Report', 'href' => 'report.php', 'visible' => true],
   ];
