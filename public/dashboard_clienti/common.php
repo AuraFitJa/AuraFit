@@ -219,6 +219,7 @@ function renderStart(string $title, string $activeTab, ?string $email): void {
     'allenamenti' => ['label' => 'Allenamenti', 'href' => 'allenamenti.php'],
     'nutrizione' => ['label' => 'Nutrizione', 'href' => 'nutrizione.php'],
     'progressi' => ['label' => 'Progressi', 'href' => 'progressi.php'],
+    'questionari' => ['label' => 'Questionari', 'href' => 'questionari.php'],
     'supporto' => ['label' => 'Supporto', 'href' => 'supporto.php'],
   ];
 
