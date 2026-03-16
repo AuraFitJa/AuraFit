@@ -5,6 +5,8 @@ $errors = [];
 $cliente = null;
 $programmiAssegnati = [];
 $storicoAssociazioni = [];
+$questionariAssegnati = [];
+$questionariCompilazioni = [];
 
 $idCliente = (int)($_GET['idCliente'] ?? 0);
 
@@ -66,6 +68,25 @@ if ($idCliente < 1) {
              WHERE professionista = ? AND cliente = ?
              ORDER BY iniziataIl DESC
              LIMIT 5",
+            [$professionistaId, $idCliente]
+          )->fetchAll();
+
+          $questionariAssegnati = Database::exec(
+            "SELECT qa.idAssegnazioneQuestionario, qa.stato, qa.assegnatoIl, qa.disattivatoIl, q.titolo
+             FROM QuestionarioAssegnazioni qa
+             INNER JOIN Questionari q ON q.idQuestionario = qa.questionario
+             WHERE qa.professionista = ? AND qa.cliente = ?
+             ORDER BY qa.assegnatoIl DESC",
+            [$professionistaId, $idCliente]
+          )->fetchAll();
+
+          $questionariCompilazioni = Database::exec(
+            "SELECT qc.idCompilazione, qc.numeroCompilazione, qc.stato, qc.inviatoIl, qc.aggiornatoIl, qc.ricompilazioneDi, q.titolo
+             FROM QuestionarioCompilazioni qc
+             INNER JOIN Questionari q ON q.idQuestionario = qc.questionario
+             INNER JOIN QuestionarioAssegnazioni qa ON qa.idAssegnazioneQuestionario = qc.assegnazione
+             WHERE qa.professionista = ? AND qc.cliente = ?
+             ORDER BY qc.aggiornatoIl DESC",
             [$professionistaId, $idCliente]
           )->fetchAll();
         }
@@ -200,6 +221,48 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     </table>
 
     <div class="divider"></div>
+
+    <h3>Questionari assegnati</h3>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>Questionario</th><th>Stato</th><th>Assegnato il</th><th>Disattivato il</th></tr></thead>
+        <tbody>
+          <?php if (!$questionariAssegnati): ?>
+            <tr><td colspan="4" class="muted">Nessun questionario assegnato.</td></tr>
+          <?php endif; ?>
+          <?php foreach ($questionariAssegnati as $qa): ?>
+            <tr>
+              <td><?= h($qa['titolo']) ?></td>
+              <td><?= h($qa['stato']) ?></td>
+              <td><?= h($qa['assegnatoIl']) ?></td>
+              <td><?= h($qa['disattivatoIl'] ?: '—') ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:14px">Compilazioni questionari</h3>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>Questionario</th><th>#</th><th>Stato</th><th>Inviato il</th><th>Data ricompilazione</th><th>Apri</th></tr></thead>
+        <tbody>
+          <?php if (!$questionariCompilazioni): ?>
+            <tr><td colspan="6" class="muted">Nessuna compilazione disponibile.</td></tr>
+          <?php endif; ?>
+          <?php foreach ($questionariCompilazioni as $qc): ?>
+            <tr>
+              <td><?= h($qc['titolo']) ?></td>
+              <td><?= (int)$qc['numeroCompilazione'] ?></td>
+              <td><?= h($qc['stato']) ?></td>
+              <td><?= h($qc['inviatoIl'] ?: '—') ?></td>
+              <td><?= h($qc['ricompilazioneDi'] ? $qc['aggiornatoIl'] : '—') ?></td>
+              <td><a class="btn" href="../api/questionari/compilazione_detail.php?idCompilazione=<?= (int)$qc['idCompilazione'] ?>" target="_blank">Apri risposte</a></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
 
     <button class="btn" type="button" data-toggle-associazioni>
       &gt; Storico associazioni con questo cliente
