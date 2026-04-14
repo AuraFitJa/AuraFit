@@ -182,17 +182,25 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
 </section>
 <style>
   .builder-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
     align-items: stretch;
   }
   .builder-card {
     width: 100%;
+    min-width: 0;
   }
   .builder-card-questions {
     min-width: 0;
-    flex: 1 1 50%;
   }
   .builder-layout > .builder-card {
-    flex: 1 1 50%;
+    width: 100%;
+  }
+  @media (max-width: 820px) {
+    .builder-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
   .builder-input {
     width: 100%;
