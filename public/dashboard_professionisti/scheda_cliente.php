@@ -7,8 +7,11 @@ $programmiAssegnati = [];
 $storicoAssociazioni = [];
 $questionariAssegnati = [];
 $questionariCompilazioni = [];
+$compilazioneApertaMeta = null;
+$compilazioneApertaRisposte = [];
 
 $idCliente = (int)($_GET['idCliente'] ?? 0);
+$idCompilazioneAperta = (int)($_GET['idCompilazione'] ?? 0);
 
 if ($idCliente < 1) {
   $errors[] = 'Cliente non valido.';
@@ -89,6 +92,31 @@ if ($idCliente < 1) {
              ORDER BY qc.aggiornatoIl DESC",
             [$professionistaId, $idCliente]
           )->fetchAll();
+
+          if ($idCompilazioneAperta > 0) {
+            $compilazioneApertaMeta = Database::exec(
+              "SELECT qc.idCompilazione, qc.numeroCompilazione, qc.inviatoIl, qc.questionario, q.titolo
+               FROM QuestionarioCompilazioni qc
+               INNER JOIN QuestionarioAssegnazioni qa ON qa.idAssegnazioneQuestionario = qc.assegnazione
+               INNER JOIN Questionari q ON q.idQuestionario = qc.questionario
+               WHERE qc.idCompilazione = ?
+                 AND qc.cliente = ?
+                 AND qa.professionista = ?
+               LIMIT 1",
+              [$idCompilazioneAperta, $idCliente, $professionistaId]
+            )->fetch();
+
+            if ($compilazioneApertaMeta) {
+              $compilazioneApertaRisposte = Database::exec(
+                "SELECT d.idDomanda, d.testoDomanda, d.tipoDomanda, r.valoreTesto, r.valoreNumero, r.valoreData, r.valoreBoolean, r.valoreJson
+                 FROM QuestionarioDomande d
+                 LEFT JOIN QuestionarioRisposte r ON r.domanda = d.idDomanda AND r.compilazione = ?
+                 WHERE d.questionario = ?
+                 ORDER BY d.ordine ASC",
+                [$idCompilazioneAperta, $compilazioneApertaMeta['questionario']]
+              )->fetchAll();
+            }
+          }
         }
       }
     }
@@ -102,7 +130,7 @@ $clienteEmail = $cliente ? (string)$cliente['email'] : '';
 $ultimoProgramma = $programmiAssegnati[0] ?? null;
 renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
-<section class="card" data-client-card>
+<section class="card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
   <style>
     .remove-program-overlay {
       position: fixed;
@@ -286,15 +314,15 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
               <td><?= h($qc['inviatoIl'] ?: '—') ?></td>
               <td><?= h($qc['ricompilazioneDi'] ? $qc['aggiornatoIl'] : '—') ?></td>
               <td>
-                <button
+                <a
                   class="btn"
-                  type="button"
+                  href="scheda_cliente.php?idCliente=<?= (int)$idCliente ?>&idCompilazione=<?= (int)$qc['idCompilazione'] ?>#visualizzazione-risposte"
                   data-open-responses
                   data-id-compilazione="<?= (int)$qc['idCompilazione'] ?>"
                   data-questionario="<?= h((string)$qc['titolo']) ?>"
                   data-numero="<?= (int)$qc['numeroCompilazione'] ?>"
                   data-inviato-il="<?= h((string)($qc['inviatoIl'] ?: '—')) ?>"
-                >Apri risposte</button>
+                >Apri risposte</a>
               </td>
             </tr>
           <?php endforeach; ?>
@@ -347,15 +375,54 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
   <?php endif; ?>
 </section>
 <?php if ($cliente): ?>
-  <section class="card responses-card" data-responses-card aria-hidden="true">
+  <section
+    id="visualizzazione-risposte"
+    class="card responses-card<?= $compilazioneApertaMeta ? ' open' : '' ?>"
+    data-responses-card
+    aria-hidden="<?= $compilazioneApertaMeta ? 'false' : 'true' ?>"
+  >
     <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <button class="btn" type="button" data-back-to-client>← Torna alla scheda cliente</button>
-      <h3 style="margin:0" data-responses-title>Questionario: —</h3>
+      <a class="btn" href="scheda_cliente.php?idCliente=<?= (int)$idCliente ?>" data-back-to-client>← Torna alla scheda cliente</a>
+      <h3 style="margin:0" data-responses-title>Questionario: <?= h((string)($compilazioneApertaMeta['titolo'] ?? '—')) ?></h3>
     </div>
     <div class="divider" style="margin:14px 0"></div>
-    <p class="muted" style="margin:8px 0 0" data-responses-meta>Seleziona una compilazione per visualizzare le risposte.</p>
+    <p class="muted" style="margin:8px 0 0" data-responses-meta>
+      <?php if ($compilazioneApertaMeta): ?>
+        Questionario: <?= h((string)$compilazioneApertaMeta['titolo']) ?> ·
+        Compilazione #<?= (int)$compilazioneApertaMeta['numeroCompilazione'] ?> ·
+        Inviato il: <?= h((string)($compilazioneApertaMeta['inviatoIl'] ?: '—')) ?>
+      <?php else: ?>
+        Seleziona una compilazione per visualizzare le risposte.
+      <?php endif; ?>
+    </p>
     <p class="muted" style="margin:8px 0 0;display:none" data-responses-feedback></p>
-    <div class="responses-list" data-responses-list></div>
+    <div class="responses-list" data-responses-list>
+      <?php foreach ($compilazioneApertaRisposte as $answer): ?>
+        <?php
+          $renderedValue = '—';
+          if ($answer['valoreTesto'] !== null && $answer['valoreTesto'] !== '') {
+            $renderedValue = (string)$answer['valoreTesto'];
+          } elseif ($answer['valoreNumero'] !== null) {
+            $renderedValue = (string)$answer['valoreNumero'];
+          } elseif ($answer['valoreData'] !== null && $answer['valoreData'] !== '') {
+            $renderedValue = (string)$answer['valoreData'];
+          } elseif ($answer['valoreBoolean'] !== null) {
+            $renderedValue = ((int)$answer['valoreBoolean'] === 1) ? 'Sì' : 'No';
+          } elseif ($answer['valoreJson'] !== null && $answer['valoreJson'] !== '') {
+            $decoded = json_decode((string)$answer['valoreJson'], true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+              $renderedValue = implode(', ', array_map('strval', array_values($decoded)));
+            } else {
+              $renderedValue = (string)$answer['valoreJson'];
+            }
+          }
+        ?>
+        <div class="responses-item">
+          <p class="responses-item-question"><?= h((string)($answer['testoDomanda'] ?: 'Domanda')) ?></p>
+          <p class="responses-item-answer"><?= h($renderedValue) ?></p>
+        </div>
+      <?php endforeach; ?>
+    </div>
   </section>
 <?php endif; ?>
 
