@@ -481,6 +481,7 @@ const compilazioneMeta=document.querySelector("[data-compilazione-meta]");
 const compilazioneStato=document.querySelector("[data-compilazione-stato]");
 const compilazioneContent=document.querySelector("[data-compilazione-content]");
 const selectedCompilazioneId=' . $selectedCompilazioneId . ';
+let openedCompilazioneId=0;
 
 function htmlesc(value){
   return String(value ?? "").replace(/[&<>"\']/g, function(ch){
@@ -511,15 +512,32 @@ function setActiveRow(id){
 }
 function updateUrl(idCompilazione){
   const url=new URL(window.location.href);
-  url.searchParams.set("idCompilazione", String(idCompilazione));
+  if(Number(idCompilazione)>0){
+    url.searchParams.set("idCompilazione", String(idCompilazione));
+  }else{
+    url.searchParams.delete("idCompilazione");
+  }
   history.replaceState({}, "", url.toString());
+}
+function closeCompilazione(updateHistory=true){
+  if(!compilazionePanel || !compilazioneContent) return;
+  compilazionePanel.hidden=true;
+  compilazioneContent.innerHTML="";
+  setActiveRow(0);
+  openedCompilazioneId=0;
+  if(updateHistory) updateUrl(0);
 }
 async function openCompilazione(idCompilazione, updateHistory=true){
   if(!Number.isFinite(Number(idCompilazione)) || Number(idCompilazione)<1) return;
   if(!compilazionePanel || !compilazioneContent || !compilazioneTitle || !compilazioneMeta || !compilazioneStato) return;
+  if(openedCompilazioneId===Number(idCompilazione) && !compilazionePanel.hidden){
+    closeCompilazione(updateHistory);
+    return;
+  }
   compilazionePanel.hidden=false;
   compilazioneContent.innerHTML="<p class=\"muted\" style=\"margin:0\">Caricamento risposte...</p>";
   setActiveRow(idCompilazione);
+  openedCompilazioneId=Number(idCompilazione);
   try{
     const response=await fetch(`../api/questionari/compilazione_detail.php?idCompilazione=${idCompilazione}`);
     const payload=await response.json();
@@ -537,6 +555,7 @@ async function openCompilazione(idCompilazione, updateHistory=true){
     compilazioneContent.innerHTML=answers || "<p class=\"muted\" style=\"margin:0\">Nessuna risposta disponibile.</p>";
     if(updateHistory) updateUrl(idCompilazione);
   }catch(err){
+    openedCompilazioneId=0;
     compilazioneContent.innerHTML=`<p class="muted" style="margin:0">${htmlesc(err?.message || "Errore nel caricamento risposte.")}</p>`;
   }
 }
