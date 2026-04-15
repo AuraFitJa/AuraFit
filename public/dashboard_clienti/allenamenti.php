@@ -72,10 +72,14 @@ if ($dbAvailable) {
           }
         }
 
-        $folders = array_values(array_filter(
-          $folders,
-          static fn(array $folder): bool => isset($assignedFolderIds[(int)$folder['idCartella']])
-        ));
+        $filteredFolders = [];
+        foreach ($folders as $folder) {
+          $folderId = isset($folder['idCartella']) ? (int)$folder['idCartella'] : 0;
+          if ($folderId > 0 && isset($assignedFolderIds[$folderId])) {
+            $filteredFolders[] = $folder;
+          }
+        }
+        $folders = $filteredFolders;
       }
     }
   } catch (Throwable $e) {
