@@ -10,6 +10,7 @@ $clientiAssociati = [];
 $assegnazioni = [];
 $compilazioni = [];
 $selectedQuestionario = null;
+$assegnazioniAttiveByCliente = [];
 
 if (!$dbAvailable) {
   $errors[] = $dbError ?? 'Database non disponibile.';
@@ -76,6 +77,15 @@ if (!$dbAvailable) {
       $clientiAssociati = Database::exec("SELECT c.idCliente, u.nome, u.cognome FROM Associazioni a INNER JOIN Clienti c ON c.idCliente = a.cliente INNER JOIN Utenti u ON u.idUtente = c.idUtente WHERE a.professionista = ? AND a.attivaFlag = 1 AND a.tipoAssociazione IN ('pt','nutrizionista') ORDER BY u.nome ASC", [$professionistaId])->fetchAll();
 
       $assegnazioni = Database::exec("SELECT qa.*, q.titolo, u.nome, u.cognome FROM QuestionarioAssegnazioni qa INNER JOIN Questionari q ON q.idQuestionario=qa.questionario INNER JOIN Clienti c ON c.idCliente=qa.cliente INNER JOIN Utenti u ON u.idUtente=c.idUtente WHERE qa.professionista = ? ORDER BY qa.assegnatoIl DESC", [$professionistaId])->fetchAll();
+      if ($selectedQuestionario) {
+        $assegnazioniAttive = Database::exec(
+          "SELECT cliente FROM QuestionarioAssegnazioni WHERE professionista = ? AND questionario = ? AND stato = 'attivo'",
+          [$professionistaId, (int)$selectedQuestionario['idQuestionario']]
+        )->fetchAll();
+        foreach ($assegnazioniAttive as $assegnazioneAttiva) {
+          $assegnazioniAttiveByCliente[(int)$assegnazioneAttiva['cliente']] = true;
+        }
+      }
 
       $compilazioni = Database::exec("SELECT qc.*, q.titolo, u.nome, u.cognome FROM QuestionarioCompilazioni qc INNER JOIN Questionari q ON q.idQuestionario=qc.questionario INNER JOIN Clienti c ON c.idCliente=qc.cliente INNER JOIN Utenti u ON u.idUtente=c.idUtente WHERE q.professionista = ? ORDER BY qc.aggiornatoIl DESC LIMIT 100", [$professionistaId])->fetchAll();
     }
@@ -139,8 +149,14 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
           <option value="date">Data</option>
           <option value="consent_checkbox">Consenso (checkbox)</option>
         </select>
-        <input class="builder-input" name="descrizione" placeholder="Descrizione (opzionale)">
-        <input class="builder-input" name="placeholderText" placeholder="Placeholder (opzionale)">
+        <div class="builder-options" data-builder-options hidden>
+          <div class="builder-options-header">
+            <strong>Opzioni risposta</strong>
+            <button class="btn" type="button" data-add-option>Aggiungi opzione</button>
+          </div>
+          <div class="builder-options-list" data-builder-options-list></div>
+          <p class="muted" style="margin:0">Aggiungi almeno 2 opzioni per domande a scelta.</p>
+        </div>
         <button class="btn primary" type="submit">Aggiungi domanda</button>
       </form>
       <p class="muted" id="builderFeedback"></p>
@@ -161,7 +177,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
       <div class="assign-client-list" data-assign-client-list>
         <?php foreach ($clientiAssociati as $c): ?>
           <label class="assign-client-item">
-            <input type="checkbox" data-assign-cliente value="<?= (int)$c['idCliente'] ?>">
+            <input type="checkbox" data-assign-cliente value="<?= (int)$c['idCliente'] ?>"<?= isset($assegnazioniAttiveByCliente[(int)$c['idCliente']]) ? ' checked' : '' ?>>
             <span><?= h(trim($c['nome'] . ' ' . $c['cognome'])) ?></span>
           </label>
         <?php endforeach; ?>
@@ -270,11 +286,80 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     color: #fda4af;
   }
   .assign-feedback.ok { color: #86efac; }
+  .builder-options {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .builder-options-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .builder-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .builder-option-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+  }
 </style>
 <?php renderEnd('<script>
 (function(){
 const add=document.getElementById("addDomandaForm"); const fb=document.getElementById("builderFeedback");
-add?.addEventListener("submit", async function(e){e.preventDefault(); const form=new FormData(add); const payload=Object.fromEntries(form.entries()); const r=await fetch("../api/questionari/domanda_create.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}); const d=await r.json(); fb.textContent=d.ok?"Domanda aggiunta. Ricarico...":(d.error||"Errore"); if(d.ok) location.reload();});
+const tipoDomanda=add?.querySelector(\'select[name="tipoDomanda"]\');
+const optionsBox=add?.querySelector("[data-builder-options]");
+const optionsList=add?.querySelector("[data-builder-options-list]");
+const addOptionBtn=add?.querySelector("[data-add-option]");
+
+function createOptionRow(value=""){
+  if(!optionsList) return;
+  const row=document.createElement("div");
+  row.className="builder-option-row";
+  row.innerHTML=`<input class="builder-input" type="text" value="${value.replace(/"/g,"&quot;")}" placeholder="Testo opzione">
+    <button class="btn" type="button" data-remove-option>Rimuovi</button>`;
+  row.querySelector("[data-remove-option]")?.addEventListener("click", ()=>{ row.remove(); ensureMinRows(); });
+  optionsList.appendChild(row);
+}
+
+function ensureMinRows(){
+  if(!optionsList || !optionsBox || optionsBox.hidden) return;
+  if(optionsList.children.length===0){ createOptionRow(""); createOptionRow(""); }
+}
+
+function syncOptionsVisibility(){
+  if(!tipoDomanda || !optionsBox || !optionsList) return;
+  const needsOptions=tipoDomanda.value==="single_choice"||tipoDomanda.value==="multiple_choice";
+  optionsBox.hidden=!needsOptions;
+  if(needsOptions){ ensureMinRows(); }
+}
+
+tipoDomanda?.addEventListener("change", syncOptionsVisibility);
+addOptionBtn?.addEventListener("click", ()=>createOptionRow(""));
+syncOptionsVisibility();
+
+add?.addEventListener("submit", async function(e){
+  e.preventDefault();
+  const form=new FormData(add);
+  const payload=Object.fromEntries(form.entries());
+  if(tipoDomanda && (tipoDomanda.value==="single_choice"||tipoDomanda.value==="multiple_choice")){
+    const opzioni=[...optionsList.querySelectorAll("input")].map((i)=>i.value.trim()).filter(Boolean);
+    if(opzioni.length<2){ fb.textContent="Inserisci almeno 2 opzioni."; return; }
+    payload.opzioni=opzioni;
+  }
+  const r=await fetch("../api/questionari/domanda_create.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const d=await r.json();
+  fb.textContent=d.ok?"Domanda aggiunta. Ricarico...":(d.error||"Errore");
+  if(d.ok) location.reload();
+});
 const modal=document.querySelector("[data-assign-questionario-modal]");
 const openBtn=document.querySelector("[data-open-assign-modal]");
 const closeBtn=document.querySelector("[data-close-assign-modal]");
@@ -284,13 +369,20 @@ const feedback=document.querySelector("[data-assign-feedback]");
 const idQuestionario=' . (int)$selectedQuestionario['idQuestionario'] . ';
 
 function setFeedback(message, ok){ if(!feedback) return; feedback.textContent=message||""; feedback.classList.toggle("ok",!!ok); }
-function toggleModal(open){ if(!modal) return; modal.classList.toggle("open", !!open); if(!open) setFeedback("", false); }
+function syncToggleAll(){
+  if(!toggleAll) return;
+  const checkboxes=[...document.querySelectorAll("[data-assign-cliente]")];
+  if(checkboxes.length===0){ toggleAll.checked=false; return; }
+  toggleAll.checked=checkboxes.every((el)=>el.checked);
+}
+function toggleModal(open){ if(!modal) return; modal.classList.toggle("open", !!open); if(open){ syncToggleAll(); } if(!open) setFeedback("", false); }
 function selectedClienti(){ return [...document.querySelectorAll("[data-assign-cliente]:checked")].map(i=>parseInt(i.value,10)).filter(Number.isFinite); }
 
 openBtn?.addEventListener("click", ()=>toggleModal(true));
 closeBtn?.addEventListener("click", ()=>toggleModal(false));
 modal?.addEventListener("click", (e)=>{ if(e.target===modal) toggleModal(false); });
 toggleAll?.addEventListener("change", function(){ document.querySelectorAll("[data-assign-cliente]").forEach((el)=>{ el.checked=toggleAll.checked; }); });
+document.querySelectorAll("[data-assign-cliente]").forEach((el)=>el.addEventListener("change", syncToggleAll));
 submitBtn?.addEventListener("click", async function(){
   const clienti=selectedClienti();
   if(clienti.length===0){ setFeedback("Seleziona almeno un cliente.", false); return; }
