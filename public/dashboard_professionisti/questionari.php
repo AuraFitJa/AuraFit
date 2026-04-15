@@ -9,6 +9,7 @@ $opzioniByDomanda = [];
 $clientiAssociati = [];
 $assegnazioni = [];
 $compilazioni = [];
+$selectedCompilazioneId = 0;
 $selectedQuestionario = null;
 $assegnazioniAttiveByCliente = [];
 
@@ -88,6 +89,7 @@ if (!$dbAvailable) {
       }
 
       $compilazioni = Database::exec("SELECT qc.*, q.titolo, u.nome, u.cognome FROM QuestionarioCompilazioni qc INNER JOIN Questionari q ON q.idQuestionario=qc.questionario INNER JOIN Clienti c ON c.idCliente=qc.cliente INNER JOIN Utenti u ON u.idUtente=c.idUtente WHERE q.professionista = ? ORDER BY qc.aggiornatoIl DESC LIMIT 100", [$professionistaId])->fetchAll();
+      $selectedCompilazioneId = (int)($_GET['idCompilazione'] ?? 0);
     }
   } catch (Throwable $e) {
     $errors[] = 'Errore nel caricamento questionari.';
@@ -193,10 +195,90 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
 
   <h3 style="margin-top:18px">Compilazioni ricevute</h3>
   <div style="overflow:auto"><table><thead><tr><th>Questionario</th><th>Cliente</th><th>#</th><th>Stato</th><th>Aggiornato</th><th>Inviato</th></tr></thead><tbody>
-    <?php foreach ($compilazioni as $c): ?><tr><td><?= h($c['titolo']) ?></td><td><?= h(trim($c['nome'].' '.$c['cognome'])) ?></td><td><?= (int)$c['numeroCompilazione'] ?></td><td><?= h($c['stato']) ?></td><td><?= h($c['aggiornatoIl']) ?></td><td><?= h($c['inviatoIl'] ?: '—') ?></td></tr><?php endforeach; ?>
+    <?php foreach ($compilazioni as $c): ?>
+      <tr class="compilazione-row" data-compilazione-row data-id-compilazione="<?= (int)$c['idCompilazione'] ?>" role="button" tabindex="0" aria-label="Apri risposte compilazione #<?= (int)$c['numeroCompilazione'] ?>">
+        <td><strong><?= h($c['titolo']) ?></strong></td>
+        <td><?= h(trim($c['nome'].' '.$c['cognome'])) ?></td>
+        <td><?= (int)$c['numeroCompilazione'] ?></td>
+        <td><?= h($c['stato']) ?></td>
+        <td><?= h($c['aggiornatoIl']) ?></td>
+        <td><?= h($c['inviatoIl'] ?: '—') ?></td>
+      </tr>
+    <?php endforeach; ?>
   </tbody></table></div>
+  <section class="compilazione-panel" data-compilazione-panel hidden>
+    <div class="compilazione-panel__header">
+      <div>
+        <h4 style="margin:0" data-compilazione-title>Risposte compilazione</h4>
+        <p class="muted compilazione-panel__meta" data-compilazione-meta></p>
+      </div>
+      <span class="compilazione-panel__badge" data-compilazione-stato></span>
+    </div>
+    <div class="compilazione-panel__content" data-compilazione-content></div>
+  </section>
 </section>
 <style>
+  .compilazione-row {
+    cursor: pointer;
+    transition: background-color .18s ease;
+  }
+  .compilazione-row:hover {
+    background: rgba(99, 102, 241, 0.12);
+  }
+  .compilazione-row:focus-visible {
+    outline: 2px solid rgba(99, 102, 241, 0.9);
+    outline-offset: -2px;
+  }
+  .compilazione-row.is-active {
+    background: rgba(56, 189, 248, 0.14);
+  }
+  .compilazione-panel {
+    margin-top: 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.9), rgba(8, 12, 22, 0.9));
+    padding: 16px;
+  }
+  .compilazione-panel__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .compilazione-panel__meta {
+    margin: 6px 0 0;
+    font-size: 13px;
+  }
+  .compilazione-panel__badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(148, 163, 184, 0.16);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+  }
+  .compilazione-panel__content {
+    display: grid;
+    gap: 10px;
+  }
+  .compilazione-answer {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.02);
+    padding: 10px 12px;
+  }
+  .compilazione-answer__question {
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  .compilazione-answer__value {
+    margin: 0;
+    color: rgba(231, 239, 255, 0.92);
+    white-space: pre-wrap;
+  }
   .builder-layout {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -391,5 +473,83 @@ submitBtn?.addEventListener("click", async function(){
   if(d.ok){ setFeedback(`Assegnati ${d.inserted} clienti.`, true); setTimeout(()=>location.reload(), 500); return; }
   setFeedback(d.error||"Errore durante assegnazione.", false);
 });
+
+const compilazioneRows=[...document.querySelectorAll("[data-compilazione-row]")];
+const compilazionePanel=document.querySelector("[data-compilazione-panel]");
+const compilazioneTitle=document.querySelector("[data-compilazione-title]");
+const compilazioneMeta=document.querySelector("[data-compilazione-meta]");
+const compilazioneStato=document.querySelector("[data-compilazione-stato]");
+const compilazioneContent=document.querySelector("[data-compilazione-content]");
+const selectedCompilazioneId=' . $selectedCompilazioneId . ';
+
+function htmlesc(value){
+  return String(value ?? "").replace(/[&<>"\']/g, function(ch){
+    if(ch==="&") return "&amp;";
+    if(ch==="<") return "&lt;";
+    if(ch===">") return "&gt;";
+    if(ch==="\"") return "&quot;";
+    if(ch==="\'") return "&#039;";
+    return ch;
+  });
+}
+function fmtAnswer(risposta){
+  if(!risposta) return "—";
+  if(risposta.tipoDomanda==="multiple_choice"){
+    try{
+      const parsed=JSON.parse(risposta.valoreJson || "[]");
+      if(Array.isArray(parsed) && parsed.length){ return parsed.join(", "); }
+    }catch(_){}
+    return "—";
+  }
+  if(risposta.tipoDomanda==="number"){ return risposta.valoreNumero ?? "—"; }
+  if(risposta.tipoDomanda==="date"){ return risposta.valoreData || "—"; }
+  if(risposta.tipoDomanda==="consent_checkbox"){ return Number(risposta.valoreBoolean)===1 ? "Sì" : "No"; }
+  return risposta.valoreTesto || "—";
+}
+function setActiveRow(id){
+  compilazioneRows.forEach((row)=>row.classList.toggle("is-active", Number(row.dataset.idCompilazione)===Number(id)));
+}
+function updateUrl(idCompilazione){
+  const url=new URL(window.location.href);
+  url.searchParams.set("idCompilazione", String(idCompilazione));
+  history.replaceState({}, "", url.toString());
+}
+async function openCompilazione(idCompilazione, updateHistory=true){
+  if(!Number.isFinite(Number(idCompilazione)) || Number(idCompilazione)<1) return;
+  if(!compilazionePanel || !compilazioneContent || !compilazioneTitle || !compilazioneMeta || !compilazioneStato) return;
+  compilazionePanel.hidden=false;
+  compilazioneContent.innerHTML="<p class=\"muted\" style=\"margin:0\">Caricamento risposte...</p>";
+  setActiveRow(idCompilazione);
+  try{
+    const response=await fetch(`../api/questionari/compilazione_detail.php?idCompilazione=${idCompilazione}`);
+    const payload=await response.json();
+    if(!payload.ok){ throw new Error(payload.error || "Errore caricamento."); }
+    const comp=payload.compilazione || {};
+    compilazioneTitle.textContent=`${comp.titolo || "Questionario"} • Compilazione #${comp.numeroCompilazione || "—"}`;
+    compilazioneMeta.textContent=`Iniziato: ${comp.iniziatoIl || "—"} · Aggiornato: ${comp.aggiornatoIl || "—"} · Inviato: ${comp.inviatoIl || "—"}`;
+    compilazioneStato.textContent=comp.stato || "—";
+    const answers=(payload.risposte || []).map((r)=>`
+      <article class="compilazione-answer">
+        <p class="compilazione-answer__question">${htmlesc(r.testoDomanda || "Domanda")}</p>
+        <p class="compilazione-answer__value">${htmlesc(fmtAnswer(r))}</p>
+      </article>
+    `).join("");
+    compilazioneContent.innerHTML=answers || "<p class=\"muted\" style=\"margin:0\">Nessuna risposta disponibile.</p>";
+    if(updateHistory) updateUrl(idCompilazione);
+  }catch(err){
+    compilazioneContent.innerHTML=`<p class="muted" style="margin:0">${htmlesc(err?.message || "Errore nel caricamento risposte.")}</p>`;
+  }
+}
+
+compilazioneRows.forEach((row)=>{
+  row.addEventListener("click", ()=>openCompilazione(Number(row.dataset.idCompilazione)));
+  row.addEventListener("keydown", (event)=>{
+    if(event.key==="Enter" || event.key===" "){
+      event.preventDefault();
+      openCompilazione(Number(row.dataset.idCompilazione));
+    }
+  });
+});
+if(selectedCompilazioneId>0){ openCompilazione(selectedCompilazioneId, false); }
 })();
 </script>'); ?>
