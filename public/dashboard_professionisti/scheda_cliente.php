@@ -7,8 +7,11 @@ $programmiAssegnati = [];
 $storicoAssociazioni = [];
 $questionariAssegnati = [];
 $questionariCompilazioni = [];
+$compilazioneApertaMeta = null;
+$compilazioneApertaRisposte = [];
 
 $idCliente = (int)($_GET['idCliente'] ?? 0);
+$idCompilazioneAperta = (int)($_GET['idCompilazione'] ?? 0);
 
 if ($idCliente < 1) {
   $errors[] = 'Cliente non valido.';
@@ -89,6 +92,31 @@ if ($idCliente < 1) {
              ORDER BY qc.aggiornatoIl DESC",
             [$professionistaId, $idCliente]
           )->fetchAll();
+
+          if ($idCompilazioneAperta > 0) {
+            $compilazioneApertaMeta = Database::exec(
+              "SELECT qc.idCompilazione, qc.numeroCompilazione, qc.inviatoIl, qc.questionario, q.titolo
+               FROM QuestionarioCompilazioni qc
+               INNER JOIN QuestionarioAssegnazioni qa ON qa.idAssegnazioneQuestionario = qc.assegnazione
+               INNER JOIN Questionari q ON q.idQuestionario = qc.questionario
+               WHERE qc.idCompilazione = ?
+                 AND qc.cliente = ?
+                 AND qa.professionista = ?
+               LIMIT 1",
+              [$idCompilazioneAperta, $idCliente, $professionistaId]
+            )->fetch();
+
+            if ($compilazioneApertaMeta) {
+              $compilazioneApertaRisposte = Database::exec(
+                "SELECT d.idDomanda, d.testoDomanda, d.tipoDomanda, r.valoreTesto, r.valoreNumero, r.valoreData, r.valoreBoolean, r.valoreJson
+                 FROM QuestionarioDomande d
+                 LEFT JOIN QuestionarioRisposte r ON r.domanda = d.idDomanda AND r.compilazione = ?
+                 WHERE d.questionario = ?
+                 ORDER BY d.ordine ASC",
+                [$idCompilazioneAperta, $compilazioneApertaMeta['questionario']]
+              )->fetchAll();
+            }
+          }
         }
       }
     }
@@ -102,7 +130,7 @@ $clienteEmail = $cliente ? (string)$cliente['email'] : '';
 $ultimoProgramma = $programmiAssegnati[0] ?? null;
 renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
-<section class="card">
+<section class="card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
   <style>
     .remove-program-overlay {
       position: fixed;
@@ -145,6 +173,34 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
       justify-content: flex-end;
       gap: 10px;
       flex-wrap: wrap;
+    }
+    .responses-card {
+      margin-top: 16px;
+      display: none;
+    }
+    .responses-card.open {
+      display: block;
+    }
+    .responses-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .responses-item {
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, .02);
+    }
+    .responses-item-question {
+      font-weight: 600;
+      margin: 0 0 6px;
+    }
+    .responses-item-answer {
+      margin: 0;
+      color: #d5dde8;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   </style>
   <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
@@ -257,7 +313,17 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
               <td><?= h($qc['stato']) ?></td>
               <td><?= h($qc['inviatoIl'] ?: '—') ?></td>
               <td><?= h($qc['ricompilazioneDi'] ? $qc['aggiornatoIl'] : '—') ?></td>
-              <td><a class="btn" href="../api/questionari/compilazione_detail.php?idCompilazione=<?= (int)$qc['idCompilazione'] ?>" target="_blank">Apri risposte</a></td>
+              <td>
+                <a
+                  class="btn"
+                  href="scheda_cliente.php?idCliente=<?= (int)$idCliente ?>&idCompilazione=<?= (int)$qc['idCompilazione'] ?>#visualizzazione-risposte"
+                  data-open-responses
+                  data-id-compilazione="<?= (int)$qc['idCompilazione'] ?>"
+                  data-questionario="<?= h((string)$qc['titolo']) ?>"
+                  data-numero="<?= (int)$qc['numeroCompilazione'] ?>"
+                  data-inviato-il="<?= h((string)($qc['inviatoIl'] ?: '—')) ?>"
+                >Apri risposte</a>
+              </td>
             </tr>
           <?php endforeach; ?>
         </tbody>
@@ -298,6 +364,57 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     </div>
   <?php endif; ?>
 </section>
+<?php if ($cliente): ?>
+  <section
+    id="visualizzazione-risposte"
+    class="card responses-card<?= $compilazioneApertaMeta ? ' open' : '' ?>"
+    data-responses-card
+    aria-hidden="<?= $compilazioneApertaMeta ? 'false' : 'true' ?>"
+  >
+    <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <a class="btn" href="scheda_cliente.php?idCliente=<?= (int)$idCliente ?>" data-back-to-client>← Torna alla scheda cliente</a>
+      <h3 style="margin:0" data-responses-title>Questionario: <?= h((string)($compilazioneApertaMeta['titolo'] ?? '—')) ?></h3>
+    </div>
+    <div class="divider" style="margin:14px 0"></div>
+    <p class="muted" style="margin:8px 0 0" data-responses-meta>
+      <?php if ($compilazioneApertaMeta): ?>
+        Questionario: <?= h((string)$compilazioneApertaMeta['titolo']) ?> ·
+        Compilazione #<?= (int)$compilazioneApertaMeta['numeroCompilazione'] ?> ·
+        Inviato il: <?= h((string)($compilazioneApertaMeta['inviatoIl'] ?: '—')) ?>
+      <?php else: ?>
+        Seleziona una compilazione per visualizzare le risposte.
+      <?php endif; ?>
+    </p>
+    <p class="muted" style="margin:8px 0 0;display:none" data-responses-feedback></p>
+    <div class="responses-list" data-responses-list>
+      <?php foreach ($compilazioneApertaRisposte as $answer): ?>
+        <?php
+          $renderedValue = '—';
+          if ($answer['valoreTesto'] !== null && $answer['valoreTesto'] !== '') {
+            $renderedValue = (string)$answer['valoreTesto'];
+          } elseif ($answer['valoreNumero'] !== null) {
+            $renderedValue = (string)$answer['valoreNumero'];
+          } elseif ($answer['valoreData'] !== null && $answer['valoreData'] !== '') {
+            $renderedValue = (string)$answer['valoreData'];
+          } elseif ($answer['valoreBoolean'] !== null) {
+            $renderedValue = ((int)$answer['valoreBoolean'] === 1) ? 'Sì' : 'No';
+          } elseif ($answer['valoreJson'] !== null && $answer['valoreJson'] !== '') {
+            $decoded = json_decode((string)$answer['valoreJson'], true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+              $renderedValue = implode(', ', array_map('strval', array_values($decoded)));
+            } else {
+              $renderedValue = (string)$answer['valoreJson'];
+            }
+          }
+        ?>
+        <div class="responses-item">
+          <p class="responses-item-question"><?= h((string)($answer['testoDomanda'] ?: 'Domanda')) ?></p>
+          <p class="responses-item-answer"><?= h($renderedValue) ?></p>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </section>
+<?php endif; ?>
 
 <div id="removeProgramOverlay" class="remove-program-overlay" aria-hidden="true">
   <div id="removeProgramModal" class="remove-program-modal" role="dialog" aria-modal="true" aria-labelledby="removeProgramTitle">
@@ -318,4 +435,310 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
   </div>
 </div>
 <?php
-renderEnd('<script>(function(){const contactBtn=document.querySelector("[data-toggle-contact]");const contactMail=document.querySelector("[data-contact-mail]");if(contactBtn&&contactMail){contactBtn.addEventListener("click",function(){const isHidden=contactMail.style.display==="none";contactMail.style.display=isHidden?"block":"none";contactBtn.textContent=isHidden?"Nascondi mail contatto":"Mostra mail contatto";});}const physicalBtn=document.querySelector("[data-toggle-physical]");const physicalLine=document.querySelector("[data-physical-line]");if(physicalBtn&&physicalLine){physicalBtn.addEventListener("click",function(){const hidden=physicalLine.style.display==="none";physicalLine.style.display=hidden?"block":"none";physicalBtn.textContent=hidden?"Nascondi dati fisici":"Mostra dati fisici";});}const assocBtn=document.querySelector("[data-toggle-associazioni]");const assocContainer=document.querySelector("[data-associazioni-container]");if(assocBtn&&assocContainer){assocBtn.addEventListener("click",function(){const hidden=assocContainer.style.display==="none";assocContainer.style.display=hidden?"block":"none";assocBtn.textContent=hidden?"˅ Nascondi storico associazioni":"> Storico associazioni con questo cliente";});}const overlay=document.getElementById("removeProgramOverlay");const modal=document.getElementById("removeProgramModal");const titleEl=document.querySelector("[data-remove-program-title]");const dateEl=document.querySelector("[data-remove-program-date]");const feedbackEl=document.querySelector("[data-remove-feedback]");const closeEls=document.querySelectorAll("[data-remove-close],[data-remove-cancel]");const confirmBtn=document.querySelector("[data-remove-confirm]");let currentBtn=null;let payload=null;function closeModal(){if(!overlay){return;}overlay.classList.remove("open");overlay.setAttribute("aria-hidden","true");document.body.style.overflow="";if(feedbackEl){feedbackEl.textContent="";}currentBtn=null;payload=null;if(confirmBtn){confirmBtn.disabled=false;confirmBtn.textContent="Conferma rimozione";}}function openModal(btn){if(!overlay||!modal){return;}currentBtn=btn;payload={idCliente:Number(btn.dataset.idCliente||0),idProgramma:Number(btn.dataset.idProgramma||0)};if(titleEl){titleEl.textContent=btn.dataset.titolo||"—";}if(dateEl){dateEl.textContent=btn.dataset.assegnatoIl||"—";}if(feedbackEl){feedbackEl.textContent="";}overlay.classList.add("open");overlay.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";}document.querySelectorAll("[data-remove-program]").forEach(function(btn){btn.addEventListener("click",function(){openModal(btn);});});closeEls.forEach(function(el){el.addEventListener("click",closeModal);});overlay?.addEventListener("click",function(event){if(event.target===overlay){closeModal();}});document.addEventListener("keydown",function(event){if(event.key==="Escape"&&overlay&&overlay.classList.contains("open")){closeModal();}});confirmBtn?.addEventListener("click",async function(){if(!currentBtn||!payload){return;}confirmBtn.disabled=true;confirmBtn.textContent="Rimozione in corso...";closeEls.forEach(function(el){el.disabled=true;});if(feedbackEl){feedbackEl.textContent="Rimozione in corso...";}try{const response=await fetch("api/rimuovi_programma_cliente.php",{method:"POST",headers:{"Content-Type":"application/json","X-Requested-With":"XMLHttpRequest"},body:JSON.stringify(payload)});const text=await response.text();let data=null;try{data=JSON.parse(text);}catch(parseError){throw new Error("Risposta non valida dal server.");}if(!response.ok||!data.ok){throw new Error((data&&data.error)||"Rimozione non riuscita.");}const row=currentBtn.closest("tr");if(row){row.remove();}if(feedbackEl){feedbackEl.textContent="Programma rimosso correttamente.";}setTimeout(closeModal,500);}catch(error){if(feedbackEl){feedbackEl.textContent=error.message||"Errore durante la rimozione.";}confirmBtn.disabled=false;confirmBtn.textContent="Conferma rimozione";}finally{closeEls.forEach(function(el){el.disabled=false;});}});})();</script>');
+renderEnd(<<<'HTML'
+<script>
+(function(){
+  const contactBtn = document.querySelector('[data-toggle-contact]');
+  const contactMail = document.querySelector('[data-contact-mail]');
+  if (contactBtn && contactMail) {
+    contactBtn.addEventListener('click', function(){
+      const isHidden = contactMail.style.display === 'none';
+      contactMail.style.display = isHidden ? 'block' : 'none';
+      contactBtn.textContent = isHidden ? 'Nascondi mail contatto' : 'Mostra mail contatto';
+    });
+  }
+
+  const physicalBtn = document.querySelector('[data-toggle-physical]');
+  const physicalLine = document.querySelector('[data-physical-line]');
+  if (physicalBtn && physicalLine) {
+    physicalBtn.addEventListener('click', function(){
+      const hidden = physicalLine.style.display === 'none';
+      physicalLine.style.display = hidden ? 'block' : 'none';
+      physicalBtn.textContent = hidden ? 'Nascondi dati fisici' : 'Mostra dati fisici';
+    });
+  }
+
+  const assocBtn = document.querySelector('[data-toggle-associazioni]');
+  const assocContainer = document.querySelector('[data-associazioni-container]');
+  if (assocBtn && assocContainer) {
+    assocBtn.addEventListener('click', function(){
+      const hidden = assocContainer.style.display === 'none';
+      assocContainer.style.display = hidden ? 'block' : 'none';
+      assocBtn.textContent = hidden ? '˅ Nascondi storico associazioni' : '> Storico associazioni con questo cliente';
+    });
+  }
+
+  const clientCard = document.querySelector('[data-client-card]');
+  const responsesCard = document.querySelector('[data-responses-card]');
+  const responsesTitle = document.querySelector('[data-responses-title]');
+  const responsesMeta = document.querySelector('[data-responses-meta]');
+  const responsesFeedback = document.querySelector('[data-responses-feedback]');
+  const responsesList = document.querySelector('[data-responses-list]');
+  const backToClientBtn = document.querySelector('[data-back-to-client]');
+
+  function formatAnswer(answer) {
+    if (answer.valoreTesto !== null && answer.valoreTesto !== '') {
+      return String(answer.valoreTesto);
+    }
+    if (answer.valoreNumero !== null) {
+      return String(answer.valoreNumero);
+    }
+    if (answer.valoreData !== null && answer.valoreData !== '') {
+      return String(answer.valoreData);
+    }
+    if (answer.valoreBoolean !== null) {
+      return Number(answer.valoreBoolean) === 1 ? 'Sì' : 'No';
+    }
+    if (answer.valoreJson !== null && answer.valoreJson !== '') {
+      try {
+        const parsed = JSON.parse(answer.valoreJson);
+        if (Array.isArray(parsed)) {
+          return parsed.join(', ');
+        }
+        if (typeof parsed === 'object' && parsed) {
+          return Object.values(parsed).join(', ');
+        }
+      } catch (error) {
+        return String(answer.valoreJson);
+      }
+      return String(answer.valoreJson);
+    }
+    return '—';
+  }
+
+  function clearResponses() {
+    if (responsesList) {
+      responsesList.innerHTML = '';
+    }
+  }
+
+  function openResponsesCard() {
+    if (!responsesCard) {
+      return;
+    }
+    responsesCard.classList.add('open');
+    responsesCard.setAttribute('aria-hidden', 'false');
+    if (clientCard) {
+      clientCard.style.display = 'none';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeResponsesCard() {
+    if (!responsesCard) {
+      return;
+    }
+    responsesCard.classList.remove('open');
+    responsesCard.setAttribute('aria-hidden', 'true');
+    clearResponses();
+    if (clientCard) {
+      clientCard.style.display = 'block';
+    }
+    if (responsesFeedback) {
+      responsesFeedback.style.display = 'none';
+      responsesFeedback.textContent = '';
+    }
+    if (responsesMeta) {
+      responsesMeta.textContent = 'Seleziona una compilazione per visualizzare le risposte.';
+    }
+    if (responsesTitle) {
+      responsesTitle.textContent = 'Questionario: —';
+    }
+  }
+
+  backToClientBtn?.addEventListener('click', closeResponsesCard);
+
+  document.querySelectorAll('[data-open-responses]').forEach(function(btn){
+    btn.addEventListener('click', async function(){
+      const idCompilazione = Number(btn.dataset.idCompilazione || 0);
+      if (!idCompilazione || !responsesCard || !responsesList) {
+        return;
+      }
+
+      openResponsesCard();
+      clearResponses();
+
+      if (responsesMeta) {
+        responsesMeta.textContent = 'Questionario: ' + (btn.dataset.questionario || '—') + ' · Compilazione #' + (btn.dataset.numero || '—') + ' · Inviato il: ' + (btn.dataset.inviatoIl || '—');
+      }
+      if (responsesTitle) {
+        responsesTitle.textContent = 'Questionario: ' + (btn.dataset.questionario || '—');
+      }
+      if (responsesFeedback) {
+        responsesFeedback.style.display = 'block';
+        responsesFeedback.textContent = 'Caricamento risposte...';
+      }
+
+      try {
+        const response = await fetch('../api/questionari/compilazione_detail.php?idCompilazione=' + idCompilazione, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const responseData = await response.json();
+        if (!response.ok || !responseData.ok) {
+          throw new Error((responseData && responseData.error) || 'Impossibile caricare le risposte.');
+        }
+
+        (responseData.risposte || []).forEach(function(answer){
+          const item = document.createElement('div');
+          item.className = 'responses-item';
+
+          const question = document.createElement('p');
+          question.className = 'responses-item-question';
+          question.textContent = answer.testoDomanda || 'Domanda';
+
+          const value = document.createElement('p');
+          value.className = 'responses-item-answer';
+          value.textContent = formatAnswer(answer);
+
+          item.appendChild(question);
+          item.appendChild(value);
+          responsesList.appendChild(item);
+        });
+
+        if (responsesFeedback) {
+          responsesFeedback.style.display = 'none';
+          responsesFeedback.textContent = '';
+        }
+      } catch (error) {
+        if (responsesFeedback) {
+          responsesFeedback.style.display = 'block';
+          responsesFeedback.textContent = error.message || 'Errore durante il caricamento delle risposte.';
+        }
+      }
+    });
+  });
+
+  const overlay = document.getElementById('removeProgramOverlay');
+  const modal = document.getElementById('removeProgramModal');
+  const titleEl = document.querySelector('[data-remove-program-title]');
+  const dateEl = document.querySelector('[data-remove-program-date]');
+  const feedbackEl = document.querySelector('[data-remove-feedback]');
+  const closeEls = document.querySelectorAll('[data-remove-close],[data-remove-cancel]');
+  const confirmBtn = document.querySelector('[data-remove-confirm]');
+
+  let currentBtn = null;
+  let payload = null;
+
+  function closeModal() {
+    if (!overlay) {
+      return;
+    }
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (feedbackEl) {
+      feedbackEl.textContent = '';
+    }
+    currentBtn = null;
+    payload = null;
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Conferma rimozione';
+    }
+  }
+
+  function openModal(btn) {
+    if (!overlay || !modal) {
+      return;
+    }
+    currentBtn = btn;
+    payload = {
+      idCliente: Number(btn.dataset.idCliente || 0),
+      idProgramma: Number(btn.dataset.idProgramma || 0)
+    };
+    if (titleEl) {
+      titleEl.textContent = btn.dataset.titolo || '—';
+    }
+    if (dateEl) {
+      dateEl.textContent = btn.dataset.assegnatoIl || '—';
+    }
+    if (feedbackEl) {
+      feedbackEl.textContent = '';
+    }
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  document.querySelectorAll('[data-remove-program]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      openModal(btn);
+    });
+  });
+
+  closeEls.forEach(function(el){
+    el.addEventListener('click', closeModal);
+  });
+
+  overlay?.addEventListener('click', function(event){
+    if (event.target === overlay) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', function(event){
+    if (event.key === 'Escape' && overlay && overlay.classList.contains('open')) {
+      closeModal();
+    }
+  });
+
+  confirmBtn?.addEventListener('click', async function(){
+    if (!currentBtn || !payload) {
+      return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Rimozione in corso...';
+    closeEls.forEach(function(el){
+      el.disabled = true;
+    });
+
+    if (feedbackEl) {
+      feedbackEl.textContent = 'Rimozione in corso...';
+    }
+
+    try {
+      const response = await fetch('api/rimuovi_programma_cliente.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(payload)
+      });
+      const text = await response.text();
+      let data = null;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        throw new Error('Risposta non valida dal server.');
+      }
+
+      if (!response.ok || !data.ok) {
+        throw new Error((data && data.error) || 'Rimozione non riuscita.');
+      }
+
+      const row = currentBtn.closest('tr');
+      if (row) {
+        row.remove();
+      }
+      if (feedbackEl) {
+        feedbackEl.textContent = 'Programma rimosso correttamente.';
+      }
+      setTimeout(closeModal, 500);
+    } catch (error) {
+      if (feedbackEl) {
+        feedbackEl.textContent = error.message || 'Errore durante la rimozione.';
+      }
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Conferma rimozione';
+    } finally {
+      closeEls.forEach(function(el){
+        el.disabled = false;
+      });
+    }
+  });
+})();
+</script>
+HTML
+);
