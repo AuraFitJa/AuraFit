@@ -346,6 +346,17 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     </div>
   <?php endif; ?>
 </section>
+<?php if ($cliente): ?>
+  <section class="card responses-card" data-responses-card>
+    <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h3 style="margin:0">Visualizzazione risposte</h3>
+      <button class="btn" type="button" data-close-responses>Chiudi</button>
+    </div>
+    <p class="muted" style="margin:8px 0 0" data-responses-meta>Seleziona una compilazione per visualizzare le risposte.</p>
+    <p class="muted" style="margin:8px 0 0;display:none" data-responses-feedback></p>
+    <div class="responses-list" data-responses-list></div>
+  </section>
+<?php endif; ?>
 
 <div id="removeProgramOverlay" class="remove-program-overlay" aria-hidden="true">
   <div id="removeProgramModal" class="remove-program-modal" role="dialog" aria-modal="true" aria-labelledby="removeProgramTitle">
