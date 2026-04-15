@@ -206,6 +206,34 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     display: grid;
     gap: 10px;
   }
+  .collapsible-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+  }
+  .collapsible-card-chevron {
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: transform .2s ease;
+    color: #9fb3c8;
+  }
+  .collapsible-card-header[aria-expanded="true"] .collapsible-card-chevron {
+    transform: rotate(180deg);
+  }
+  .collapsible-card-content {
+    margin-top: 10px;
+  }
+  .collapsible-card-content[hidden] {
+    display: none;
+  }
   .sessione-item {
     display: flex;
     justify-content: space-between;
@@ -325,11 +353,9 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     </article>
 
     <article class="card" style="margin-top:12px">
-      <h3 class="section-title" style="margin-top:0">Storico sessioni</h3>
-      <div id="sessioniList" class="sessioni-list"></div>
-      <p class="muted" id="sessioniError" style="display:none">Errore caricamento sessioni.</p>
-      <p class="muted" id="sessioniEmpty" style="display:none">Nessuna sessione registrata.</p>
-      <button class="btn" id="loadMoreSessioni" type="button" style="margin-top:10px">Carica altre</button>
+      <h3 class="section-title" style="margin-top:0">Nuovo allenamento</h3>
+      <p class="muted" style="margin-top:8px">Registra una nuova sessione completata in pochi secondi.</p>
+      <button class="btn primary" id="openNewWorkout" type="button" style="margin-top:10px">+ Nuovo allenamento</button>
     </article>
 
     <?php foreach ($days as $day): ?>
@@ -412,6 +438,24 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
         <?php endif; ?>
       </article>
     <?php endforeach; ?>
+
+    <article class="card" style="margin-top:12px">
+      <button
+        type="button"
+        class="collapsible-card-header"
+        id="toggleStoricoSessioni"
+        aria-expanded="false"
+        aria-controls="storicoSessioniContent"
+      >
+        <h3 class="section-title" style="margin:0">Storico sessioni</h3>
+        <span class="collapsible-card-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div id="storicoSessioniContent" class="collapsible-card-content" hidden>
+        <div id="sessioniList" class="sessioni-list"></div>
+        <p class="muted" id="sessioniError" style="display:none">Errore caricamento sessioni.</p>
+        <p class="muted" id="sessioniEmpty" style="display:none">Nessuna sessione registrata.</p>
+      </div>
+    </article>
   <?php endif; ?>
 </section>
 
@@ -890,9 +934,11 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
   (function () {
     const PROGRAM_ID = <?= (int)$programId ?>;
     const listWrap = document.getElementById('sessioniList');
-    const loadMoreBtn = document.getElementById('loadMoreSessioni');
+    const openNewWorkoutBtn = document.getElementById('openNewWorkout');
     const emptyNode = document.getElementById('sessioniEmpty');
     const errorNode = document.getElementById('sessioniError');
+    const toggleStoricoBtn = document.getElementById('toggleStoricoSessioni');
+    const storicoContent = document.getElementById('storicoSessioniContent');
 
     const overlay = document.getElementById('sessioneModalOverlay');
     const modalClose = document.getElementById('sessioneModalClose');
@@ -915,7 +961,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
     const confirmCancel = document.getElementById('confirmModalCancel');
     const confirmOk = document.getElementById('confirmModalOk');
 
-    if (!listWrap || !loadMoreBtn || !overlay || !addOverlay || !confirmOverlay || !PROGRAM_ID) return;
+    if (!listWrap || !openNewWorkoutBtn || !overlay || !addOverlay || !confirmOverlay || !PROGRAM_ID || !toggleStoricoBtn || !storicoContent) return;
 
     const EXERCISES = <?= json_encode(array_values(array_reduce($days, function ($carry, $day) {
       foreach (($day['exercises'] ?? []) as $exercise) {
@@ -1220,8 +1266,14 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
       closeAddModal();
     }
 
-    loadMoreBtn.addEventListener('click', () => {
+    openNewWorkoutBtn.addEventListener('click', () => {
       openAddModal();
+    });
+
+    toggleStoricoBtn.addEventListener('click', () => {
+      const expanded = toggleStoricoBtn.getAttribute('aria-expanded') === 'true';
+      toggleStoricoBtn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+      storicoContent.hidden = expanded;
     });
 
     listWrap.addEventListener('click', (event) => {
