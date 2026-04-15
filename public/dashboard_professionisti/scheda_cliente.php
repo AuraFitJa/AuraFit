@@ -102,7 +102,7 @@ $clienteEmail = $cliente ? (string)$cliente['email'] : '';
 $ultimoProgramma = $programmiAssegnati[0] ?? null;
 renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
-<section class="card">
+<section class="card" data-client-card>
   <style>
     .remove-program-overlay {
       position: fixed;
@@ -347,11 +347,12 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
   <?php endif; ?>
 </section>
 <?php if ($cliente): ?>
-  <section class="card responses-card" data-responses-card>
+  <section class="card responses-card" data-responses-card aria-hidden="true">
     <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <h3 style="margin:0">Visualizzazione risposte</h3>
-      <button class="btn" type="button" data-close-responses>Chiudi</button>
+      <button class="btn" type="button" data-back-to-client>← Torna alla scheda cliente</button>
+      <h3 style="margin:0" data-responses-title>Questionario: —</h3>
     </div>
+    <div class="divider" style="margin:14px 0"></div>
     <p class="muted" style="margin:8px 0 0" data-responses-meta>Seleziona una compilazione per visualizzare le risposte.</p>
     <p class="muted" style="margin:8px 0 0;display:none" data-responses-feedback></p>
     <div class="responses-list" data-responses-list></div>
@@ -410,11 +411,13 @@ renderEnd(<<<'HTML'
     });
   }
 
+  const clientCard = document.querySelector('[data-client-card]');
   const responsesCard = document.querySelector('[data-responses-card]');
+  const responsesTitle = document.querySelector('[data-responses-title]');
   const responsesMeta = document.querySelector('[data-responses-meta]');
   const responsesFeedback = document.querySelector('[data-responses-feedback]');
   const responsesList = document.querySelector('[data-responses-list]');
-  const responsesCloseBtn = document.querySelector('[data-close-responses]');
+  const backToClientBtn = document.querySelector('[data-back-to-client]');
 
   function formatAnswer(answer) {
     if (answer.valoreTesto !== null && answer.valoreTesto !== '') {
@@ -457,7 +460,11 @@ renderEnd(<<<'HTML'
       return;
     }
     responsesCard.classList.add('open');
-    responsesCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    responsesCard.setAttribute('aria-hidden', 'false');
+    if (clientCard) {
+      clientCard.style.display = 'none';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function closeResponsesCard() {
@@ -465,7 +472,11 @@ renderEnd(<<<'HTML'
       return;
     }
     responsesCard.classList.remove('open');
+    responsesCard.setAttribute('aria-hidden', 'true');
     clearResponses();
+    if (clientCard) {
+      clientCard.style.display = 'block';
+    }
     if (responsesFeedback) {
       responsesFeedback.style.display = 'none';
       responsesFeedback.textContent = '';
@@ -473,9 +484,12 @@ renderEnd(<<<'HTML'
     if (responsesMeta) {
       responsesMeta.textContent = 'Seleziona una compilazione per visualizzare le risposte.';
     }
+    if (responsesTitle) {
+      responsesTitle.textContent = 'Questionario: —';
+    }
   }
 
-  responsesCloseBtn?.addEventListener('click', closeResponsesCard);
+  backToClientBtn?.addEventListener('click', closeResponsesCard);
 
   document.querySelectorAll('[data-open-responses]').forEach(function(btn){
     btn.addEventListener('click', async function(){
@@ -489,6 +503,9 @@ renderEnd(<<<'HTML'
 
       if (responsesMeta) {
         responsesMeta.textContent = 'Questionario: ' + (btn.dataset.questionario || '—') + ' · Compilazione #' + (btn.dataset.numero || '—') + ' · Inviato il: ' + (btn.dataset.inviatoIl || '—');
+      }
+      if (responsesTitle) {
+        responsesTitle.textContent = 'Questionario: ' + (btn.dataset.questionario || '—');
       }
       if (responsesFeedback) {
         responsesFeedback.style.display = 'block';
