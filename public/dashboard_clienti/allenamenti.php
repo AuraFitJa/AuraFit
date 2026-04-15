@@ -43,8 +43,8 @@ if ($dbAvailable) {
            FROM AssegnazioniProgramma ap
            INNER JOIN ProgrammiAllenamento p ON p.idProgramma = ap.programma
            WHERE ap.cliente = ?
-             AND (ap.stato = 'attivo' OR ap.stato IS NULL OR ap.stato = '')
-             AND p.stato <> 'archiviato'
+             AND (ap.stato IN ('attivo', 'attiva') OR ap.stato IS NULL OR ap.stato = '')
+             AND (p.stato IS NULL OR p.stato <> 'archiviato')
            ORDER BY ap.assegnatoIl DESC",
           [$clienteId]
         )->fetchAll();
@@ -138,8 +138,8 @@ if ($selectedFolder && $clienteId) {
      FROM ProgrammiAllenamento p
      INNER JOIN AssegnazioniProgramma ap ON ap.programma = p.idProgramma
      WHERE ap.cliente = ?
-       AND (ap.stato = 'attivo' OR ap.stato IS NULL OR ap.stato = '')
-       AND p.stato <> 'archiviato'" . $selectedFolderFilterSql . "
+       AND (ap.stato IN ('attivo', 'attiva') OR ap.stato IS NULL OR ap.stato = '')
+       AND (p.stato IS NULL OR p.stato <> 'archiviato')" . $selectedFolderFilterSql . "
      ORDER BY ap.assegnatoIl DESC, p.idProgramma DESC",
     $queryParams
   )->fetchAll();
