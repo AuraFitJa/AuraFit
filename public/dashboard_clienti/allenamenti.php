@@ -50,6 +50,7 @@ if ($dbAvailable) {
            FROM AssegnazioniProgramma ap
            INNER JOIN ProgrammiAllenamento p ON p.idProgramma = ap.programma
            WHERE ap.cliente = ?
+             AND ap.stato = 'attivo'
              AND p.stato <> 'archiviato'
            ORDER BY ap.assegnatoIl DESC",
           [$clienteId]
@@ -70,6 +71,11 @@ if ($dbAvailable) {
             $assignedFolderIds[$folderId] = true;
           }
         }
+
+        $folders = array_values(array_filter(
+          $folders,
+          static fn(array $folder): bool => isset($assignedFolderIds[(int)$folder['idCartella']])
+        ));
       }
     }
   } catch (Throwable $e) {
@@ -90,9 +96,14 @@ foreach ($folders as $folder) {
   }
 }
 
-if ($selectedFolder && $ptUserId) {
+if (!$selectedFolder && !empty($folders)) {
+  $selectedFolder = $folders[0];
+  $selectedFolderId = (int)$selectedFolder['idCartella'];
+}
+
+if ($selectedFolder && $ptUserId && $clienteId) {
   $programs = Database::exec(
-    "SELECT p.idProgramma, p.titolo, p.descrizione,
+    "SELECT p.idProgramma, p.titolo, p.descrizione, ap.assegnatoIl,
             (
               SELECT GROUP_CONCAT(e.nome ORDER BY g.ordine ASC, eg.ordine ASC SEPARATOR ', ')
               FROM GiorniAllenamento g
@@ -101,12 +112,15 @@ if ($selectedFolder && $ptUserId) {
               WHERE g.programma = p.idProgramma
             ) AS previewEsercizi
      FROM ProgrammiAllenamento p
+     INNER JOIN AssegnazioniProgramma ap ON ap.programma = p.idProgramma
      WHERE p.creatoreUtente = ?
        AND p.isTemplate = 1
        AND p.stato <> 'archiviato'
        AND p.cartellaId = ?
-     ORDER BY p.aggiornatoIl DESC, p.idProgramma DESC",
-    [$ptUserId, (int)$selectedFolder['idCartella']]
+       AND ap.cliente = ?
+       AND ap.stato = 'attivo'
+     ORDER BY ap.assegnatoIl DESC, p.idProgramma DESC",
+    [$ptUserId, (int)$selectedFolder['idCartella'], $clienteId]
   )->fetchAll();
 }
 
