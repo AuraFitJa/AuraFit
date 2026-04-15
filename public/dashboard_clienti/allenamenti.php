@@ -50,7 +50,7 @@ if ($dbAvailable) {
            FROM AssegnazioniProgramma ap
            INNER JOIN ProgrammiAllenamento p ON p.idProgramma = ap.programma
            WHERE ap.cliente = ?
-             AND ap.stato = 'attivo'
+             AND (ap.stato = 'attivo' OR ap.stato IS NULL OR ap.stato = '')
              AND p.stato <> 'archiviato'
            ORDER BY ap.assegnatoIl DESC",
           [$clienteId]
@@ -122,7 +122,7 @@ if ($selectedFolder && $ptUserId && $clienteId) {
        AND p.stato <> 'archiviato'
        AND p.cartellaId = ?
        AND ap.cliente = ?
-       AND ap.stato = 'attivo'
+       AND (ap.stato = 'attivo' OR ap.stato IS NULL OR ap.stato = '')
      ORDER BY ap.assegnatoIl DESC, p.idProgramma DESC",
     [$ptUserId, (int)$selectedFolder['idCartella'], $clienteId]
   )->fetchAll();
