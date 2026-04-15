@@ -516,12 +516,12 @@ renderEnd(<<<'HTML'
         const response = await fetch('../api/questionari/compilazione_detail.php?idCompilazione=' + idCompilazione, {
           headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
-        const payload = await response.json();
-        if (!response.ok || !payload.ok) {
-          throw new Error((payload && payload.error) || 'Impossibile caricare le risposte.');
+        const responseData = await response.json();
+        if (!response.ok || !responseData.ok) {
+          throw new Error((responseData && responseData.error) || 'Impossibile caricare le risposte.');
         }
 
-        (payload.risposte || []).forEach(function(answer){
+        (responseData.risposte || []).forEach(function(answer){
           const item = document.createElement('div');
           item.className = 'responses-item';
 
