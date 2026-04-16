@@ -393,6 +393,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       completeNutritionAction('Pasto aggiornato.', ['cartella' => (int)$meal['cartellaId'], 'piano' => (int)$meal['idPianoAlim']]);
     }
 
+    if ($action === 'delete_meal_section') {
+      $mealId = (int)($_POST['meal_id'] ?? 0);
+      if ($mealId <= 0) {
+        throw new RuntimeException('Sezione pasto non valida.');
+      }
+
+      $meal = Database::exec(
+        "SELECT pp.idPastoPiano, pp.nomePasto, p.idPianoAlim, p.cartellaId
+         FROM PastiPiano pp
+         INNER JOIN PianiAlimentari p ON p.idPianoAlim = pp.pianoAlim
+         WHERE pp.idPastoPiano = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
+         LIMIT 1",
+        [$mealId, $userId, $professionistaId]
+      )->fetch();
+      if (!$meal) {
+        throw new RuntimeException('Sezione pasto non trovata.');
+      }
+
+      if (canonicalMealKey((string)$meal['nomePasto']) !== '') {
+        throw new RuntimeException('Non puoi rimuovere una sezione pasto base.');
+      }
+
+      Database::exec('DELETE FROM AlimentiPiano WHERE pastoPiano = ?', [$mealId]);
+      Database::exec('DELETE FROM PastiPiano WHERE idPastoPiano = ? LIMIT 1', [$mealId]);
+      Database::exec('UPDATE PianiAlimentari SET aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [(int)$meal['idPianoAlim']]);
+      completeNutritionAction('Spuntino extra rimosso.', ['cartella' => (int)$meal['cartellaId'], 'piano' => (int)$meal['idPianoAlim']]);
+    }
+
     if ($action === 'add_food') {
       $mealId = (int)($_POST['meal_id'] ?? 0);
       $nomeAlimento = trim((string)($_POST['nomeAlimento'] ?? ''));
@@ -1043,11 +1083,20 @@ if ($pianoAttivoId > 0) {
                 <h3><?= h((string)$mealCard['emoji']) ?> <?= h((string)$mealCard['label']) ?></h3>
                 <p class="muted-sm"><?= count($mealCard['foods']) ?> alimento/i</p>
               </div>
-              <div class="meal-macro-chips">
-                <span>P <?= number_format((float)$mealCard['totals']['proteine'], 1) ?>g</span>
-                <span>C <?= number_format((float)$mealCard['totals']['carboidrati'], 1) ?>g</span>
-                <span>G <?= number_format((float)$mealCard['totals']['grassi'], 1) ?>g</span>
-                <span><?= number_format((float)$mealCard['totals']['calorie'], 0) ?> kcal</span>
+              <div class="meal-header-right">
+                <div class="meal-macro-chips">
+                  <span>P <?= number_format((float)$mealCard['totals']['proteine'], 1) ?>g</span>
+                  <span>C <?= number_format((float)$mealCard['totals']['carboidrati'], 1) ?>g</span>
+                  <span>G <?= number_format((float)$mealCard['totals']['grassi'], 1) ?>g</span>
+                  <span><?= number_format((float)$mealCard['totals']['calorie'], 0) ?> kcal</span>
+                </div>
+                <?php if ($meal && strpos((string)$mealCard['slotKey'], 'extra_') === 0): ?>
+                  <form method="post" class="meal-extra-remove-form">
+                    <input type="hidden" name="action" value="delete_meal_section">
+                    <input type="hidden" name="meal_id" value="<?= (int)$meal['idPastoPiano'] ?>">
+                    <button type="submit" class="btn tiny danger">Rimuovi spuntino extra</button>
+                  </form>
+                <?php endif; ?>
               </div>
             </div>
 
@@ -1297,8 +1346,10 @@ if ($pianoAttivoId > 0) {
   .meal-builder-card { display:grid; gap:12px; }
   .meal-builder-header { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
   .meal-builder-header h3 { margin:0; }
-  .meal-macro-chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .meal-macro-chips span { font-size:.8rem; border:1px solid rgba(112,191,255,.35); border-radius:999px; padding:4px 10px; color:#d6e8ff; background:rgba(24,43,76,.6); }
+  .meal-header-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .meal-macro-chips { display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
+  .meal-macro-chips span { display:inline-flex; align-items:center; justify-content:center; min-height:28px; font-size:.75rem; border:1px solid rgba(96,177,245,.34); border-radius:999px; padding:2px 9px; color:#cfe4ff; background:rgba(21,40,72,.55); line-height:1; white-space:nowrap; }
+  .meal-extra-remove-form { margin:0; }
   .meal-food-table-wrap { overflow:auto; }
   .meal-food-table { width:100%; border-collapse:separate; border-spacing:0 8px; min-width:900px; }
   .meal-food-table th { text-align:left; font-size:.78rem; color:#9fb2d8; font-weight:600; }
@@ -1319,6 +1370,7 @@ if ($pianoAttivoId > 0) {
   @media (max-width: 1080px) {
     .nutrition-builder-layout { grid-template-columns: 1fr; }
     .nutrition-builder-side { position:static; }
+    .meal-macro-chips span { min-height:26px; font-size:.72rem; padding:2px 8px; }
   }
   @media (max-width: 720px) {
     .nutrition-overview-grid { grid-template-columns: 1fr; }
