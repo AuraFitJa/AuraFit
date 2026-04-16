@@ -74,6 +74,33 @@ function getFlash(): ?array {
   return is_array($flash) ? $flash : null;
 }
 
+function sanitizeFloat(mixed $value): float {
+  $normalized = str_replace(',', '.', trim((string)$value));
+  if ($normalized === '' || !is_numeric($normalized)) {
+    return 0.0;
+  }
+  return (float)$normalized;
+}
+
+function canonicalMealKey(string $name): string {
+  $name = mb_strtolower(trim($name));
+  $name = str_replace(['à', 'á', 'â', 'ä'], 'a', $name);
+  $name = str_replace(['è', 'é', 'ê', 'ë'], 'e', $name);
+  $name = str_replace(['ì', 'í', 'î', 'ï'], 'i', $name);
+  $name = str_replace(['ò', 'ó', 'ô', 'ö'], 'o', $name);
+  $name = str_replace(['ù', 'ú', 'û', 'ü'], 'u', $name);
+  $name = preg_replace('/\s+/', ' ', $name);
+
+  return match ($name) {
+    'colazione' => 'colazione',
+    'spuntino mattina', 'spuntino di mattina' => 'spuntino_mattina',
+    'pranzo' => 'pranzo',
+    'spuntino pomeriggio', 'spuntino del pomeriggio' => 'spuntino_pomeriggio',
+    'cena' => 'cena',
+    default => '',
+  };
+}
+
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
@@ -270,6 +297,221 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       Database::exec('UPDATE PianiAlimentari SET titolo = ?, note = ?, aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [$titolo, $note, $planId]);
       completeNutritionAction('Piano aggiornato.', ['cartella' => (int)$ownedPlan['cartellaId'], 'piano' => $planId]);
+    }
+
+    if ($action === 'create_meal_section') {
+      $planId = (int)($_POST['plan_id'] ?? 0);
+      $mealLabel = trim((string)($_POST['meal_label'] ?? ''));
+      $mealOrder = max(1, (int)($_POST['meal_order'] ?? 1));
+      if ($planId <= 0 || $mealLabel === '') {
+        throw new RuntimeException('Sezione pasto non valida.');
+      }
+
+      $ownedPlan = Database::exec(
+        "SELECT p.idPianoAlim, p.cartellaId
+         FROM PianiAlimentari p
+         WHERE p.idPianoAlim = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
+         LIMIT 1",
+        [$planId, $userId, $professionistaId]
+      )->fetch();
+      if (!$ownedPlan) {
+        throw new RuntimeException('Piano non trovato o non modificabile.');
+      }
+
+      $mealKey = canonicalMealKey($mealLabel);
+      if ($mealKey !== '') {
+        $rows = Database::exec('SELECT idPastoPiano, nomePasto FROM PastiPiano WHERE pianoAlim = ?', [$planId])->fetchAll();
+        foreach ($rows as $row) {
+          if (canonicalMealKey((string)$row['nomePasto']) === $mealKey) {
+            throw new RuntimeException('La sezione è già presente nel piano.');
+          }
+        }
+      }
+
+      Database::exec(
+        'INSERT INTO PastiPiano (pianoAlim, nomePasto, ordine, note) VALUES (?, ?, ?, ?)',
+        [$planId, $mealLabel, $mealOrder, '']
+      );
+      Database::exec('UPDATE PianiAlimentari SET aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [$planId]);
+      completeNutritionAction('Sezione pasto creata.', ['cartella' => (int)$ownedPlan['cartellaId'], 'piano' => $planId]);
+    }
+
+    if ($action === 'save_meal_notes') {
+      $mealId = (int)($_POST['meal_id'] ?? 0);
+      $note = trim((string)($_POST['meal_note'] ?? ''));
+      if ($mealId <= 0) {
+        throw new RuntimeException('Pasto non valido.');
+      }
+
+      $meal = Database::exec(
+        "SELECT pp.idPastoPiano, p.idPianoAlim, p.cartellaId
+         FROM PastiPiano pp
+         INNER JOIN PianiAlimentari p ON p.idPianoAlim = pp.pianoAlim
+         WHERE pp.idPastoPiano = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
+         LIMIT 1",
+        [$mealId, $userId, $professionistaId]
+      )->fetch();
+      if (!$meal) {
+        throw new RuntimeException('Pasto non trovato.');
+      }
+
+      Database::exec('UPDATE PastiPiano SET note = ? WHERE idPastoPiano = ? LIMIT 1', [$note, $mealId]);
+      Database::exec('UPDATE PianiAlimentari SET aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [(int)$meal['idPianoAlim']]);
+      completeNutritionAction('Pasto aggiornato.', ['cartella' => (int)$meal['cartellaId'], 'piano' => (int)$meal['idPianoAlim']]);
+    }
+
+    if ($action === 'add_food') {
+      $mealId = (int)($_POST['meal_id'] ?? 0);
+      $nomeAlimento = trim((string)($_POST['nomeAlimento'] ?? ''));
+      $quantita = sanitizeFloat($_POST['quantita'] ?? null);
+      $unita = trim((string)($_POST['unita'] ?? 'g'));
+      $proteine = sanitizeFloat($_POST['proteine'] ?? null);
+      $carboidrati = sanitizeFloat($_POST['carboidrati'] ?? null);
+      $grassi = sanitizeFloat($_POST['grassi'] ?? null);
+      $calorie = sanitizeFloat($_POST['calorie'] ?? null);
+      if ($mealId <= 0 || $nomeAlimento === '') {
+        throw new RuntimeException('Inserisci almeno il nome alimento.');
+      }
+
+      $meal = Database::exec(
+        "SELECT pp.idPastoPiano, p.idPianoAlim, p.cartellaId
+         FROM PastiPiano pp
+         INNER JOIN PianiAlimentari p ON p.idPianoAlim = pp.pianoAlim
+         WHERE pp.idPastoPiano = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
+         LIMIT 1",
+        [$mealId, $userId, $professionistaId]
+      )->fetch();
+      if (!$meal) {
+        throw new RuntimeException('Pasto non valido.');
+      }
+
+      Database::exec(
+        'INSERT INTO AlimentiPiano (pastoPiano, nomeAlimento, quantita, unita, proteine, carboidrati, grassi, calorie)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [$mealId, $nomeAlimento, $quantita, $unita, $proteine, $carboidrati, $grassi, $calorie]
+      );
+      Database::exec('UPDATE PianiAlimentari SET aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [(int)$meal['idPianoAlim']]);
+      completeNutritionAction('Alimento aggiunto.', ['cartella' => (int)$meal['cartellaId'], 'piano' => (int)$meal['idPianoAlim']]);
+    }
+
+    if ($action === 'update_food') {
+      $foodId = (int)($_POST['food_id'] ?? 0);
+      $nomeAlimento = trim((string)($_POST['nomeAlimento'] ?? ''));
+      $quantita = sanitizeFloat($_POST['quantita'] ?? null);
+      $unita = trim((string)($_POST['unita'] ?? 'g'));
+      $proteine = sanitizeFloat($_POST['proteine'] ?? null);
+      $carboidrati = sanitizeFloat($_POST['carboidrati'] ?? null);
+      $grassi = sanitizeFloat($_POST['grassi'] ?? null);
+      $calorie = sanitizeFloat($_POST['calorie'] ?? null);
+      if ($foodId <= 0 || $nomeAlimento === '') {
+        throw new RuntimeException('Dati alimento non validi.');
+      }
+
+      $food = Database::exec(
+        "SELECT ap.idAlimentoPiano, pp.idPastoPiano, p.idPianoAlim, p.cartellaId
+         FROM AlimentiPiano ap
+         INNER JOIN PastiPiano pp ON pp.idPastoPiano = ap.pastoPiano
+         INNER JOIN PianiAlimentari p ON p.idPianoAlim = pp.pianoAlim
+         WHERE ap.idAlimentoPiano = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
+         LIMIT 1",
+        [$foodId, $userId, $professionistaId]
+      )->fetch();
+      if (!$food) {
+        throw new RuntimeException('Alimento non trovato.');
+      }
+
+      Database::exec(
+        'UPDATE AlimentiPiano
+         SET nomeAlimento = ?, quantita = ?, unita = ?, proteine = ?, carboidrati = ?, grassi = ?, calorie = ?
+         WHERE idAlimentoPiano = ? LIMIT 1',
+        [$nomeAlimento, $quantita, $unita, $proteine, $carboidrati, $grassi, $calorie, $foodId]
+      );
+      Database::exec('UPDATE PianiAlimentari SET aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [(int)$food['idPianoAlim']]);
+      completeNutritionAction('Alimento aggiornato.', ['cartella' => (int)$food['cartellaId'], 'piano' => (int)$food['idPianoAlim']]);
+    }
+
+    if ($action === 'delete_food') {
+      $foodId = (int)($_POST['food_id'] ?? 0);
+      if ($foodId <= 0) {
+        throw new RuntimeException('Alimento non valido.');
+      }
+
+      $food = Database::exec(
+        "SELECT ap.idAlimentoPiano, p.idPianoAlim, p.cartellaId
+         FROM AlimentiPiano ap
+         INNER JOIN PastiPiano pp ON pp.idPastoPiano = ap.pastoPiano
+         INNER JOIN PianiAlimentari p ON p.idPianoAlim = pp.pianoAlim
+         WHERE ap.idAlimentoPiano = ?
+           AND p.creatoreUtente = ?
+           AND (
+             p.cliente IS NULL
+             OR EXISTS (
+               SELECT 1
+               FROM Associazioni a
+               WHERE a.cliente = p.cliente
+                 AND a.professionista = ?
+                 AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+                 AND a.attivaFlag = 1
+             )
+           )
+         LIMIT 1",
+        [$foodId, $userId, $professionistaId]
+      )->fetch();
+      if (!$food) {
+        throw new RuntimeException('Alimento non trovato.');
+      }
+
+      Database::exec('DELETE FROM AlimentiPiano WHERE idAlimentoPiano = ? LIMIT 1', [$foodId]);
+      Database::exec('UPDATE PianiAlimentari SET aggiornatoIl = NOW() WHERE idPianoAlim = ? LIMIT 1', [(int)$food['idPianoAlim']]);
+      completeNutritionAction('Alimento rimosso.', ['cartella' => (int)$food['cartellaId'], 'piano' => (int)$food['idPianoAlim']]);
     }
 
     if ($action === 'duplicate_plan') {
@@ -535,6 +777,15 @@ if ($cartellaAttiva) {
 
 $pianoAttivo = null;
 $assegnazioneAttiva = null;
+$mealSlots = [
+  'colazione' => ['label' => 'Colazione', 'emoji' => '🌅', 'ordine' => 1],
+  'spuntino_mattina' => ['label' => 'Spuntino mattina', 'emoji' => '🍎', 'ordine' => 2],
+  'pranzo' => ['label' => 'Pranzo', 'emoji' => '🍽️', 'ordine' => 3],
+  'spuntino_pomeriggio' => ['label' => 'Spuntino pomeriggio', 'emoji' => '🥜', 'ordine' => 4],
+  'cena' => ['label' => 'Cena', 'emoji' => '🌙', 'ordine' => 5],
+];
+$mealCards = [];
+$dailyTotals = ['proteine' => 0.0, 'carboidrati' => 0.0, 'grassi' => 0.0, 'calorie' => 0.0];
 if ($pianoAttivoId > 0) {
   $pianoAttivo = Database::exec(
     "SELECT p.idPianoAlim, p.titolo, p.note, p.stato, p.versione, p.cartellaId, p.cliente,
@@ -574,6 +825,88 @@ if ($pianoAttivoId > 0) {
        LIMIT 1",
       [$pianoAttivoId]
     )->fetch();
+  }
+
+  $mealRows = Database::exec(
+    'SELECT idPastoPiano, nomePasto, ordine, note FROM PastiPiano WHERE pianoAlim = ? ORDER BY ordine, idPastoPiano',
+    [$pianoAttivoId]
+  )->fetchAll();
+
+  $foodsRows = Database::exec(
+    'SELECT ap.idAlimentoPiano, ap.pastoPiano, ap.nomeAlimento, ap.quantita, ap.unita, ap.proteine, ap.carboidrati, ap.grassi, ap.calorie
+     FROM AlimentiPiano ap
+     INNER JOIN PastiPiano pp ON pp.idPastoPiano = ap.pastoPiano
+     WHERE pp.pianoAlim = ?
+     ORDER BY ap.idAlimentoPiano',
+    [$pianoAttivoId]
+  )->fetchAll();
+
+  $foodsByMeal = [];
+  foreach ($foodsRows as $food) {
+    $mealId = (int)$food['pastoPiano'];
+    $foodsByMeal[$mealId][] = $food;
+  }
+
+  $mealByKey = [];
+  $extraMeals = [];
+  foreach ($mealRows as $mealRow) {
+    $key = canonicalMealKey((string)$mealRow['nomePasto']);
+    if ($key !== '' && !isset($mealByKey[$key])) {
+      $mealByKey[$key] = $mealRow;
+    } else {
+      $extraMeals[] = $mealRow;
+    }
+  }
+
+  foreach ($mealSlots as $slotKey => $slotData) {
+    $mealRow = $mealByKey[$slotKey] ?? null;
+    $mealFoods = $mealRow ? ($foodsByMeal[(int)$mealRow['idPastoPiano']] ?? []) : [];
+    $totals = ['proteine' => 0.0, 'carboidrati' => 0.0, 'grassi' => 0.0, 'calorie' => 0.0];
+    foreach ($mealFoods as $food) {
+      $totals['proteine'] += (float)$food['proteine'];
+      $totals['carboidrati'] += (float)$food['carboidrati'];
+      $totals['grassi'] += (float)$food['grassi'];
+      $totals['calorie'] += (float)$food['calorie'];
+    }
+    $dailyTotals['proteine'] += $totals['proteine'];
+    $dailyTotals['carboidrati'] += $totals['carboidrati'];
+    $dailyTotals['grassi'] += $totals['grassi'];
+    $dailyTotals['calorie'] += $totals['calorie'];
+
+    $mealCards[] = [
+      'slotKey' => $slotKey,
+      'label' => $slotData['label'],
+      'emoji' => $slotData['emoji'],
+      'ordine' => (int)$slotData['ordine'],
+      'meal' => $mealRow,
+      'foods' => $mealFoods,
+      'totals' => $totals,
+    ];
+  }
+
+  foreach ($extraMeals as $idx => $mealRow) {
+    $mealFoods = $foodsByMeal[(int)$mealRow['idPastoPiano']] ?? [];
+    $totals = ['proteine' => 0.0, 'carboidrati' => 0.0, 'grassi' => 0.0, 'calorie' => 0.0];
+    foreach ($mealFoods as $food) {
+      $totals['proteine'] += (float)$food['proteine'];
+      $totals['carboidrati'] += (float)$food['carboidrati'];
+      $totals['grassi'] += (float)$food['grassi'];
+      $totals['calorie'] += (float)$food['calorie'];
+    }
+    $dailyTotals['proteine'] += $totals['proteine'];
+    $dailyTotals['carboidrati'] += $totals['carboidrati'];
+    $dailyTotals['grassi'] += $totals['grassi'];
+    $dailyTotals['calorie'] += $totals['calorie'];
+
+    $mealCards[] = [
+      'slotKey' => 'extra_' . $idx,
+      'label' => (string)$mealRow['nomePasto'],
+      'emoji' => '✨',
+      'ordine' => (int)$mealRow['ordine'],
+      'meal' => $mealRow,
+      'foods' => $mealFoods,
+      'totals' => $totals,
+    ];
   }
 }
 ?>
@@ -648,13 +981,13 @@ if ($pianoAttivoId > 0) {
       </button>
     </div>
   <?php else: ?>
-    <div class="program-toolbar">
-      <a href="nutrizione.php?cartella=<?= (int)$pianoAttivo['cartellaId'] ?>" class="link-btn">← Torna alla cartella</a>
-      <h2 class="section-title" style="margin:0"><?= h((string)$pianoAttivo['titolo']) ?></h2>
-    </div>
-
-    <article class="folder-card nutrition-builder-shell">
-      <div class="program-toolbar nutrition-builder-toolbar">
+    <div class="nutrition-builder-head">
+      <div>
+        <a href="nutrizione.php?cartella=<?= (int)$pianoAttivo['cartellaId'] ?>" class="link-btn">← Torna alla cartella</a>
+        <h2 class="section-title" style="margin:10px 0 4px"><?= h((string)$pianoAttivo['titolo']) ?></h2>
+        <p class="muted-sm">Builder piano nutrizionale · modifica rapida pasti e alimenti</p>
+      </div>
+      <div class="nutrition-builder-actions">
         <button type="button" class="btn primary" data-open-assign-plan>Assegna piano</button>
         <form method="post" style="margin:0">
           <input type="hidden" name="action" value="duplicate_plan">
@@ -663,26 +996,164 @@ if ($pianoAttivoId > 0) {
         </form>
         <button type="button" class="btn danger" data-open-delete-plan data-plan-id="<?= (int)$pianoAttivo['idPianoAlim'] ?>" data-folder-id="<?= (int)$pianoAttivo['cartellaId'] ?>" data-plan-name="<?= h((string)$pianoAttivo['titolo']) ?>">Elimina</button>
       </div>
+    </div>
 
-      <?php if ($assegnazioneAttiva): ?>
-        <p class="muted-sm">Ultima assegnazione: <?= h(trim((string)$assegnazioneAttiva['cognome'] . ' ' . (string)$assegnazioneAttiva['nome'])) ?> (<?= h((string)$assegnazioneAttiva['stato']) ?>)</p>
-      <?php endif; ?>
-
+    <article class="folder-card nutrition-plan-overview">
       <form method="post" class="nutrition-builder-fields">
         <input type="hidden" name="action" value="update_plan">
         <input type="hidden" name="plan_id" value="<?= (int)$pianoAttivo['idPianoAlim'] ?>">
-
-        <label class="muted-sm" for="diet-plan-name">Nome piano</label>
-        <input id="diet-plan-name" name="titolo" class="dark-input" type="text" value="<?= h((string)$pianoAttivo['titolo']) ?>" required />
-
-        <label class="muted-sm" for="diet-plan-description">Descrizione</label>
-        <textarea id="diet-plan-description" name="note" class="dark-textarea" rows="8"><?= h((string)$pianoAttivo['note']) ?></textarea>
-
+        <div class="nutrition-overview-grid">
+          <div>
+            <label class="muted-sm" for="diet-plan-name">Nome piano</label>
+            <input id="diet-plan-name" name="titolo" class="dark-input" type="text" value="<?= h((string)$pianoAttivo['titolo']) ?>" required />
+          </div>
+          <div class="muted-sm nutrition-meta-box">
+            <strong><?= $pianoAttivo['cliente'] ? h(trim((string)$pianoAttivo['cognome'] . ' ' . (string)$pianoAttivo['nome'])) : 'Bozza non assegnata' ?></strong><br>
+            Stato: <?= h((string)$pianoAttivo['stato']) ?> · v<?= (int)$pianoAttivo['versione'] ?><br>
+            Ultimo aggiornamento: <?= h((string)$pianoAttivo['aggiornatoIl']) ?>
+            <?php if ($assegnazioneAttiva): ?>
+              <br>Assegnazione attiva: <?= h(trim((string)$assegnazioneAttiva['cognome'] . ' ' . (string)$assegnazioneAttiva['nome'])) ?>
+            <?php endif; ?>
+          </div>
+        </div>
+        <label class="muted-sm" for="diet-plan-description">Note generali</label>
+        <textarea id="diet-plan-description" name="note" class="dark-textarea" rows="4"><?= h((string)$pianoAttivo['note']) ?></textarea>
         <div class="library-toolbar" style="justify-content:flex-end">
-          <button type="submit" class="btn primary">Salva modifiche</button>
+          <button type="submit" class="btn primary">Salva piano</button>
         </div>
       </form>
     </article>
+
+    <div class="nutrition-builder-layout">
+      <div class="nutrition-builder-main">
+        <?php foreach ($mealCards as $mealCard): ?>
+          <?php $meal = $mealCard['meal']; ?>
+          <article class="folder-card meal-builder-card">
+            <div class="meal-builder-header">
+              <div>
+                <h3><?= h((string)$mealCard['emoji']) ?> <?= h((string)$mealCard['label']) ?></h3>
+                <p class="muted-sm"><?= count($mealCard['foods']) ?> alimento/i</p>
+              </div>
+              <div class="meal-macro-chips">
+                <span>P <?= number_format((float)$mealCard['totals']['proteine'], 1) ?>g</span>
+                <span>C <?= number_format((float)$mealCard['totals']['carboidrati'], 1) ?>g</span>
+                <span>G <?= number_format((float)$mealCard['totals']['grassi'], 1) ?>g</span>
+                <span><?= number_format((float)$mealCard['totals']['calorie'], 0) ?> kcal</span>
+              </div>
+            </div>
+
+            <?php if (!$meal): ?>
+              <form method="post" class="meal-create-form">
+                <input type="hidden" name="action" value="create_meal_section">
+                <input type="hidden" name="plan_id" value="<?= (int)$pianoAttivo['idPianoAlim'] ?>">
+                <input type="hidden" name="meal_label" value="<?= h((string)$mealCard['label']) ?>">
+                <input type="hidden" name="meal_order" value="<?= (int)$mealCard['ordine'] ?>">
+                <button type="submit" class="btn">Crea sezione</button>
+              </form>
+            <?php else: ?>
+              <div class="meal-food-table-wrap">
+                <table class="meal-food-table">
+                  <thead>
+                    <tr>
+                      <th>Alimento</th>
+                      <th>Qtà</th>
+                      <th>Unità</th>
+                      <th>P</th>
+                      <th>C</th>
+                      <th>G</th>
+                      <th>Kcal</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($mealCard['foods'] as $food): ?>
+                      <tr>
+                        <form method="post">
+                          <input type="hidden" name="action" value="update_food">
+                          <input type="hidden" name="food_id" value="<?= (int)$food['idAlimentoPiano'] ?>">
+                          <td><input class="dark-input slim" type="text" name="nomeAlimento" value="<?= h((string)$food['nomeAlimento']) ?>" required></td>
+                          <td><input class="dark-input slim" type="number" step="0.1" min="0" name="quantita" value="<?= h((string)$food['quantita']) ?>"></td>
+                          <td><input class="dark-input slim" type="text" name="unita" value="<?= h((string)$food['unita']) ?>"></td>
+                          <td><input class="dark-input slim" type="number" step="0.1" min="0" name="proteine" value="<?= h((string)$food['proteine']) ?>"></td>
+                          <td><input class="dark-input slim" type="number" step="0.1" min="0" name="carboidrati" value="<?= h((string)$food['carboidrati']) ?>"></td>
+                          <td><input class="dark-input slim" type="number" step="0.1" min="0" name="grassi" value="<?= h((string)$food['grassi']) ?>"></td>
+                          <td><input class="dark-input slim" type="number" step="0.1" min="0" name="calorie" value="<?= h((string)$food['calorie']) ?>"></td>
+                          <td class="meal-row-actions">
+                            <button class="btn tiny" type="submit">Salva</button>
+                            <button class="btn tiny danger" type="submit" name="action" value="delete_food">🗑</button>
+                          </td>
+                        </form>
+                      </tr>
+                    <?php endforeach; ?>
+
+                    <tr class="meal-add-row">
+                      <form method="post">
+                        <input type="hidden" name="action" value="add_food">
+                        <input type="hidden" name="meal_id" value="<?= (int)$meal['idPastoPiano'] ?>">
+                        <td><input class="dark-input slim" type="text" name="nomeAlimento" placeholder="Nuovo alimento"></td>
+                        <td><input class="dark-input slim" type="number" step="0.1" min="0" name="quantita" placeholder="0"></td>
+                        <td><input class="dark-input slim" type="text" name="unita" value="g"></td>
+                        <td><input class="dark-input slim" type="number" step="0.1" min="0" name="proteine" placeholder="0"></td>
+                        <td><input class="dark-input slim" type="number" step="0.1" min="0" name="carboidrati" placeholder="0"></td>
+                        <td><input class="dark-input slim" type="number" step="0.1" min="0" name="grassi" placeholder="0"></td>
+                        <td><input class="dark-input slim" type="number" step="0.1" min="0" name="calorie" placeholder="0"></td>
+                        <td><button class="btn tiny" type="submit">+ Aggiungi alimento</button></td>
+                      </form>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <form method="post" class="meal-notes-form">
+                <input type="hidden" name="action" value="save_meal_notes">
+                <input type="hidden" name="meal_id" value="<?= (int)$meal['idPastoPiano'] ?>">
+                <label class="muted-sm">Note pasto</label>
+                <textarea class="dark-textarea" name="meal_note" rows="2" placeholder="Indicazioni per il cliente..."><?= h((string)$meal['note']) ?></textarea>
+                <div class="meal-actions-line">
+                  <button class="btn primary" type="submit">Salva <?= h((string)$mealCard['label']) ?></button>
+                </div>
+              </form>
+            <?php endif; ?>
+          </article>
+        <?php endforeach; ?>
+      </div>
+
+      <aside class="nutrition-builder-side">
+        <article class="folder-card nutrition-side-card">
+          <h4>Riepilogo giornaliero</h4>
+          <div class="side-macros">
+            <div><span>Proteine</span><strong><?= number_format((float)$dailyTotals['proteine'], 1) ?> g</strong></div>
+            <div><span>Carboidrati</span><strong><?= number_format((float)$dailyTotals['carboidrati'], 1) ?> g</strong></div>
+            <div><span>Grassi</span><strong><?= number_format((float)$dailyTotals['grassi'], 1) ?> g</strong></div>
+            <div><span>Calorie</span><strong><?= number_format((float)$dailyTotals['calorie'], 0) ?> kcal</strong></div>
+          </div>
+        </article>
+
+        <article class="folder-card nutrition-side-card">
+          <h4>Azioni rapide</h4>
+          <div class="quick-actions">
+            <button class="btn primary" type="button" onclick="document.querySelector('form.nutrition-builder-fields button[type=submit]')?.click()">Salva tutto</button>
+            <form method="post">
+              <input type="hidden" name="action" value="create_meal_section">
+              <input type="hidden" name="plan_id" value="<?= (int)$pianoAttivo['idPianoAlim'] ?>">
+              <input type="hidden" name="meal_label" value="Spuntino extra">
+              <input type="hidden" name="meal_order" value="6">
+              <button class="btn" type="submit">Aggiungi spuntino extra</button>
+            </form>
+            <form method="post">
+              <input type="hidden" name="action" value="duplicate_plan">
+              <input type="hidden" name="plan_id" value="<?= (int)$pianoAttivo['idPianoAlim'] ?>">
+              <button class="btn" type="submit">Duplica da template</button>
+            </form>
+          </div>
+        </article>
+
+        <article class="folder-card nutrition-side-card info">
+          <h4>Info tecniche</h4>
+          <p class="muted-sm">Builder attivo su PianiAlimentari / PastiPiano / AlimentiPiano.<?= !$assegnazioniEnabled ? ' La tabella AssegnazioniPianoAlimentare non risulta presente: gestire la migrazione separatamente.' : '' ?></p>
+        </article>
+      </aside>
+    </div>
   <?php endif; ?>
 </section>
 
@@ -807,6 +1278,42 @@ if ($pianoAttivoId > 0) {
   .alert-strip { padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; font-size: .95rem; }
   .alert-strip.ok { background: rgba(39,174,96,.18); border: 1px solid rgba(39,174,96,.45); }
   .alert-strip.error { background: rgba(231,76,60,.18); border: 1px solid rgba(231,76,60,.45); }
+  .nutrition-builder-head { display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; margin-bottom:12px; }
+  .nutrition-builder-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .nutrition-plan-overview { margin-bottom:16px; }
+  .nutrition-overview-grid { display:grid; gap:12px; grid-template-columns: minmax(260px,1fr) minmax(260px,1fr); }
+  .nutrition-meta-box { padding:12px; border:1px solid rgba(136,178,255,.24); border-radius:12px; background:rgba(14, 22, 42, .65); line-height:1.5; }
+  .nutrition-builder-layout { display:grid; gap:16px; grid-template-columns: minmax(0, 2.1fr) minmax(280px, 1fr); align-items:start; }
+  .nutrition-builder-main { display:grid; gap:14px; }
+  .meal-builder-card { display:grid; gap:12px; }
+  .meal-builder-header { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .meal-builder-header h3 { margin:0; }
+  .meal-macro-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .meal-macro-chips span { font-size:.8rem; border:1px solid rgba(112,191,255,.35); border-radius:999px; padding:4px 10px; color:#d6e8ff; background:rgba(24,43,76,.6); }
+  .meal-food-table-wrap { overflow:auto; }
+  .meal-food-table { width:100%; border-collapse:separate; border-spacing:0 8px; min-width:900px; }
+  .meal-food-table th { text-align:left; font-size:.78rem; color:#9fb2d8; font-weight:600; }
+  .meal-food-table td { vertical-align:middle; }
+  .dark-input.slim { min-height:36px; padding:7px 9px; font-size:.88rem; }
+  .meal-row-actions { display:flex; gap:6px; }
+  .btn.tiny { padding:8px 10px; font-size:.75rem; }
+  .meal-add-row td { padding-top:4px; }
+  .meal-notes-form { display:grid; gap:8px; }
+  .meal-actions-line { display:flex; justify-content:flex-end; }
+  .nutrition-builder-side { display:grid; gap:12px; position:sticky; top:10px; }
+  .nutrition-side-card { display:grid; gap:10px; }
+  .side-macros { display:grid; gap:8px; }
+  .side-macros div { display:flex; justify-content:space-between; align-items:center; font-size:.92rem; padding:8px 10px; border-radius:10px; background:rgba(26,38,66,.56); border:1px solid rgba(130,165,227,.22); }
+  .side-macros span { color:#adc2ea; }
+  .quick-actions { display:grid; gap:8px; }
+  .meal-create-form { display:flex; justify-content:flex-start; }
+  @media (max-width: 1080px) {
+    .nutrition-builder-layout { grid-template-columns: 1fr; }
+    .nutrition-builder-side { position:static; }
+  }
+  @media (max-width: 720px) {
+    .nutrition-overview-grid { grid-template-columns: 1fr; }
+  }
 </style>
 <?php
 renderEnd(<<<'SCRIPT'
