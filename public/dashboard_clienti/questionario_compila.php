@@ -1,25 +1,42 @@
 <?php
 require __DIR__ . '/common.php';
 $errors=[]; $assegnazione=null; $domande=[]; $opzioni=[]; $answers=[]; $idCompilazione=0;
+$isViewOnly = (($_GET['view'] ?? '') === '1');
 if(!$dbAvailable){$errors[]=$dbError??'DB non disponibile.';} else {
   try{
     $idAssegnazione=(int)($_GET['idAssegnazione']??0);
+    $idCompilazioneRequested=(int)($_GET['idCompilazione']??0);
     $cliente=Database::exec('SELECT idCliente FROM Clienti WHERE idUtente=? LIMIT 1',[$user['idUtente']])->fetch();
     if(!$cliente||$idAssegnazione<1){$errors[]='Parametri non validi.';} else {
       $assegnazione=Database::exec("SELECT qa.*,q.titolo,q.descrizione FROM QuestionarioAssegnazioni qa INNER JOIN Questionari q ON q.idQuestionario=qa.questionario WHERE qa.idAssegnazioneQuestionario=? AND qa.cliente=? AND qa.stato='attivo' LIMIT 1",[$idAssegnazione,$cliente['idCliente']])->fetch();
       if(!$assegnazione){$errors[]='Assegnazione non trovata.';} else {
-        $draft=Database::exec("SELECT * FROM QuestionarioCompilazioni WHERE assegnazione=? AND cliente=? AND stato='bozza' ORDER BY aggiornatoIl DESC LIMIT 1",[$idAssegnazione,$cliente['idCliente']])->fetch();
-        if(!$draft){
-          $max=Database::exec('SELECT COALESCE(MAX(numeroCompilazione),0) maxNumero FROM QuestionarioCompilazioni WHERE assegnazione=?',[$idAssegnazione])->fetch();
-          $num=((int)$max['maxNumero'])+1;
-          Database::exec("INSERT INTO QuestionarioCompilazioni (assegnazione,questionario,cliente,numeroCompilazione,stato,iniziatoIl,aggiornatoIl) VALUES (?,?,?,?, 'bozza',NOW(),NOW())",[$idAssegnazione,$assegnazione['questionario'],$cliente['idCliente'],$num]);
-          $idCompilazione=(int)Database::pdo()->lastInsertId();
-        } else { $idCompilazione=(int)$draft['idCompilazione']; }
+        if($isViewOnly){
+          if($idCompilazioneRequested>0){
+            $compilazione=Database::exec("SELECT * FROM QuestionarioCompilazioni WHERE idCompilazione=? AND assegnazione=? AND cliente=? AND stato='inviato' LIMIT 1",[$idCompilazioneRequested,$idAssegnazione,$cliente['idCliente']])->fetch();
+          } else {
+            $compilazione=Database::exec("SELECT * FROM QuestionarioCompilazioni WHERE assegnazione=? AND cliente=? AND stato='inviato' ORDER BY numeroCompilazione DESC LIMIT 1",[$idAssegnazione,$cliente['idCliente']])->fetch();
+          }
+          if(!$compilazione){
+            $errors[]='Nessuna compilazione inviata disponibile da visualizzare.';
+          } else {
+            $idCompilazione=(int)$compilazione['idCompilazione'];
+          }
+        } else {
+          $draft=Database::exec("SELECT * FROM QuestionarioCompilazioni WHERE assegnazione=? AND cliente=? AND stato='bozza' ORDER BY aggiornatoIl DESC LIMIT 1",[$idAssegnazione,$cliente['idCliente']])->fetch();
+          if(!$draft){
+            $max=Database::exec('SELECT COALESCE(MAX(numeroCompilazione),0) maxNumero FROM QuestionarioCompilazioni WHERE assegnazione=?',[$idAssegnazione])->fetch();
+            $num=((int)$max['maxNumero'])+1;
+            Database::exec("INSERT INTO QuestionarioCompilazioni (assegnazione,questionario,cliente,numeroCompilazione,stato,iniziatoIl,aggiornatoIl) VALUES (?,?,?,?, 'bozza',NOW(),NOW())",[$idAssegnazione,$assegnazione['questionario'],$cliente['idCliente'],$num]);
+            $idCompilazione=(int)Database::pdo()->lastInsertId();
+          } else { $idCompilazione=(int)$draft['idCompilazione']; }
+        }
 
         $domande=Database::exec('SELECT * FROM QuestionarioDomande WHERE questionario=? ORDER BY ordine ASC',[$assegnazione['questionario']])->fetchAll();
         if($domande){$ids=array_map(static function ($d) { return (int)$d['idDomanda']; },$domande);$in=implode(',',array_fill(0,count($ids),'?'));$ops=Database::exec("SELECT * FROM QuestionarioOpzioni WHERE domanda IN ($in) ORDER BY ordine ASC",$ids)->fetchAll();foreach($ops as $o){$opzioni[(int)$o['domanda']][]=$o;}}
-        $risp=Database::exec('SELECT * FROM QuestionarioRisposte WHERE compilazione=?',[$idCompilazione])->fetchAll();
-        foreach($risp as $r){$answers[(int)$r['domanda']]=$r;}
+        if($idCompilazione>0){
+          $risp=Database::exec('SELECT * FROM QuestionarioRisposte WHERE compilazione=?',[$idCompilazione])->fetchAll();
+          foreach($risp as $r){$answers[(int)$r['domanda']]=$r;}
+        }
       }
     }
   }catch(Throwable $e){$errors[]='Errore apertura questionario.';}
@@ -28,7 +45,7 @@ if(!$dbAvailable){$errors[]=$dbError??'DB non disponibile.';} else {
 $questionarioTitolo = trim((string)($assegnazione['titolo'] ?? '')) !== '' ? (string)$assegnazione['titolo'] : 'Anamnesi Nutrizione';
 $questionarioDescrizione = trim((string)($assegnazione['descrizione'] ?? '')) !== '' ? (string)$assegnazione['descrizione'] : 'Compila le informazioni principali del cliente con un’interfaccia più ordinata, leggibile e coerente con la dashboard.';
 $categoria = 'Nutrizione';
-$statoCompilazione = 'Bozza';
+$statoCompilazione = $isViewOnly ? 'Sola lettura' : 'Bozza';
 
 $numberQuestions = array_values(array_filter($domande, static function ($d) {
   return ($d['tipoDomanda'] ?? '') === 'number';
@@ -100,8 +117,12 @@ renderStart('Compila questionario','questionari',$email);
       <p class="questionnaire-subtitle"><?= h($questionarioDescrizione) ?></p>
     </div>
     <div class="questionnaire-actions">
+      <?php if($isViewOnly): ?>
+      <a class="btn" href="questionari.php">Torna ai questionari</a>
+      <?php else: ?>
       <button class="btn" type="button" id="btnAnteprima">Anteprima</button>
       <button class="btn gradient-primary" type="button" id="inviaQuestionarioTop">Invia questionario</button>
+      <?php endif; ?>
     </div>
   </header>
 
@@ -127,7 +148,7 @@ renderStart('Compila questionario','questionari',$email);
             <label class="question-field">
               <span><?= h($d['testoDomanda'] ?? $label) ?></span>
               <?php if($d): ?>
-              <input type="number" step="0.01" name="risposte[<?= $id ?>]" value="<?= h((string)$value) ?>" placeholder="<?= h($placeholder) ?>">
+              <input type="number" step="0.01" name="risposte[<?= $id ?>]" value="<?= h((string)$value) ?>" placeholder="<?= h($placeholder) ?>" <?= $isViewOnly ? 'disabled' : '' ?>>
               <?php else: ?>
               <input type="number" step="0.01" value="<?= h((string)$value) ?>" placeholder="<?= h($placeholder) ?>" disabled>
               <?php endif; ?>
@@ -151,7 +172,7 @@ renderStart('Compila questionario','questionari',$email);
               $isChecked = in_array(strtolower((string)$o['valoreOpzione']), array_map('strtolower',$multiValues), true);
             ?>
             <label class="option-card<?= $isChecked ? ' is-selected' : '' ?>">
-              <input type="checkbox" name="risposte[<?= $idMulti ?>][]" value="<?= h($o['valoreOpzione']) ?>" <?= $isChecked ? 'checked' : '' ?>>
+              <input type="checkbox" name="risposte[<?= $idMulti ?>][]" value="<?= h($o['valoreOpzione']) ?>" <?= $isChecked ? 'checked' : '' ?> <?= $isViewOnly ? 'disabled' : '' ?>>
               <span><?= h($o['labelOpzione']) ?></span>
             </label>
             <?php endforeach; ?>
@@ -172,7 +193,7 @@ renderStart('Compila questionario','questionari',$email);
               $isChecked = strtolower((string)$o['valoreOpzione']) === strtolower($singleValue);
             ?>
             <label class="option-card<?= $isChecked ? ' is-selected' : '' ?>">
-              <input type="radio" name="risposte[<?= $idSingle ?>]" value="<?= h($o['valoreOpzione']) ?>" <?= $isChecked ? 'checked' : '' ?>>
+              <input type="radio" name="risposte[<?= $idSingle ?>]" value="<?= h($o['valoreOpzione']) ?>" <?= $isChecked ? 'checked' : '' ?> <?= $isViewOnly ? 'disabled' : '' ?>>
               <span><?= h($o['labelOpzione']) ?></span>
             </label>
             <?php endforeach; ?>
@@ -189,23 +210,23 @@ renderStart('Compila questionario','questionari',$email);
             <div class="question-field">
               <label for="q_<?= $id ?>"><?= h($d['testoDomanda']) ?></label>
               <?php if(!empty($d['descrizione'])): ?><small class="helper-text"><?= h($d['descrizione']) ?></small><?php endif; ?>
-              <?php if($tipo==='short_text'): ?><input id="q_<?= $id ?>" name="risposte[<?= $id ?>]" value="<?= h((string)($existing['valoreTesto']??'')) ?>" placeholder="<?= h($d['placeholderText']) ?>">
-              <?php elseif($tipo==='long_text'): ?><textarea id="q_<?= $id ?>" name="risposte[<?= $id ?>]" placeholder="<?= h($d['placeholderText']) ?>"><?= h((string)($existing['valoreTesto']??'')) ?></textarea>
+              <?php if($tipo==='short_text'): ?><input id="q_<?= $id ?>" name="risposte[<?= $id ?>]" value="<?= h((string)($existing['valoreTesto']??'')) ?>" placeholder="<?= h($d['placeholderText']) ?>" <?= $isViewOnly ? 'disabled' : '' ?>>
+              <?php elseif($tipo==='long_text'): ?><textarea id="q_<?= $id ?>" name="risposte[<?= $id ?>]" placeholder="<?= h($d['placeholderText']) ?>" <?= $isViewOnly ? 'disabled' : '' ?>><?= h((string)($existing['valoreTesto']??'')) ?></textarea>
               <?php elseif($tipo==='single_choice'): ?>
                 <div class="option-grid single-col">
                 <?php foreach(($opzioni[$id]??[]) as $o): $checked = (($existing['valoreTesto']??'')===$o['valoreOpzione']); ?>
-                  <label class="option-card<?= $checked ? ' is-selected' : '' ?>"><input type="radio" name="risposte[<?= $id ?>]" value="<?= h($o['valoreOpzione']) ?>" <?= $checked?'checked':''; ?>> <span><?= h($o['labelOpzione']) ?></span></label>
+                  <label class="option-card<?= $checked ? ' is-selected' : '' ?>"><input type="radio" name="risposte[<?= $id ?>]" value="<?= h($o['valoreOpzione']) ?>" <?= $checked?'checked':''; ?> <?= $isViewOnly ? 'disabled' : '' ?>> <span><?= h($o['labelOpzione']) ?></span></label>
                 <?php endforeach; ?>
                 </div>
               <?php elseif($tipo==='multiple_choice'): $curr=json_decode((string)($existing['valoreJson']??'[]'),true); if(!is_array($curr))$curr=[]; ?>
                 <div class="option-grid">
                 <?php foreach(($opzioni[$id]??[]) as $o): $checked=in_array($o['valoreOpzione'],$curr,true); ?>
-                  <label class="option-card<?= $checked ? ' is-selected' : '' ?>"><input type="checkbox" name="risposte[<?= $id ?>][]" value="<?= h($o['valoreOpzione']) ?>" <?= $checked?'checked':''; ?>> <span><?= h($o['labelOpzione']) ?></span></label>
+                  <label class="option-card<?= $checked ? ' is-selected' : '' ?>"><input type="checkbox" name="risposte[<?= $id ?>][]" value="<?= h($o['valoreOpzione']) ?>" <?= $checked?'checked':''; ?> <?= $isViewOnly ? 'disabled' : '' ?>> <span><?= h($o['labelOpzione']) ?></span></label>
                 <?php endforeach; ?>
                 </div>
-              <?php elseif($tipo==='number'): ?><input id="q_<?= $id ?>" type="number" step="0.01" name="risposte[<?= $id ?>]" value="<?= h((string)($existing['valoreNumero']??'')) ?>">
-              <?php elseif($tipo==='date'): ?><input id="q_<?= $id ?>" type="date" name="risposte[<?= $id ?>]" value="<?= h((string)($existing['valoreData']??'')) ?>">
-              <?php elseif($tipo==='consent_checkbox'): ?><label class="option-card<?= !empty($existing['valoreBoolean']) ? ' is-selected' : '' ?>"><input type="checkbox" name="risposte[<?= $id ?>]" value="1" <?= !empty($existing['valoreBoolean'])?'checked':''; ?>> <span>Acconsento</span></label><?php endif; ?>
+              <?php elseif($tipo==='number'): ?><input id="q_<?= $id ?>" type="number" step="0.01" name="risposte[<?= $id ?>]" value="<?= h((string)($existing['valoreNumero']??'')) ?>" <?= $isViewOnly ? 'disabled' : '' ?>>
+              <?php elseif($tipo==='date'): ?><input id="q_<?= $id ?>" type="date" name="risposte[<?= $id ?>]" value="<?= h((string)($existing['valoreData']??'')) ?>" <?= $isViewOnly ? 'disabled' : '' ?>>
+              <?php elseif($tipo==='consent_checkbox'): ?><label class="option-card<?= !empty($existing['valoreBoolean']) ? ' is-selected' : '' ?>"><input type="checkbox" name="risposte[<?= $id ?>]" value="1" <?= !empty($existing['valoreBoolean'])?'checked':''; ?> <?= $isViewOnly ? 'disabled' : '' ?>> <span>Acconsento</span></label><?php endif; ?>
             </div>
             <?php endforeach; ?>
           </div>
@@ -226,9 +247,13 @@ renderStart('Compila questionario','questionari',$email);
         <article class="questionnaire-panel">
           <h3 class="section-title">Azioni rapide</h3>
           <div class="quick-actions">
+            <?php if(!$isViewOnly): ?>
             <button class="btn" type="button" id="salvaBozza">Salva bozza</button>
             <button class="btn" type="button" id="resetCampi">Reimposta campi</button>
             <button class="btn gradient-primary" type="button" id="inviaQuestionario">Invia questionario</button>
+            <?php else: ?>
+            <a class="btn" href="questionari.php">Chiudi visualizzazione</a>
+            <?php endif; ?>
           </div>
         </article>
 
@@ -240,6 +265,7 @@ renderStart('Compila questionario','questionari',$email);
     <p class="muted" id="saveFeedback" style="margin:14px 0 0"></p>
   </form>
 
+  <?php if(!$isViewOnly): ?>
   <script>
   (function(){
     const form=document.getElementById('questionarioForm');
@@ -315,6 +341,7 @@ renderStart('Compila questionario','questionari',$email);
     refreshOptionCards();
   })();
   </script>
+  <?php endif; ?>
   <?php endif; ?>
 </section>
 <?php renderEnd(); ?>
