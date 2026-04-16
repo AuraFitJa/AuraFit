@@ -10,10 +10,10 @@ register_shutdown_function(static function (): void {
   if (!$error || !in_array((int)$error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
     return;
   }
-  if (headers_sent()) {
-    return;
+  if (!headers_sent()) {
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
   }
-  http_response_code(500);
   while (ob_get_level() > 0) {
     ob_end_clean();
   }

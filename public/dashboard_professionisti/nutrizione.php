@@ -1547,7 +1547,18 @@ renderEnd(<<<'SCRIPT'
 
     async function offApi(form) {
       const response = await fetch('../api/openfoodfacts.php', { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
-      const payload = await response.json();
+      const raw = await response.text();
+      let payload = null;
+      if (raw.trim() !== '') {
+        try {
+          payload = JSON.parse(raw);
+        } catch (e) {
+          throw new Error('Risposta API non valida: ' + raw.slice(0, 180));
+        }
+      }
+      if (!payload) {
+        throw new Error('Endpoint OFF vuoto (HTTP ' + response.status + ').');
+      }
       if (!response.ok || !payload.ok) throw new Error(payload.message || 'Errore API');
       return payload;
     }
