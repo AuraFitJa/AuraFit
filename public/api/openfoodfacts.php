@@ -303,5 +303,12 @@ try {
 
   off_json_error('Azione non supportata.', 400);
 } catch (Throwable $e) {
-  off_json_error($e->getMessage(), 500);
+  $message = (string)$e->getMessage();
+  if (stripos($message, 'Errore Open Food Facts') !== false) {
+    off_json_error(
+      'Open Food Facts non raggiungibile dal server hosting (upstream 403/blocco rete). Usa inserimento manuale o cache locale.',
+      503
+    );
+  }
+  off_json_error($message, 500);
 }

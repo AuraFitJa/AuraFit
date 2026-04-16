@@ -131,17 +131,34 @@ if (!function_exists('off_http_get')) {
     try {
       return off_http_get_single($url);
     } catch (Throwable $e) {
-      $isHttps = strpos($url, 'https://') === 0;
-      $canRetryHttp = strpos($url, 'https://world.openfoodfacts.org/') === 0
-        || strpos($url, 'https://it.openfoodfacts.org/') === 0;
       $message = (string)$e->getMessage();
       $proxyBlocked = stripos($message, 'CONNECT tunnel failed') !== false
         || stripos($message, 'HTTP 403') !== false;
+      $retryUrls = [];
 
-      if ($isHttps && $canRetryHttp && $proxyBlocked) {
-        $httpUrl = preg_replace('/^https:\\/\\//', 'http://', $url);
-        if (is_string($httpUrl) && $httpUrl !== '') {
-          return off_http_get_single($httpUrl);
+      if (strpos($url, 'openfoodfacts.org') !== false) {
+        $retryUrls[] = str_replace('://world.openfoodfacts.org/', '://it.openfoodfacts.org/', $url);
+        $retryUrls[] = str_replace('://it.openfoodfacts.org/', '://world.openfoodfacts.org/', $url);
+      }
+
+      if ($proxyBlocked && strpos($url, 'https://') === 0) {
+        $retryUrls[] = preg_replace('/^https:\\/\\//', 'http://', $url);
+        foreach ($retryUrls as $candidateUrl) {
+          $retryUrls[] = preg_replace('/^https:\\/\\//', 'http://', (string)$candidateUrl);
+        }
+      }
+
+      $retryUrls = array_values(array_unique(array_filter($retryUrls, static function ($candidate) use ($url) {
+        return is_string($candidate) && $candidate !== '' && $candidate !== $url;
+      })));
+
+      foreach ($retryUrls as $retryUrl) {
+        try {
+          return off_http_get_single((string)$retryUrl);
+        } catch (Throwable $retryError) {
+          if (!$proxyBlocked) {
+            break;
+          }
         }
       }
 
