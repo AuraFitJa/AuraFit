@@ -1161,6 +1161,9 @@ if ($pianoAttivoId > 0) {
                   </tbody>
                 </table>
               </div>
+              <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                <button type="button" class="btn" data-open-off-plan-modal data-meal-id="<?= (int)$meal['idPastoPiano'] ?>">Aggiungi da Open Food Facts</button>
+              </div>
 
               <form method="post" class="meal-notes-form">
                 <input type="hidden" name="action" value="save_meal_notes">
@@ -1324,6 +1327,36 @@ if ($pianoAttivoId > 0) {
   </div>
 </div>
 
+<div class="modal-layer" data-modal="off-plan">
+  <div class="modal-card">
+    <h3>Aggiungi da Open Food Facts</h3>
+    <input type="hidden" data-off-plan-meal-id value="">
+    <label class="muted-sm">Ricerca alimento</label>
+    <div style="display:flex;gap:8px">
+      <input class="dark-input" type="text" data-off-plan-query placeholder="Es. riso basmati">
+      <button class="btn" type="button" data-off-plan-search>Cerca</button>
+    </div>
+    <label class="muted-sm" style="margin-top:8px">Barcode</label>
+    <div style="display:flex;gap:8px">
+      <input class="dark-input" type="text" data-off-plan-barcode placeholder="EAN/UPC">
+      <button class="btn" type="button" data-off-plan-lookup>Lookup</button>
+    </div>
+    <div class="off-results" data-off-plan-results></div>
+    <div class="off-preview" data-off-plan-preview style="display:none">
+      <div class="two">
+        <label class="field"><span>Modalità</span>
+          <select class="dark-input" data-off-plan-mode><option value="grams">Grammi</option><option value="servings">Porzioni</option></select>
+        </label>
+        <label class="field"><span>Quantità</span><input class="dark-input" type="number" min="0.1" step="0.1" value="100" data-off-plan-amount></label>
+      </div>
+      <p class="muted-sm" data-off-plan-macros>Macro non calcolati.</p>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn primary" type="button" data-off-plan-save>Salva alimento nel pasto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
   .nutrition-shell { width: min(100%, 1120px); }
   .nutrition-folder-card, .nutrition-plan-card { transition: transform .15s ease, border-color .15s ease, background .15s ease; }
@@ -1360,6 +1393,10 @@ if ($pianoAttivoId > 0) {
   .meal-add-row td { padding-top:4px; }
   .meal-notes-form { display:grid; gap:8px; }
   .meal-actions-line { display:flex; justify-content:flex-end; }
+  .off-results{display:grid;gap:8px;margin-top:10px}
+  .off-card{display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid rgba(96,177,245,.34);border-radius:12px;background:rgba(21,40,72,.35)}
+  .off-card img{width:50px;height:50px;object-fit:cover;border-radius:10px;background:#0f1729}
+  .off-preview{margin-top:10px;padding:10px;border:1px solid rgba(96,177,245,.34);border-radius:12px;background:rgba(14,22,42,.65)}
   .nutrition-builder-side { display:grid; gap:12px; position:sticky; top:10px; }
   .nutrition-side-card { display:grid; gap:10px; }
   .side-macros { display:grid; gap:8px; }
@@ -1381,6 +1418,9 @@ renderEnd(<<<'SCRIPT'
 <script>
   (function () {
     const modals = document.querySelectorAll('[data-modal]');
+    const offPlanModal = document.querySelector('[data-modal="off-plan"]');
+    let offPlanProduct = null;
+    let offPlanDebounce = null;
     function openModal(name) {
       const modal = document.querySelector('[data-modal="' + name + '"]');
       if (modal) modal.classList.add('open');
@@ -1497,6 +1537,121 @@ renderEnd(<<<'SCRIPT'
     });
 
     document.querySelector('[data-open-assign-plan]')?.addEventListener('click', function () { openModal('assign-plan'); });
+    document.querySelectorAll('[data-open-off-plan-modal]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const mealIdInput = document.querySelector('[data-off-plan-meal-id]');
+        if (mealIdInput) mealIdInput.value = button.getAttribute('data-meal-id') || '';
+        openModal('off-plan');
+      });
+    });
+
+    async function offApi(form) {
+      const response = await fetch('../api/openfoodfacts.php', { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
+      const raw = await response.text();
+      let payload = null;
+      if (raw.trim() !== '') {
+        try {
+          payload = JSON.parse(raw);
+        } catch (e) {
+          throw new Error('Risposta API non valida: ' + raw.slice(0, 180));
+        }
+      }
+      if (!payload) {
+        throw new Error('Endpoint OFF vuoto (HTTP ' + response.status + ').');
+      }
+      if (!response.ok || !payload.ok) throw new Error(payload.message || 'Errore API');
+      return payload;
+    }
+
+    function renderOffPlanResults(products) {
+      const wrap = offPlanModal?.querySelector('[data-off-plan-results]');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      if (!products.length) {
+        wrap.innerHTML = '<p class="muted-sm">Nessun risultato trovato.</p>';
+        return;
+      }
+      products.forEach(function (p) {
+        const card = document.createElement('div');
+        card.className = 'off-card';
+        card.innerHTML = `<img src="${p.image_url || ''}" alt=""><div><strong>${p.name || 'Senza nome'}</strong><br><span class="muted-sm">${p.brand || 'Marca n/d'} · ${p.kcal_100g ?? 0} kcal/100g</span></div><button type="button" class="btn tiny">Seleziona</button>`;
+        card.querySelector('button')?.addEventListener('click', function () {
+          offPlanProduct = p;
+          offPlanModal.querySelector('[data-off-plan-preview]').style.display = '';
+          recalcOffPlanPreview();
+        });
+        wrap.appendChild(card);
+      });
+    }
+
+    async function recalcOffPlanPreview() {
+      if (!offPlanProduct || !offPlanModal) return;
+      const form = new FormData();
+      form.append('action', 'calculate');
+      form.append('barcode', offPlanProduct.barcode);
+      form.append('mode', offPlanModal.querySelector('[data-off-plan-mode]').value);
+      form.append('amount', offPlanModal.querySelector('[data-off-plan-amount]').value);
+      const payload = await offApi(form);
+      const m = payload.macros || {};
+      const box = offPlanModal.querySelector('[data-off-plan-macros]');
+      if (box) box.textContent = `Kcal ${m.calorie} · P ${m.proteine}g · C ${m.carboidrati}g · G ${m.grassi}g`;
+    }
+
+    offPlanModal?.querySelector('[data-off-plan-search]')?.addEventListener('click', async function () {
+      try {
+        const q = (offPlanModal.querySelector('[data-off-plan-query]')?.value || '').trim();
+        if (q.length < 2) return;
+        const form = new FormData();
+        form.append('action', 'search');
+        form.append('q', q);
+        const payload = await offApi(form);
+        renderOffPlanResults(payload.products || []);
+      } catch (error) {
+        showInlineAlert('error', error.message || 'Errore ricerca Open Food Facts.');
+      }
+    });
+
+    offPlanModal?.querySelector('[data-off-plan-query]')?.addEventListener('input', function () {
+      clearTimeout(offPlanDebounce);
+      offPlanDebounce = setTimeout(function () {
+        offPlanModal.querySelector('[data-off-plan-search]')?.click();
+      }, 500);
+    });
+
+    offPlanModal?.querySelector('[data-off-plan-lookup]')?.addEventListener('click', async function () {
+      try {
+        const barcode = (offPlanModal.querySelector('[data-off-plan-barcode]')?.value || '').trim();
+        if (!barcode) return;
+        const form = new FormData();
+        form.append('action', 'barcode_lookup');
+        form.append('barcode', barcode);
+        const payload = await offApi(form);
+        renderOffPlanResults(payload.product ? [payload.product] : []);
+      } catch (error) {
+        showInlineAlert('error', error.message || 'Errore lookup barcode OFF.');
+      }
+    });
+
+    offPlanModal?.querySelector('[data-off-plan-mode]')?.addEventListener('change', recalcOffPlanPreview);
+    offPlanModal?.querySelector('[data-off-plan-amount]')?.addEventListener('input', recalcOffPlanPreview);
+
+    offPlanModal?.querySelector('[data-off-plan-save]')?.addEventListener('click', async function () {
+      try {
+        if (!offPlanProduct) return;
+        const mealId = offPlanModal.querySelector('[data-off-plan-meal-id]')?.value || '';
+        if (!mealId) return;
+        const form = new FormData();
+        form.append('action', 'add_plan_food');
+        form.append('meal_id', mealId);
+        form.append('barcode', offPlanProduct.barcode);
+        form.append('mode', offPlanModal.querySelector('[data-off-plan-mode]').value);
+        form.append('amount', offPlanModal.querySelector('[data-off-plan-amount]').value);
+        await offApi(form);
+        window.location.reload();
+      } catch (error) {
+        showInlineAlert('error', error.message || 'Errore salvataggio alimento OFF.');
+      }
+    });
 
     const alertStrip = document.querySelector('.alert-strip');
     function showInlineAlert(type, message) {
