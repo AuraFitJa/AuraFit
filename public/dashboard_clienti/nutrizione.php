@@ -989,6 +989,89 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
 
   async function offApi(params){
     const res = await fetch('../api/openfoodfacts.php', { method:'POST', body: params, headers:{'Accept':'application/json'} });
+    const raw = await res.text();
+    let payload = null;
+    if(raw.trim() !== ''){
+      try { payload = JSON.parse(raw); } catch (e) {
+        throw new Error('Risposta API non valida: ' + raw.slice(0, 180));
+      }
+    }
+    if(!payload){
+      throw new Error('Endpoint OFF vuoto (HTTP ' + res.status + ').');
+    }
+    if(!res.ok || !payload.ok){ throw new Error(payload.message || 'Errore API'); }
+    return payload;
+  }
+
+  function renderResults(products){
+    offResults.innerHTML = '';
+    if(!products.length){ offResults.innerHTML = '<div class="off-meta">Nessun prodotto trovato.</div>'; return; }
+    products.forEach((p)=>{
+      const card = document.createElement('div');
+      card.className = 'off-product-card';
+      card.innerHTML = `<img src="${p.image_url || ''}" alt=""><div><div class="name">${p.name || 'Senza nome'}</div><div class="off-meta">${p.brand || 'Marca n/d'} · ${p.kcal_100g ?? 0} kcal/100g</div></div><button type="button" class="cta-btn secondary">Seleziona</button>`;
+      card.querySelector('button').addEventListener('click', ()=>{ selectedProduct = p; offPreview.style.display='block'; recalcPreview(); });
+      offResults.appendChild(card);
+    });
+  }
+
+  async function recalcPreview(){
+    if(!selectedProduct){ return; }
+    const form = new FormData();
+    form.append('action','calculate');
+    form.append('barcode', selectedProduct.barcode);
+    form.append('mode', offModal.querySelector('[data-off-mode]').value);
+    form.append('amount', offModal.querySelector('[data-off-amount]').value);
+    const payload = await offApi(form);
+    const m = payload.macros;
+    offMacros.textContent = `Kcal ${m.calorie} · P ${m.proteine}g · C ${m.carboidrati}g · G ${m.grassi}g · ${m.grammiTotali ?? '-'}g`;
+  }
+
+  offModal?.querySelector('[data-off-search-btn]')?.addEventListener('click', async ()=>{
+    try{
+      const q = offModal.querySelector('[data-off-query]').value.trim();
+      if(q.length < 2){ return; }
+      const form = new FormData(); form.append('action','search'); form.append('q', q);
+      const payload = await offApi(form);
+      renderResults(payload.products || []);
+    } catch(error){ alert(error.message || 'Errore ricerca OFF'); }
+  });
+
+  offModal?.querySelector('[data-off-query]')?.addEventListener('input', ()=>{
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(()=> offModal.querySelector('[data-off-search-btn]').click(), 500);
+  });
+
+  offModal?.querySelector('[data-off-barcode-btn]')?.addEventListener('click', async ()=>{
+    try{
+      const barcode = offModal.querySelector('[data-off-barcode]').value.trim();
+      if(!barcode){ return; }
+      const form = new FormData(); form.append('action','barcode_lookup'); form.append('barcode', barcode);
+      const payload = await offApi(form);
+      renderResults(payload.product ? [payload.product] : []);
+    } catch(error){ alert(error.message || 'Errore lookup barcode'); }
+  });
+
+  offModal?.querySelector('[data-off-mode]')?.addEventListener('change', recalcPreview);
+  offModal?.querySelector('[data-off-amount]')?.addEventListener('input', recalcPreview);
+
+  offModal?.querySelector('[data-off-save]')?.addEventListener('click', async ()=>{
+    try{
+      if(!selectedProduct){ return; }
+      const form = new FormData();
+      form.append('action','add_diary_food');
+      form.append('barcode', selectedProduct.barcode);
+      form.append('mode', offModal.querySelector('[data-off-mode]').value);
+      form.append('amount', offModal.querySelector('[data-off-amount]').value);
+      form.append('meal_type', offMeal.value);
+      form.append('entry_time', offModal.querySelector('[data-off-time]').value);
+      await offApi(form);
+      window.location.reload();
+    } catch(error){ alert(error.message || 'Errore salvataggio alimento'); }
+  });
+
+  async function offApi(params){
+    const res = await fetch('../api/openfoodfacts.php', { method:'POST', body: params, headers:{'Accept':'application/json'} });
     const payload = await res.json();
     if(!res.ok || !payload.ok){ throw new Error(payload.message || 'Errore API'); }
     return payload;

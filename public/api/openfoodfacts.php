@@ -68,7 +68,9 @@ function off_require_role(array $roles, string $target): void {
   off_json_error('Permessi insufficienti.', 403);
 }
 
-$roles = array_map(static fn($r) => strtolower((string)$r), (array)($user['roles'] ?? []));
+$roles = array_map(static function ($r) {
+  return strtolower((string)$r);
+}, (array)($user['roles'] ?? []));
 $action = trim((string)($_POST['action'] ?? ''));
 
 try {
