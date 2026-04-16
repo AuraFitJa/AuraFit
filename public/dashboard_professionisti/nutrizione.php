@@ -74,7 +74,7 @@ function getFlash(): ?array {
   return is_array($flash) ? $flash : null;
 }
 
-function sanitizeFloat(mixed $value): float {
+function sanitizeFloat($value): float {
   $normalized = str_replace(',', '.', trim((string)$value));
   if ($normalized === '' || !is_numeric($normalized)) {
     return 0.0;
@@ -91,14 +91,23 @@ function canonicalMealKey(string $name): string {
   $name = str_replace(['ù', 'ú', 'û', 'ü'], 'u', $name);
   $name = preg_replace('/\s+/', ' ', $name);
 
-  return match ($name) {
-    'colazione' => 'colazione',
-    'spuntino mattina', 'spuntino di mattina' => 'spuntino_mattina',
-    'pranzo' => 'pranzo',
-    'spuntino pomeriggio', 'spuntino del pomeriggio' => 'spuntino_pomeriggio',
-    'cena' => 'cena',
-    default => '',
-  };
+  if ($name === 'colazione') {
+    return 'colazione';
+  }
+  if ($name === 'spuntino mattina' || $name === 'spuntino di mattina') {
+    return 'spuntino_mattina';
+  }
+  if ($name === 'pranzo') {
+    return 'pranzo';
+  }
+  if ($name === 'spuntino pomeriggio' || $name === 'spuntino del pomeriggio') {
+    return 'spuntino_pomeriggio';
+  }
+  if ($name === 'cena') {
+    return 'cena';
+  }
+
+  return '';
 }
 
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
