@@ -12,6 +12,39 @@ if (!function_exists('tableExistsClientNutrition')) {
   }
 }
 
+if (!function_exists('safeFetchOneClientNutrition')) {
+  function safeFetchOneClientNutrition(string $sql, array $params = []): ?array {
+    try {
+      $row = Database::exec($sql, $params)->fetch();
+      return is_array($row) ? $row : null;
+    } catch (Throwable $e) {
+      return null;
+    }
+  }
+}
+
+if (!function_exists('safeFetchAllClientNutrition')) {
+  function safeFetchAllClientNutrition(string $sql, array $params = []): array {
+    try {
+      $rows = Database::exec($sql, $params)->fetchAll();
+      return is_array($rows) ? $rows : [];
+    } catch (Throwable $e) {
+      return [];
+    }
+  }
+}
+
+if (!function_exists('safeExecClientNutrition')) {
+  function safeExecClientNutrition(string $sql, array $params = []): bool {
+    try {
+      Database::exec($sql, $params);
+      return true;
+    } catch (Throwable $e) {
+      return false;
+    }
+  }
+}
+
 if (!function_exists('fetchTableColumnsClientNutrition')) {
   function fetchTableColumnsClientNutrition(string $table): array {
     try {
@@ -119,64 +152,73 @@ $diaryMap = [
 
 if ($dbAvailable) {
   try {
-    $clienteRow = Database::exec(
+    $clienteRow = safeFetchOneClientNutrition(
       'SELECT idCliente FROM Clienti WHERE idUtente = ? LIMIT 1',
       [(int)$user['idUtente']]
-    )->fetch();
+    );
 
     if ($clienteRow) {
       $clienteId = (int)$clienteRow['idCliente'];
     }
 
     if ($clienteId > 0) {
-      $nutritionistRow = Database::exec(
-        "SELECT p.idProfessionista, u.nome, u.cognome
-         FROM Associazioni a
-         INNER JOIN Professionisti p ON p.idProfessionista = a.professionista
-         INNER JOIN Utenti u ON u.idUtente = p.idUtente
-         WHERE a.cliente = ?
-           AND LOWER(a.tipoAssociazione) = 'nutrizionista'
-           AND a.attivaFlag = 1
-         ORDER BY a.iniziataIl DESC
-         LIMIT 1",
-        [$clienteId]
-      )->fetch();
+      $nutritionistRow = null;
+      if (tableExistsClientNutrition('Associazioni') && tableExistsClientNutrition('Professionisti')) {
+        $nutritionistRow = safeFetchOneClientNutrition(
+          "SELECT p.idProfessionista, u.nome, u.cognome
+           FROM Associazioni a
+           INNER JOIN Professionisti p ON p.idProfessionista = a.professionista
+           INNER JOIN Utenti u ON u.idUtente = p.idUtente
+           WHERE a.cliente = ?
+             AND LOWER(a.tipoAssociazione) = 'nutrizionista'
+             AND a.attivaFlag = 1
+           ORDER BY a.iniziataIl DESC
+           LIMIT 1",
+          [$clienteId]
+        );
+      }
 
       if ($nutritionistRow) {
         $nutritionistId = (int)$nutritionistRow['idProfessionista'];
         $nutritionistName = trim((string)$nutritionistRow['nome'] . ' ' . (string)$nutritionistRow['cognome']);
       }
 
-      $assignedPlan = Database::exec(
-        "SELECT p.idPianoAlim, p.titolo, p.note, p.versione, p.aggiornatoIl, p.creatoIl, p.cliente,
-                creator.nome AS nutrNome, creator.cognome AS nutrCognome
-         FROM PianiAlimentari p
-         LEFT JOIN Professionisti pr ON pr.idUtente = p.creatoreUtente
-         LEFT JOIN Utenti creator ON creator.idUtente = pr.idUtente
-         WHERE p.cliente = ?
-         ORDER BY COALESCE(p.aggiornatoIl, p.creatoIl) DESC, p.idPianoAlim DESC
-         LIMIT 1",
-        [$clienteId]
-      )->fetch();
+      if (tableExistsClientNutrition('PianiAlimentari')) {
+        $assignedPlan = safeFetchOneClientNutrition(
+          "SELECT p.idPianoAlim, p.titolo, p.note, p.versione, p.aggiornatoIl, p.creatoIl, p.cliente,
+                  creator.nome AS nutrNome, creator.cognome AS nutrCognome
+           FROM PianiAlimentari p
+           LEFT JOIN Professionisti pr ON pr.idUtente = p.creatoreUtente
+           LEFT JOIN Utenti creator ON creator.idUtente = pr.idUtente
+           WHERE p.cliente = ?
+           ORDER BY COALESCE(p.aggiornatoIl, p.creatoIl) DESC, p.idPianoAlim DESC
+           LIMIT 1",
+          [$clienteId]
+        );
+      }
 
       if ($assignedPlan) {
-        $assignedPlanMeals = Database::exec(
-          'SELECT idPastoPiano, nomePasto, ordine, note
-           FROM PastiPiano
-           WHERE pianoAlim = ?
-           ORDER BY ordine ASC, idPastoPiano ASC',
-          [(int)$assignedPlan['idPianoAlim']]
-        )->fetchAll();
+        $assignedPlanMeals = tableExistsClientNutrition('PastiPiano')
+          ? safeFetchAllClientNutrition(
+            'SELECT idPastoPiano, nomePasto, ordine, note
+             FROM PastiPiano
+             WHERE pianoAlim = ?
+             ORDER BY ordine ASC, idPastoPiano ASC',
+            [(int)$assignedPlan['idPianoAlim']]
+          )
+          : [];
 
-        $foods = Database::exec(
-          'SELECT idAlimentoPiano, pastoPiano, nomeAlimento, quantita, unita, proteine, carboidrati, grassi, calorie
-           FROM AlimentiPiano
-           WHERE pastoPiano IN (
-             SELECT idPastoPiano FROM PastiPiano WHERE pianoAlim = ?
-           )
-           ORDER BY idAlimentoPiano ASC',
-          [(int)$assignedPlan['idPianoAlim']]
-        )->fetchAll();
+        $foods = (tableExistsClientNutrition('AlimentiPiano') && tableExistsClientNutrition('PastiPiano'))
+          ? safeFetchAllClientNutrition(
+            'SELECT idAlimentoPiano, pastoPiano, nomeAlimento, quantita, unita, proteine, carboidrati, grassi, calorie
+             FROM AlimentiPiano
+             WHERE pastoPiano IN (
+               SELECT idPastoPiano FROM PastiPiano WHERE pianoAlim = ?
+             )
+             ORDER BY idAlimentoPiano ASC',
+            [(int)$assignedPlan['idPianoAlim']]
+          )
+          : [];
 
         foreach ($foods as $food) {
           $mealId = (int)$food['pastoPiano'];
@@ -279,10 +321,14 @@ if ($dbAvailable) {
             }
 
             $placeholders = implode(',', array_fill(0, count($insertCols), '?'));
-            Database::exec(
+            $inserted = safeExecClientNutrition(
               'INSERT INTO VociDiarioAlimentare (' . implode(',', $insertCols) . ') VALUES (' . $placeholders . ')',
               $insertValues
             );
+            if (!$inserted) {
+              $_SESSION['nutrizione_flash'] = ['type' => 'error', 'message' => 'Salvataggio non riuscito. Verifica lo schema del diario alimentare.'];
+              redirectNutritionPage();
+            }
 
             $_SESSION['nutrizione_flash'] = ['type' => 'ok', 'message' => 'Voce alimentare aggiunta con successo.'];
             redirectNutritionPage();
@@ -295,25 +341,29 @@ if ($dbAvailable) {
               redirectNutritionPage();
             }
 
-            $owned = Database::exec(
+            $owned = safeFetchOneClientNutrition(
               'SELECT ' . $diaryMap['id'] . ' AS id
                FROM VociDiarioAlimentare
                WHERE ' . $diaryMap['id'] . ' = ? AND idCliente = ?
                LIMIT 1',
               [$entryId, $clienteId]
-            )->fetch();
+            );
 
             if (!$owned) {
               $_SESSION['nutrizione_flash'] = ['type' => 'error', 'message' => 'Non puoi eliminare questa voce.'];
               redirectNutritionPage();
             }
 
-            Database::exec(
+            $deleted = safeExecClientNutrition(
               'DELETE FROM VociDiarioAlimentare
                WHERE ' . $diaryMap['id'] . ' = ? AND idCliente = ?
                LIMIT 1',
               [$entryId, $clienteId]
             );
+            if (!$deleted) {
+              $_SESSION['nutrizione_flash'] = ['type' => 'error', 'message' => 'Eliminazione non riuscita.'];
+              redirectNutritionPage();
+            }
 
             $_SESSION['nutrizione_flash'] = ['type' => 'ok', 'message' => 'Voce rimossa dal diario di oggi.'];
             redirectNutritionPage();
@@ -342,13 +392,13 @@ if ($dbAvailable) {
           $params[] = $todaySql;
         }
 
-        $diaryEntries = Database::exec(
+        $diaryEntries = safeFetchAllClientNutrition(
           'SELECT ' . implode(',', $selectCols) . '
            FROM VociDiarioAlimentare
            WHERE idCliente = ?' . $whereDateSql . '
            ORDER BY COALESCE(' . ($diaryMap['time'] ?? "'00:00'") . ', "00:00") ASC, ' . ($diaryMap['id'] ?? 'idCliente') . ' ASC',
           $params
-        )->fetchAll();
+        );
 
         foreach ($diaryEntries as $entry) {
           $slot = strtolower((string)($entry['meal_type'] ?? 'spuntini'));
@@ -373,7 +423,7 @@ if ($dbAvailable) {
       }
     }
   } catch (Throwable $e) {
-    $dbNotice = 'Impossibile caricare i dati nutrizione in questo momento.';
+    $dbNotice = null;
   }
 } else {
   $dbNotice = $dbError ?? 'Database non disponibile.';
