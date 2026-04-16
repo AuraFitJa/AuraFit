@@ -30,7 +30,9 @@ renderStart('Questionari','questionari',$email);
 <td><?= (int)$a['numeroCompilazioni'] ?></td>
 <td>
 <?php if(!empty($a['bozzaId'])): ?><a class="btn" href="questionario_compila.php?idAssegnazione=<?= (int)$a['idAssegnazioneQuestionario'] ?>">Continua bozza</a>
-<?php elseif(!empty($a['ultimaInviata'])): ?><button class="btn" data-ricompila="<?= (int)$a['idAssegnazioneQuestionario'] ?>">Ricompila</button>
+<?php elseif(!empty($a['ultimaInviata'])): ?>
+  <a class="btn" href="questionario_compila.php?idAssegnazione=<?= (int)$a['idAssegnazioneQuestionario'] ?>&view=1&idCompilazione=<?= (int)$a['ultimaInviata'] ?>">Visualizza risposte</a>
+  <button class="btn" data-ricompila="<?= (int)$a['idAssegnazioneQuestionario'] ?>">Ricompila</button>
 <?php else: ?><a class="btn primary" href="questionario_compila.php?idAssegnazione=<?= (int)$a['idAssegnazioneQuestionario'] ?>">Compila</a><?php endif; ?>
 </td>
 </tr>
