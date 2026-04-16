@@ -3,8 +3,35 @@
 declare(strict_types=1);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
+ob_start();
+
+register_shutdown_function(static function (): void {
+  $error = error_get_last();
+  if (!$error || !in_array((int)$error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+    return;
+  }
+  if (headers_sent()) {
+    return;
+  }
+  http_response_code(500);
+  while (ob_get_level() > 0) {
+    ob_end_clean();
+  }
+  echo json_encode(['ok' => false, 'message' => 'Errore interno API Open Food Facts. Controlla i log PHP.'], JSON_UNESCAPED_UNICODE);
+});
+
+if (!file_exists(__DIR__ . '/../../config/database.php')) {
+  http_response_code(500);
+  echo json_encode(['ok' => false, 'message' => 'Config database.php mancante sul server.'], JSON_UNESCAPED_UNICODE);
+  exit;
+}
 
 require_once __DIR__ . '/../../config/database.php';
+if (!class_exists('Database')) {
+  http_response_code(500);
+  echo json_encode(['ok' => false, 'message' => 'Classe Database non disponibile.'], JSON_UNESCAPED_UNICODE);
+  exit;
+}
 require_once __DIR__ . '/../lib/open_food_facts.php';
 
 $user = $_SESSION['user'] ?? null;

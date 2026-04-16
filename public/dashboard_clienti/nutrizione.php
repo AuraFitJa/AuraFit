@@ -936,11 +936,13 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
   }
 
   offModal?.querySelector('[data-off-search-btn]')?.addEventListener('click', async ()=>{
-    const q = offModal.querySelector('[data-off-query]').value.trim();
-    if(q.length < 2){ return; }
-    const form = new FormData(); form.append('action','search'); form.append('q', q);
-    const payload = await offApi(form);
-    renderResults(payload.products || []);
+    try{
+      const q = offModal.querySelector('[data-off-query]').value.trim();
+      if(q.length < 2){ return; }
+      const form = new FormData(); form.append('action','search'); form.append('q', q);
+      const payload = await offApi(form);
+      renderResults(payload.products || []);
+    } catch(error){ alert(error.message || 'Errore ricerca OFF'); }
   });
 
   offModal?.querySelector('[data-off-query]')?.addEventListener('input', ()=>{
@@ -949,27 +951,31 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
   });
 
   offModal?.querySelector('[data-off-barcode-btn]')?.addEventListener('click', async ()=>{
-    const barcode = offModal.querySelector('[data-off-barcode]').value.trim();
-    if(!barcode){ return; }
-    const form = new FormData(); form.append('action','barcode_lookup'); form.append('barcode', barcode);
-    const payload = await offApi(form);
-    renderResults(payload.product ? [payload.product] : []);
+    try{
+      const barcode = offModal.querySelector('[data-off-barcode]').value.trim();
+      if(!barcode){ return; }
+      const form = new FormData(); form.append('action','barcode_lookup'); form.append('barcode', barcode);
+      const payload = await offApi(form);
+      renderResults(payload.product ? [payload.product] : []);
+    } catch(error){ alert(error.message || 'Errore lookup barcode'); }
   });
 
   offModal?.querySelector('[data-off-mode]')?.addEventListener('change', recalcPreview);
   offModal?.querySelector('[data-off-amount]')?.addEventListener('input', recalcPreview);
 
   offModal?.querySelector('[data-off-save]')?.addEventListener('click', async ()=>{
-    if(!selectedProduct){ return; }
-    const form = new FormData();
-    form.append('action','add_diary_food');
-    form.append('barcode', selectedProduct.barcode);
-    form.append('mode', offModal.querySelector('[data-off-mode]').value);
-    form.append('amount', offModal.querySelector('[data-off-amount]').value);
-    form.append('meal_type', offMeal.value);
-    form.append('entry_time', offModal.querySelector('[data-off-time]').value);
-    await offApi(form);
-    window.location.reload();
+    try{
+      if(!selectedProduct){ return; }
+      const form = new FormData();
+      form.append('action','add_diary_food');
+      form.append('barcode', selectedProduct.barcode);
+      form.append('mode', offModal.querySelector('[data-off-mode]').value);
+      form.append('amount', offModal.querySelector('[data-off-amount]').value);
+      form.append('meal_type', offMeal.value);
+      form.append('entry_time', offModal.querySelector('[data-off-time]').value);
+      await offApi(form);
+      window.location.reload();
+    } catch(error){ alert(error.message || 'Errore salvataggio alimento'); }
   });
 })();
 </script>

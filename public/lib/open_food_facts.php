@@ -63,23 +63,52 @@ if (!function_exists('off_normalize_query')) {
 }
 
 if (!function_exists('off_http_get')) {
-  function off_http_get(string $url): array {
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-      CURLOPT_RETURNTRANSFER => true,
-      CURLOPT_TIMEOUT => 12,
-      CURLOPT_CONNECTTIMEOUT => 6,
-      CURLOPT_FOLLOWLOCATION => true,
-      CURLOPT_HTTPHEADER => [
-        'Accept: application/json',
-        'User-Agent: AuraFit/1.0 (+https://aurafit.local; contact: support@aurafit.local)',
-      ],
-    ]);
+  function off_user_agent(): string {
+    $email = trim((string)(getenv('OFF_CONTACT_EMAIL') ?: ''));
+    if ($email === '' && defined('OPENFOODFACTS_CONTACT_EMAIL')) {
+      $email = trim((string)OPENFOODFACTS_CONTACT_EMAIL);
+    }
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $email = 'aurafit.team@gmail.com';
+    }
+    return 'AuraFit/1.1 (OpenFoodFacts integration; contact: ' . $email . ')';
+  }
 
-    $body = curl_exec($ch);
-    $err = curl_error($ch);
-    $status = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    curl_close($ch);
+  function off_http_get(string $url): array {
+    $body = false;
+    $err = '';
+    $status = 0;
+
+    if (function_exists('curl_init')) {
+      $ch = curl_init($url);
+      curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 12,
+        CURLOPT_CONNECTTIMEOUT => 6,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTPHEADER => [
+          'Accept: application/json',
+          'User-Agent: ' . off_user_agent(),
+        ],
+      ]);
+
+      $body = curl_exec($ch);
+      $err = curl_error($ch);
+      $status = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+      curl_close($ch);
+    }
+
+    if ($body === false && ini_get('allow_url_fopen')) {
+      $ctx = stream_context_create([
+        'http' => [
+          'method' => 'GET',
+          'timeout' => 12,
+          'header' => "Accept: application/json\r\nUser-Agent: " . off_user_agent() . "\r\n",
+        ],
+      ]);
+      $body = @file_get_contents($url, false, $ctx);
+      $status = 200;
+    }
 
     if ($body === false || $status >= 400) {
       throw new RuntimeException('Errore Open Food Facts: ' . ($err ?: ('HTTP ' . $status)));
