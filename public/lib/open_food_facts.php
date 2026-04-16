@@ -74,7 +74,7 @@ if (!function_exists('off_http_get')) {
     return 'AuraFit/1.1 (OpenFoodFacts integration; contact: ' . $email . ')';
   }
 
-  function off_http_get(string $url): array {
+  function off_http_get_single(string $url): array {
     $body = false;
     $err = '';
     $status = 0;
@@ -107,7 +107,12 @@ if (!function_exists('off_http_get')) {
         ],
       ]);
       $body = @file_get_contents($url, false, $ctx);
-      $status = 200;
+      $status = 0;
+      if (isset($http_response_header) && is_array($http_response_header) && isset($http_response_header[0])) {
+        if (preg_match('/\\s(\\d{3})\\s/', (string)$http_response_header[0], $m)) {
+          $status = (int)$m[1];
+        }
+      }
     }
 
     if ($body === false || $status >= 400) {
@@ -120,6 +125,28 @@ if (!function_exists('off_http_get')) {
     }
 
     return $json;
+  }
+
+  function off_http_get(string $url): array {
+    try {
+      return off_http_get_single($url);
+    } catch (Throwable $e) {
+      $isHttps = strpos($url, 'https://') === 0;
+      $canRetryHttp = strpos($url, 'https://world.openfoodfacts.org/') === 0
+        || strpos($url, 'https://it.openfoodfacts.org/') === 0;
+      $message = (string)$e->getMessage();
+      $proxyBlocked = stripos($message, 'CONNECT tunnel failed') !== false
+        || stripos($message, 'HTTP 403') !== false;
+
+      if ($isHttps && $canRetryHttp && $proxyBlocked) {
+        $httpUrl = preg_replace('/^https:\\/\\//', 'http://', $url);
+        if (is_string($httpUrl) && $httpUrl !== '') {
+          return off_http_get_single($httpUrl);
+        }
+      }
+
+      throw $e;
+    }
   }
 }
 

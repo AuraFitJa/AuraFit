@@ -1419,6 +1419,7 @@ renderEnd(<<<'SCRIPT'
   (function () {
     const modals = document.querySelectorAll('[data-modal]');
     const offPlanModal = document.querySelector('[data-modal="off-plan"]');
+    const OFF_API_URL = '/public/api/openfoodfacts.php';
     let offPlanProduct = null;
     let offPlanDebounce = null;
     function openModal(name) {
@@ -1546,7 +1547,7 @@ renderEnd(<<<'SCRIPT'
     });
 
     async function offApi(form) {
-      const response = await fetch('../api/openfoodfacts.php', { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
+      const response = await fetch(OFF_API_URL, { method: 'POST', body: form, headers: { 'Accept': 'application/json' } });
       const raw = await response.text();
       let payload = null;
       if (raw.trim() !== '') {
