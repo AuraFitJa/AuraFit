@@ -1420,6 +1420,8 @@ renderEnd(<<<'SCRIPT'
     const modals = document.querySelectorAll('[data-modal]');
     const offPlanModal = document.querySelector('[data-modal="off-plan"]');
     const OFF_API_URL = '/public/api/openfoodfacts.php';
+    const OFF_SEARCH_COOLDOWN_MS = 7000;
+    let offSearchCooldownUntil = 0;
     let offPlanProduct = null;
     function openModal(name) {
       const modal = document.querySelector('[data-modal="' + name + '"]');
@@ -1598,9 +1600,21 @@ renderEnd(<<<'SCRIPT'
     }
 
     offPlanModal?.querySelector('[data-off-plan-search]')?.addEventListener('click', async function () {
+      const searchBtn = offPlanModal.querySelector('[data-off-plan-search]');
       try {
+        const now = Date.now();
+        if (now < offSearchCooldownUntil) return;
         const q = (offPlanModal.querySelector('[data-off-plan-query]')?.value || '').trim();
         if (q.length < 2) return;
+        offSearchCooldownUntil = now + OFF_SEARCH_COOLDOWN_MS;
+        if (searchBtn) {
+          searchBtn.disabled = true;
+          searchBtn.textContent = 'Attendi 7s';
+          setTimeout(function () {
+            searchBtn.disabled = false;
+            searchBtn.textContent = 'Cerca';
+          }, OFF_SEARCH_COOLDOWN_MS);
+        }
         const form = new FormData();
         form.append('action', 'search');
         form.append('q', q);
