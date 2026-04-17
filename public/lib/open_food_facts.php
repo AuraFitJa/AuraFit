@@ -69,7 +69,7 @@ if (!function_exists('off_http_get')) {
       $email = trim((string)OPENFOODFACTS_CONTACT_EMAIL);
     }
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-      $email = 'support@aurafit.app';
+      $email = 'aurafit.team@gmail.com';
     }
     return 'AuraFit/1.1 (OpenFoodFacts integration; contact: ' . $email . ')';
   }
