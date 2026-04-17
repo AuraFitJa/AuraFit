@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/lib/security.php';
+aurafit_start_secure_session();
 require_once __DIR__ . '/../config/database.php';
 
 $tipoFromGet = $_GET['tipo'] ?? null;
@@ -26,7 +27,12 @@ function find_role_id($roleName) {
     return $row ? (int)$row['idRuolo'] : null;
 }
 
+$csrfToken = aurafit_get_csrf_token();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
+        $errors[] = "Sessione non valida. Ricarica la pagina e riprova.";
+    }
 
     // Campi base
     $nome    = trim($_POST['nome'] ?? '');
@@ -193,7 +199,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
         } catch (Throwable $e) {
-            $errors[] = "Errore: " . $e->getMessage();
+            aurafit_log_exception('register', $e);
+            $errors[] = "Si è verificato un errore temporaneo. Riprova.";
         }
     }
 }
@@ -401,6 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="post" action="">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
       <div class="row">
         <div>
           <label for="nome">Nome</label>

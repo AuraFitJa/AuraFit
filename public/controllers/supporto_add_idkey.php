@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../lib/security.php';
+aurafit_start_secure_session();
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../config/database.php';
@@ -17,6 +18,12 @@ if (!$user && isset($_SESSION['idUtente'])) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'message' => 'Metodo non consentito.']);
+    exit;
+}
+
+if (!aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'message' => 'Richiesta non valida (CSRF).']);
     exit;
 }
 

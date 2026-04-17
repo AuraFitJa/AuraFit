@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/lib/security.php';
+aurafit_start_secure_session();
 require_once __DIR__ . '/../config/database.php';
 
 $errors = [];
@@ -42,7 +43,12 @@ function decide_redirect(array $roles): string {
   return '/index.html';
 }
 
+$csrfToken = aurafit_get_csrf_token();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (!aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
+    $errors[] = "Sessione non valida. Ricarica la pagina e riprova.";
+  }
   $email = (string)($_POST['email'] ?? '');
   $password = (string)($_POST['password'] ?? '');
 
@@ -155,7 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       }
     } catch (Throwable $e) {
-      $errors[] = "Errore: " . $e->getMessage();
+      aurafit_log_exception('login', $e);
+      $errors[] = "Si è verificato un errore temporaneo. Riprova.";
     }
   }
 }
@@ -338,6 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="post" action="">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
       <label for="email">Email</label>
       <input id="email" type="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
 
