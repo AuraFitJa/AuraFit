@@ -45,6 +45,7 @@ renderStart('Supporto cliente', 'supporto', $email);
     <?php endforeach; ?>
 
     <form id="idkeyForm" class="toolbar" style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">
+      <input type="hidden" name="csrf_token" value="<?= h($csrfToken) ?>">
       <div class="field" style="width:100%">
         <label for="idkeyInput">Inserisci ID-Key</label>
         <input id="idkeyInput" name="codice" type="text" required placeholder="Es. AF-PT-ABC123" style="width:100%" />
@@ -124,12 +125,14 @@ $scripts = <<<'HTML'
     try {
       const formData = new FormData();
       formData.append('codice', codice);
+      formData.append('csrf_token', String(form.elements.csrf_token?.value || ''));
 
       const response = await fetch('../controllers/supporto_add_idkey.php', {
         method: 'POST',
         body: formData,
         headers: {
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': String(form.elements.csrf_token?.value || '')
         }
       });
 
