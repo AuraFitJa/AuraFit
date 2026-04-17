@@ -1328,20 +1328,46 @@ if ($pianoAttivoId > 0) {
 </div>
 
 <div class="modal-layer" data-modal="off-plan">
-  <div class="modal-card">
-    <h3>Aggiungi da Open Food Facts</h3>
+  <div class="modal-card off-plan-modal-card">
+    <div class="off-plan-head">
+      <div>
+        <span class="off-pill">Open Food Facts</span>
+        <h3>Aggiungi alimento al pasto</h3>
+        <p class="off-plan-subtitle">Cerca un prodotto per nome o barcode, confronta brand, kcal per 100 g e porzione.</p>
+      </div>
+      <div class="off-plan-head-actions">
+        <div class="off-results-counter">
+          <span>Risultati</span>
+          <strong data-off-plan-count>0 prodotti</strong>
+        </div>
+        <button class="btn" type="button" data-close-modal>Chiudi</button>
+      </div>
+    </div>
     <input type="hidden" data-off-plan-meal-id value="">
-    <label class="muted-sm">Ricerca alimento</label>
-    <div style="display:flex;gap:8px">
-      <input class="dark-input" type="text" data-off-plan-query placeholder="Es. riso basmati">
-      <button class="btn" type="button" data-off-plan-search>Cerca</button>
+    <div class="off-search-grid">
+      <label class="off-search-field"><span>Ricerca alimento</span>
+        <div>
+          <input class="dark-input" type="text" data-off-plan-query placeholder="Es. riso basmati">
+          <button class="btn" type="button" data-off-plan-search>Cerca</button>
+        </div>
+      </label>
+      <label class="off-search-field"><span>Barcode</span>
+        <div>
+          <input class="dark-input" type="text" data-off-plan-barcode placeholder="EAN / UPC / GTIN">
+          <button class="btn" type="button" data-off-plan-lookup>Lookup</button>
+        </div>
+      </label>
     </div>
-    <label class="muted-sm" style="margin-top:8px">Barcode</label>
-    <div style="display:flex;gap:8px">
-      <input class="dark-input" type="text" data-off-plan-barcode placeholder="EAN/UPC">
-      <button class="btn" type="button" data-off-plan-lookup>Lookup</button>
+    <div class="off-results-shell">
+      <div class="off-results-header">
+        <span>Immagine</span>
+        <span>Prodotto</span>
+        <span>Kcal</span>
+        <span>Porzione</span>
+        <span>Azione</span>
+      </div>
+      <div class="off-results" data-off-plan-results></div>
     </div>
-    <div class="off-results" data-off-plan-results></div>
     <div class="off-preview" data-off-plan-preview style="display:none">
       <div class="two">
         <label class="field"><span>Modalità</span>
@@ -1393,10 +1419,49 @@ if ($pianoAttivoId > 0) {
   .meal-add-row td { padding-top:4px; }
   .meal-notes-form { display:grid; gap:8px; }
   .meal-actions-line { display:flex; justify-content:flex-end; }
-  .off-results{display:grid;gap:8px;margin-top:10px}
-  .off-card{display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid rgba(96,177,245,.34);border-radius:12px;background:rgba(21,40,72,.35)}
-  .off-card img{width:50px;height:50px;object-fit:cover;border-radius:10px;background:#0f1729}
-  .off-preview{margin-top:10px;padding:10px;border:1px solid rgba(96,177,245,.34);border-radius:12px;background:rgba(14,22,42,.65)}
+  body.modal-open { overflow:hidden; }
+  .modal-layer[data-modal="off-plan"] { align-items:center; justify-content:center; padding:clamp(14px, 3vh, 28px); overflow:hidden; }
+  .modal-layer[data-modal="off-plan"] .modal-card.off-plan-modal-card { width:min(96vw, 1280px); max-width:1280px; max-height:calc(100vh - clamp(28px, 6vh, 56px)); overflow:auto; overscroll-behavior:contain; padding:24px; border-radius:24px; border:1px solid rgba(121, 162, 238, .35); background:linear-gradient(155deg, rgba(8,16,38,.96), rgba(17,28,56,.94)); box-shadow:0 24px 64px rgba(0,0,0,.5); display:grid; gap:16px; }
+  .off-plan-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; border-bottom:1px solid rgba(123,157,221,.22); padding-bottom:14px; }
+  .off-pill { display:inline-flex; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.12em; font-size:.62rem; font-weight:700; color:#79efff; border:1px solid rgba(91,239,255,.35); background:rgba(10,117,153,.25); margin-bottom:8px; }
+  .off-plan-head h3 { margin:0; font-size:1.8rem; }
+  .off-plan-subtitle { margin:8px 0 0; max-width:760px; color:#aac0e8; font-size:.9rem; line-height:1.45; }
+  .off-plan-head-actions { display:flex; gap:10px; align-items:flex-start; }
+  .off-results-counter { min-width:118px; border:1px solid rgba(126,161,228,.35); background:rgba(25,39,74,.52); border-radius:12px; padding:8px 12px; display:grid; gap:3px; }
+  .off-results-counter span { text-transform:uppercase; letter-spacing:.12em; font-size:.62rem; color:#95abd3; }
+  .off-results-counter strong { font-size:.95rem; color:#ecf4ff; }
+  .off-search-grid { display:grid; gap:12px; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .off-search-field { display:grid; gap:6px; }
+  .off-search-field > span { text-transform:uppercase; font-size:.66rem; letter-spacing:.14em; color:#95abd3; font-weight:700; }
+  .off-search-field > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+  .off-results-shell { margin-top:2px; border:1px solid rgba(110,148,216,.28); border-radius:18px; background:linear-gradient(180deg, rgba(25,36,67,.55), rgba(20,30,55,.45)); padding:12px; }
+  .off-results-header { display:grid; grid-template-columns:72px minmax(0,1.2fr) 170px 170px 132px; gap:10px; color:#8fa7d0; font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; font-weight:700; padding:0 10px 8px; }
+  .off-results{display:grid;gap:10px}
+  .off-card{display:grid;grid-template-columns:72px minmax(0,1.2fr) 170px 170px 132px;gap:10px;align-items:center;padding:10px;border:1px solid rgba(104,139,203,.38);border-radius:16px;background:linear-gradient(100deg, rgba(27,40,73,.62), rgba(23,33,61,.6));transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+  .off-card:hover{transform:translateY(-1px);border-color:rgba(144,189,255,.62);box-shadow:0 8px 20px rgba(0,0,0,.22)}
+  .off-card.best-match{border-color:rgba(56,225,255,.58);box-shadow:0 12px 24px rgba(16,117,140,.25)}
+  .off-thumb{width:72px;height:72px;object-fit:cover;border-radius:14px;background:#0f1729;border:1px solid rgba(126,166,236,.35)}
+  .off-name{font-size:1rem;font-weight:700;color:#f2f7ff;line-height:1.25}
+  .off-brand{display:block;margin-top:4px;color:#9eb4da;font-size:.84rem}
+  .off-product-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .off-product-tags span,.off-best-match{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:.62rem;font-weight:700;letter-spacing:.06em}
+  .off-product-tags span{border:1px solid rgba(123,159,227,.4);color:#c5dcff;background:rgba(24,38,72,.7)}
+  .off-best-match{margin-left:8px;border:1px solid rgba(74,234,255,.4);color:#94f7ff;background:rgba(18,123,146,.24);text-transform:uppercase}
+  .off-stat{padding:10px 12px;border:1px solid rgba(108,145,212,.34);border-radius:12px;background:rgba(10,20,42,.58)}
+  .off-stat .label{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#88a2cc;font-weight:700}
+  .off-stat .value{display:block;font-size:1.35rem;line-height:1.15;font-weight:700;color:#f2f7ff;margin-top:4px}
+  .off-stat .meta{font-size:.75rem;color:#a4bbdf}
+  .off-actions{display:grid;gap:6px}
+  .off-select-btn{border:none;background:linear-gradient(90deg,#6e6dff,#26d7ff);color:#041229;font-weight:700;border-radius:12px;padding:10px 12px;cursor:pointer}
+  .off-detail-btn{border:1px solid rgba(117,150,216,.45);background:rgba(24,38,72,.45);color:#d6e6ff;font-weight:600;border-radius:12px;padding:8px 12px;cursor:pointer}
+  .off-preview{margin-top:2px;padding:12px;border:1px solid rgba(96,177,245,.34);border-radius:12px;background:rgba(14,22,42,.65)}
+  @media (max-width: 1024px) {
+    .off-search-grid { grid-template-columns:1fr; }
+    .off-results-header { display:none; }
+    .off-card{grid-template-columns:72px minmax(0,1fr);gap:10px}
+    .off-card > .off-stat, .off-card > .off-actions{grid-column:2}
+    .off-card > .off-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
   .nutrition-builder-side { display:grid; gap:12px; position:sticky; top:10px; }
   .nutrition-side-card { display:grid; gap:10px; }
   .side-macros { display:grid; gap:8px; }
@@ -1426,9 +1491,21 @@ renderEnd(<<<'SCRIPT'
     function openModal(name) {
       const modal = document.querySelector('[data-modal="' + name + '"]');
       if (modal) modal.classList.add('open');
+      updatePageScrollLock();
     }
     function closeAllModals() {
       modals.forEach(function (m) { m.classList.remove('open'); });
+      updatePageScrollLock();
+    }
+    function updatePageScrollLock() {
+      const hasOpenModal = Array.from(modals).some(function (m) { return m.classList.contains('open'); });
+      document.body.classList.toggle('modal-open', hasOpenModal);
+    }
+    function centerOffPlanModal() {
+      if (!offPlanModal || !offPlanModal.classList.contains('open')) return;
+      const offCard = offPlanModal.querySelector('.off-plan-modal-card');
+      if (offCard) offCard.scrollTop = 0;
+      offPlanModal.scrollTop = 0;
     }
 
     document.querySelectorAll('[data-close-modal]').forEach(function (button) {
@@ -1543,7 +1620,15 @@ renderEnd(<<<'SCRIPT'
       button.addEventListener('click', function () {
         const mealIdInput = document.querySelector('[data-off-plan-meal-id]');
         if (mealIdInput) mealIdInput.value = button.getAttribute('data-meal-id') || '';
+        const resultsWrap = offPlanModal?.querySelector('[data-off-plan-results]');
+        const countBox = offPlanModal?.querySelector('[data-off-plan-count]');
+        const preview = offPlanModal?.querySelector('[data-off-plan-preview]');
+        if (resultsWrap) resultsWrap.innerHTML = '';
+        if (countBox) countBox.textContent = '0 prodotti';
+        if (preview) preview.style.display = 'none';
+        offPlanProduct = null;
         openModal('off-plan');
+        centerOffPlanModal();
       });
     });
 
@@ -1565,25 +1650,87 @@ renderEnd(<<<'SCRIPT'
       return payload;
     }
 
+    function formatOffNumber(value, decimals) {
+      const num = Number(value);
+      if (!Number.isFinite(num)) return null;
+      const rounded = Number(num.toFixed(decimals));
+      return Number.isInteger(rounded) ? String(rounded) : String(rounded).replace('.', ',');
+    }
+
+    function guessOffTags(product) {
+      const tags = [];
+      const name = (product?.name || '').toLowerCase();
+      const protein = Number(product?.protein_100g || 0);
+      const carbs = Number(product?.carbs_100g || 0);
+      const fat = Number(product?.fat_100g || 0);
+      const kcal = Number(product?.kcal_100g || 0);
+
+      if (protein >= 18) tags.push('Proteico');
+      if (fat >= 20 && carbs < 25) tags.push('Frutta secca');
+      if (kcal < 120) tags.push('Low kcal');
+      if (name.includes('bar') || name.includes('barretta')) tags.push('Snack');
+      if (name.includes('drink') || name.includes('bevanda')) tags.push('Bevanda');
+      if (name.includes('yogurt') || name.includes('yoghurt')) tags.push('Latticino');
+      if (tags.length === 0 && carbs > 45) tags.push('Energetico');
+      if (tags.length === 0 && kcal > 0) tags.push('Alimento');
+      return tags.slice(0, 3);
+    }
+
+    function getServingInfo(product) {
+      const servingLabel = (product?.serving_size_label || '').trim();
+      const servingKcal = formatOffNumber(product?.kcal_serving, 0);
+      const servingQty = formatOffNumber(product?.serving_quantity_g, 0);
+      if (servingLabel && servingKcal) return servingLabel + ' · ' + servingKcal + ' kcal';
+      if (servingQty && servingKcal) return servingQty + ' g · ' + servingKcal + ' kcal';
+      if (servingKcal) return '1 porzione · ' + servingKcal + ' kcal';
+      if (servingLabel) return servingLabel + ' · n/d kcal';
+      return 'Porzione non disponibile';
+    }
+
     function renderOffPlanResults(products) {
       const wrap = offPlanModal?.querySelector('[data-off-plan-results]');
       if (!wrap) return;
+      const countBox = offPlanModal?.querySelector('[data-off-plan-count]');
+      if (countBox) countBox.textContent = products.length + (products.length === 1 ? ' prodotto' : ' prodotti');
       wrap.innerHTML = '';
       if (!products.length) {
         wrap.innerHTML = '<p class="muted-sm">Nessun risultato trovato.</p>';
+        centerOffPlanModal();
         return;
       }
-      products.forEach(function (p) {
+      products.forEach(function (p, idx) {
+        const safeName = p?.name || 'Senza nome';
+        const safeBrand = p?.brand || 'Marca n/d';
+        const kcal100 = formatOffNumber(p?.kcal_100g, 0) || '0';
+        const serving = getServingInfo(p);
+        const tags = guessOffTags(p);
+        const tagsHtml = tags.map(function (tag) { return '<span>' + tag + '</span>'; }).join('');
+        const bestMatchHtml = idx === 0 ? '<span class="off-best-match">Best match</span>' : '';
         const card = document.createElement('div');
-        card.className = 'off-card';
-        card.innerHTML = `<img src="${p.image_url || ''}" alt=""><div><strong>${p.name || 'Senza nome'}</strong><br><span class="muted-sm">${p.brand || 'Marca n/d'} · ${p.kcal_100g ?? 0} kcal/100g</span></div><button type="button" class="btn tiny">Seleziona</button>`;
-        card.querySelector('button')?.addEventListener('click', function () {
+        card.className = 'off-card' + (idx === 0 ? ' best-match' : '');
+        card.innerHTML = `<img class="off-thumb" src="${p.image_url || ''}" alt="${safeName}">
+          <div>
+            <div class="off-name">${safeName}${bestMatchHtml}</div>
+            <span class="off-brand">${safeBrand}</span>
+            <div class="off-product-tags">${tagsHtml}</div>
+          </div>
+          <div class="off-stat"><span class="label">Energia</span><span class="value">${kcal100} kcal</span><span class="meta">per 100 g</span></div>
+          <div class="off-stat"><span class="label">Porzione</span><span class="value" style="font-size:1rem">${serving}</span><span class="meta">stima rapida</span></div>
+          <div class="off-actions"><button type="button" class="off-select-btn">Seleziona</button><button type="button" class="off-detail-btn">Dettagli</button></div>`;
+        card.querySelector('.off-select-btn')?.addEventListener('click', function () {
           offPlanProduct = p;
           offPlanModal.querySelector('[data-off-plan-preview]').style.display = '';
           recalcOffPlanPreview();
         });
+        card.querySelector('.off-detail-btn')?.addEventListener('click', function () {
+          offPlanProduct = p;
+          offPlanModal.querySelector('[data-off-plan-preview]').style.display = '';
+          recalcOffPlanPreview();
+          offPlanModal.querySelector('[data-off-plan-preview]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
         wrap.appendChild(card);
       });
+      centerOffPlanModal();
     }
 
     async function recalcOffPlanPreview() {
