@@ -524,6 +524,14 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
 .form-grid .full{grid-column:1/-1}
 .field span{font-size:12px;color:rgba(230,237,255,.75)}
 .field input,.field select,.field textarea{margin-top:5px}
+.off-search-row{display:flex;gap:8px;flex-wrap:wrap}
+.off-search-row input{flex:1}
+.off-results{display:grid;gap:8px;margin-top:10px}
+.off-product-card{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid rgba(152,175,250,.2);border-radius:12px;background:rgba(9,15,27,.62)}
+.off-product-card img{width:52px;height:52px;object-fit:cover;border-radius:10px;background:#0f1729}
+.off-product-card .name{font-weight:700}
+.off-meta{font-size:12px;color:rgba(230,237,255,.7)}
+.off-preview{margin-top:10px;padding:10px;border:1px solid rgba(111,147,255,.42);border-radius:12px;background:rgba(24,38,66,.5)}
 @media (max-width:1050px){.nutrizione-v2{grid-template-columns:1fr}.nutrizione-side{position:static}.diary-grid,.meal-quick-grid,.meta-grid,.cal-grid{grid-template-columns:1fr}.ring-wrap{width:162px;height:162px}.ring-wrap svg{width:162px;height:162px}}
 </style>
 
@@ -714,6 +722,7 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
     <article class="n-card">
       <div class="cta-col">
         <button type="button" class="cta-btn" data-open-add-modal data-slot="spuntini">Aggiungi pasto</button>
+        <button type="button" class="cta-btn secondary" data-open-off-modal data-slot="spuntini">Aggiungi da Open Food Facts</button>
         <button type="button" class="cta-btn secondary" data-open-diary-modal>Vedi diario di oggi</button>
       </div>
     </article>
@@ -744,9 +753,57 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
         <label class="field"><span>Grassi (g)</span><input name="entry_grassi" type="number" min="0" max="500" step="0.1" value="0"></label>
       </div>
       <div style="margin-top:12px;display:flex;justify-content:flex-end">
+        <button type="button" class="cta-btn secondary" data-open-off-modal data-slot="spuntini" style="margin-right:8px">Open Food Facts</button>
         <button type="submit" class="cta-btn">Salva voce</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal" data-modal-off>
+  <div class="modal-panel">
+    <div class="modal-head">
+      <h3 style="margin:0">Aggiungi alimento da Open Food Facts</h3>
+      <button type="button" class="modal-close" data-close-modal>Chiudi</button>
+    </div>
+    <div class="form-grid">
+      <label class="field full"><span>Pasto</span>
+        <select data-off-meal>
+          <?php foreach ($mealSlots as $slotKey => $slot): ?>
+            <option value="<?= h($slotKey) ?>"><?= h($slot['label']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+      <label class="field full"><span>Ricerca per nome</span>
+        <div class="off-search-row">
+          <input type="text" data-off-query placeholder="Es. yogurt greco">
+          <button type="button" class="cta-btn secondary" data-off-search-btn>Cerca</button>
+        </div>
+      </label>
+      <label class="field full"><span>Oppure barcode</span>
+        <div class="off-search-row">
+          <input type="text" data-off-barcode placeholder="Es. 8000500310427">
+          <button type="button" class="cta-btn secondary" data-off-barcode-btn>Lookup</button>
+        </div>
+      </label>
+    </div>
+    <div class="off-results" data-off-results></div>
+    <div class="off-preview" data-off-preview style="display:none">
+      <div class="form-grid">
+        <label class="field"><span>Modalità</span>
+          <select data-off-mode>
+            <option value="grams">Grammi</option>
+            <option value="servings">Porzioni</option>
+          </select>
+        </label>
+        <label class="field"><span>Quantità</span><input type="number" min="0.1" step="0.1" value="100" data-off-amount></label>
+        <label class="field"><span>Orario</span><input type="time" value="<?= h(date('H:i')) ?>" data-off-time></label>
+      </div>
+      <div class="off-meta" data-off-macros>Seleziona quantità per vedere i macro.</div>
+      <div style="margin-top:10px;display:flex;justify-content:flex-end">
+        <button type="button" class="cta-btn" data-off-save>Salva nel diario</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -788,7 +845,16 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
   const body = document.body;
   const addModal = document.querySelector('[data-modal-add]');
   const diaryModal = document.querySelector('[data-modal-diary]');
+  const offModal = document.querySelector('[data-modal-off]');
   const slotField = addModal ? addModal.querySelector('[data-field-slot]') : null;
+  const offMeal = offModal ? offModal.querySelector('[data-off-meal]') : null;
+  const offResults = offModal ? offModal.querySelector('[data-off-results]') : null;
+  const offPreview = offModal ? offModal.querySelector('[data-off-preview]') : null;
+  const offMacros = offModal ? offModal.querySelector('[data-off-macros]') : null;
+  let selectedProduct = null;
+  const OFF_API_URL = '/public/api/openfoodfacts.php';
+  const OFF_SEARCH_COOLDOWN_MS = 7000;
+  let offSearchCooldownUntil = 0;
 
   function openModal(modal){
     if(!modal) return;
@@ -815,12 +881,19 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
   document.querySelectorAll('[data-open-diary-modal]').forEach((btn)=>{
     btn.addEventListener('click', ()=>openModal(diaryModal));
   });
+  document.querySelectorAll('[data-open-off-modal]').forEach((btn)=>{
+    btn.addEventListener('click', ()=>{
+      const slot = btn.getAttribute('data-slot') || 'spuntini';
+      if(offMeal){ offMeal.value = slot; }
+      openModal(offModal);
+    });
+  });
 
   document.querySelectorAll('[data-close-modal]').forEach((btn)=>{
     btn.addEventListener('click', ()=>closeModal(btn.closest('.modal')));
   });
 
-  [addModal, diaryModal].forEach((modal)=>{
+  [addModal, diaryModal, offModal].forEach((modal)=>{
     if(!modal) return;
     modal.addEventListener('click', (event)=>{ if(event.target === modal){ closeModal(modal); } });
   });
@@ -829,7 +902,98 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
     if(event.key === 'Escape'){
       closeModal(addModal);
       closeModal(diaryModal);
+      closeModal(offModal);
     }
+  });
+
+  async function offApi(params){
+    const res = await fetch(OFF_API_URL, { method:'POST', body: params, headers:{'Accept':'application/json'} });
+    const raw = await res.text();
+    let payload = null;
+    if(raw.trim() !== ''){
+      try { payload = JSON.parse(raw); } catch (e) {
+        throw new Error('Risposta API non valida: ' + raw.slice(0, 180));
+      }
+    }
+    if(!payload){
+      throw new Error('Endpoint OFF vuoto (HTTP ' + res.status + ').');
+    }
+    if(!res.ok || !payload.ok){ throw new Error(payload.message || 'Errore API'); }
+    return payload;
+  }
+
+  function renderResults(products){
+    offResults.innerHTML = '';
+    if(!products.length){ offResults.innerHTML = '<div class="off-meta">Nessun prodotto trovato.</div>'; return; }
+    products.forEach((p)=>{
+      const card = document.createElement('div');
+      card.className = 'off-product-card';
+      card.innerHTML = `<img src="${p.image_url || ''}" alt=""><div><div class="name">${p.name || 'Senza nome'}</div><div class="off-meta">${p.brand || 'Marca n/d'} · ${p.kcal_100g ?? 0} kcal/100g</div></div><button type="button" class="cta-btn secondary">Seleziona</button>`;
+      card.querySelector('button').addEventListener('click', ()=>{ selectedProduct = p; offPreview.style.display='block'; recalcPreview(); });
+      offResults.appendChild(card);
+    });
+  }
+
+  async function recalcPreview(){
+    if(!selectedProduct){ return; }
+    const form = new FormData();
+    form.append('action','calculate');
+    form.append('barcode', selectedProduct.barcode);
+    form.append('mode', offModal.querySelector('[data-off-mode]').value);
+    form.append('amount', offModal.querySelector('[data-off-amount]').value);
+    const payload = await offApi(form);
+    const m = payload.macros;
+    offMacros.textContent = `Kcal ${m.calorie} · P ${m.proteine}g · C ${m.carboidrati}g · G ${m.grassi}g · ${m.grammiTotali ?? '-'}g`;
+  }
+
+  offModal?.querySelector('[data-off-search-btn]')?.addEventListener('click', async ()=>{
+    const searchBtn = offModal.querySelector('[data-off-search-btn]');
+    try{
+      const now = Date.now();
+      if(now < offSearchCooldownUntil){ return; }
+      const q = offModal.querySelector('[data-off-query]').value.trim();
+      if(q.length < 2){ return; }
+      offSearchCooldownUntil = now + OFF_SEARCH_COOLDOWN_MS;
+      if(searchBtn){
+        searchBtn.disabled = true;
+        searchBtn.textContent = 'Attendi 7s';
+        setTimeout(()=>{
+          searchBtn.disabled = false;
+          searchBtn.textContent = 'Cerca';
+        }, OFF_SEARCH_COOLDOWN_MS);
+      }
+      const form = new FormData(); form.append('action','search'); form.append('q', q);
+      const payload = await offApi(form);
+      renderResults(payload.products || []);
+    } catch(error){ alert(error.message || 'Errore ricerca OFF'); }
+  });
+
+  offModal?.querySelector('[data-off-barcode-btn]')?.addEventListener('click', async ()=>{
+    try{
+      const barcode = offModal.querySelector('[data-off-barcode]').value.trim();
+      if(!barcode){ return; }
+      const form = new FormData(); form.append('action','barcode_lookup'); form.append('barcode', barcode);
+      const payload = await offApi(form);
+      renderResults(payload.product ? [payload.product] : []);
+    } catch(error){ alert(error.message || 'Errore lookup barcode'); }
+  });
+
+  offModal?.querySelector('[data-off-mode]')?.addEventListener('change', recalcPreview);
+  offModal?.querySelector('[data-off-amount]')?.addEventListener('input', recalcPreview);
+
+  offModal?.querySelector('[data-off-save]')?.addEventListener('click', async ()=>{
+    try{
+      if(!selectedProduct){ return; }
+      const form = new FormData();
+      form.append('action','add_diary_food');
+      form.append('barcode', selectedProduct.barcode);
+      form.append('mode', offModal.querySelector('[data-off-mode]').value);
+      form.append('amount', offModal.querySelector('[data-off-amount]').value);
+      form.append('meal_type', offMeal.value);
+      form.append('entry_time', offModal.querySelector('[data-off-time]').value);
+      await offApi(form);
+      window.location.reload();
+    } catch(error){ alert(error.message || 'Errore salvataggio alimento'); }
   });
 })();
 </script>
