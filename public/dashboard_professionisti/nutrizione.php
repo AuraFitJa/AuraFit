@@ -1421,7 +1421,6 @@ renderEnd(<<<'SCRIPT'
     const offPlanModal = document.querySelector('[data-modal="off-plan"]');
     const OFF_API_URL = '/public/api/openfoodfacts.php';
     let offPlanProduct = null;
-    let offPlanDebounce = null;
     function openModal(name) {
       const modal = document.querySelector('[data-modal="' + name + '"]');
       if (modal) modal.classList.add('open');
@@ -1610,13 +1609,6 @@ renderEnd(<<<'SCRIPT'
       } catch (error) {
         showInlineAlert('error', error.message || 'Errore ricerca Open Food Facts.');
       }
-    });
-
-    offPlanModal?.querySelector('[data-off-plan-query]')?.addEventListener('input', function () {
-      clearTimeout(offPlanDebounce);
-      offPlanDebounce = setTimeout(function () {
-        offPlanModal.querySelector('[data-off-plan-search]')?.click();
-      }, 500);
     });
 
     offPlanModal?.querySelector('[data-off-plan-lookup]')?.addEventListener('click', async function () {
