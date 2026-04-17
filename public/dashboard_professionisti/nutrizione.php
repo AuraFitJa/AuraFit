@@ -1419,7 +1419,9 @@ if ($pianoAttivoId > 0) {
   .meal-add-row td { padding-top:4px; }
   .meal-notes-form { display:grid; gap:8px; }
   .meal-actions-line { display:flex; justify-content:flex-end; }
-  .modal-layer[data-modal="off-plan"] .modal-card.off-plan-modal-card { width:min(96vw, 1280px); max-width:1280px; padding:24px; border-radius:24px; border:1px solid rgba(121, 162, 238, .35); background:linear-gradient(155deg, rgba(8,16,38,.96), rgba(17,28,56,.94)); box-shadow:0 24px 64px rgba(0,0,0,.5); display:grid; gap:16px; }
+  body.modal-open { overflow:hidden; }
+  .modal-layer[data-modal="off-plan"] { align-items:center; justify-content:center; padding:clamp(14px, 3vh, 28px); overflow:hidden; }
+  .modal-layer[data-modal="off-plan"] .modal-card.off-plan-modal-card { width:min(96vw, 1280px); max-width:1280px; max-height:calc(100vh - clamp(28px, 6vh, 56px)); overflow:auto; overscroll-behavior:contain; padding:24px; border-radius:24px; border:1px solid rgba(121, 162, 238, .35); background:linear-gradient(155deg, rgba(8,16,38,.96), rgba(17,28,56,.94)); box-shadow:0 24px 64px rgba(0,0,0,.5); display:grid; gap:16px; }
   .off-plan-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; border-bottom:1px solid rgba(123,157,221,.22); padding-bottom:14px; }
   .off-pill { display:inline-flex; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.12em; font-size:.62rem; font-weight:700; color:#79efff; border:1px solid rgba(91,239,255,.35); background:rgba(10,117,153,.25); margin-bottom:8px; }
   .off-plan-head h3 { margin:0; font-size:1.8rem; }
@@ -1489,9 +1491,21 @@ renderEnd(<<<'SCRIPT'
     function openModal(name) {
       const modal = document.querySelector('[data-modal="' + name + '"]');
       if (modal) modal.classList.add('open');
+      updatePageScrollLock();
     }
     function closeAllModals() {
       modals.forEach(function (m) { m.classList.remove('open'); });
+      updatePageScrollLock();
+    }
+    function updatePageScrollLock() {
+      const hasOpenModal = Array.from(modals).some(function (m) { return m.classList.contains('open'); });
+      document.body.classList.toggle('modal-open', hasOpenModal);
+    }
+    function centerOffPlanModal() {
+      if (!offPlanModal || !offPlanModal.classList.contains('open')) return;
+      const offCard = offPlanModal.querySelector('.off-plan-modal-card');
+      if (offCard) offCard.scrollTop = 0;
+      offPlanModal.scrollTop = 0;
     }
 
     document.querySelectorAll('[data-close-modal]').forEach(function (button) {
@@ -1614,6 +1628,7 @@ renderEnd(<<<'SCRIPT'
         if (preview) preview.style.display = 'none';
         offPlanProduct = null;
         openModal('off-plan');
+        centerOffPlanModal();
       });
     });
 
@@ -1680,6 +1695,7 @@ renderEnd(<<<'SCRIPT'
       wrap.innerHTML = '';
       if (!products.length) {
         wrap.innerHTML = '<p class="muted-sm">Nessun risultato trovato.</p>';
+        centerOffPlanModal();
         return;
       }
       products.forEach(function (p, idx) {
@@ -1714,6 +1730,7 @@ renderEnd(<<<'SCRIPT'
         });
         wrap.appendChild(card);
       });
+      centerOffPlanModal();
     }
 
     async function recalcOffPlanPreview() {
