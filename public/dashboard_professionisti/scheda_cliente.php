@@ -258,10 +258,10 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
       </article>
       <?php
         $totProgrammi = count($programmiAssegnati);
-        $programmiAttivi = count(array_filter($programmiAssegnati, fn($p) => in_array((string)$p['stato'], ['attivo','attiva'], true)));
+        $programmiAttivi = count(array_filter($programmiAssegnati, static function ($p) { return in_array((string)$p['stato'], ['attivo', 'attiva'], true); }));
         $progRate = $totProgrammi > 0 ? (int)round(($programmiAttivi / $totProgrammi) * 100) : 0;
         $totComp = count($questionariCompilazioni);
-        $compInviate = count(array_filter($questionariCompilazioni, fn($q) => ((string)$q['stato']) === 'inviato'));
+        $compInviate = count(array_filter($questionariCompilazioni, static function ($q) { return ((string)$q['stato']) === 'inviato'; }));
         $compRate = $totComp > 0 ? (int)round(($compInviate / $totComp) * 100) : 0;
       ?>
       <article class="premium-snapshot">
