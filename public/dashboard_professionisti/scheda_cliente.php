@@ -130,8 +130,75 @@ $clienteEmail = $cliente ? (string)$cliente['email'] : '';
 $ultimoProgramma = $programmiAssegnati[0] ?? null;
 renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
-<section class="card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
+<section class="card premium-client-card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
   <style>
+    :root{--max:1380px;}
+    .premium-client-card {
+      background:
+        radial-gradient(1200px 400px at 10% -10%, rgba(34, 211, 238, .12), transparent 52%),
+        radial-gradient(900px 360px at 92% -15%, rgba(79, 70, 229, .15), transparent 55%),
+        #020617;
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 24px;
+      padding: clamp(16px, 2.6vw, 32px);
+      box-shadow: 0 35px 80px rgba(2, 6, 23, .7);
+    }
+    .premium-grid{display:grid;gap:16px}
+    .premium-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+    .premium-header-title h2{font-size:clamp(1.75rem,2.8vw,2.35rem);margin:8px 0 4px;line-height:1.1}
+    .premium-header-title p{margin:0;color:#94a3b8;max-width:760px}
+    .premium-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 12px;font-size:.72rem;font-weight:700;letter-spacing:.03em;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05)}
+    .premium-pill.info{background:rgba(34,211,238,.16);color:#67e8f9;border-color:rgba(34,211,238,.35)}
+    .premium-pill.success{background:rgba(16,185,129,.16);color:#6ee7b7;border-color:rgba(16,185,129,.3)}
+    .premium-pill.warn{background:rgba(245,158,11,.16);color:#fcd34d;border-color:rgba(245,158,11,.3)}
+    .premium-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .premium-btn{border-radius:12px;padding:10px 14px;border:1px solid rgba(255,255,255,.16);background:rgba(15,23,42,.8);color:#e2e8f0;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:.82rem;transition:.2s}
+    .premium-btn:hover{border-color:rgba(34,211,238,.45);color:#fff;transform:translateY(-1px)}
+    .premium-btn.primary{background:linear-gradient(90deg,#4f46e5,#06b6d4);border:none;color:#fff}
+    .premium-btn.ghost-danger{border-color:rgba(244,63,94,.45);color:#fda4af;background:rgba(190,24,93,.08)}
+    .premium-kpi-wrap{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:18px}
+    .premium-kpi{grid-column:span 3;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+    .premium-kpi strong{display:block;font-size:1.55rem;line-height:1.15;margin-top:8px;color:#f8fafc}
+    .premium-kpi small{color:#64748b;font-size:.73rem}
+    .premium-snapshot{grid-column:span 3;background:rgba(15,23,42,.75);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px}
+    .premium-progress{height:7px;border-radius:999px;background:rgba(148,163,184,.25);overflow:hidden}
+    .premium-progress > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#22d3ee,#34d399)}
+    .premium-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,380px);gap:14px;margin-top:18px;align-items:start}
+    .premium-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.11);border-radius:18px;padding:16px;min-width:0;position:relative;z-index:0}
+    .premium-section h3{margin:0;font-size:1.03rem}
+    .premium-sub{margin:4px 0 0;color:#94a3b8;font-size:.8rem}
+    .program-card{margin-top:12px;padding:14px;border-radius:14px;background:rgba(2,6,23,.62);border:1px solid rgba(255,255,255,.12)}
+    .program-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+    .program-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .premium-table-wrap{overflow:auto;margin-top:12px}
+    .premium-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.84rem}
+    .premium-table th,.premium-table td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+    .premium-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8}
+    .premium-table tr:last-child td{border-bottom:none}
+    .compact-list{display:grid;gap:10px;margin-top:12px}
+    .compact-item{padding:12px;border-radius:12px;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.1)}
+    .quick-actions .premium-btn{width:100%;justify-content:flex-start}
+    .quick-actions .premium-btn.primary{justify-content:center}
+    .premium-main > div{min-width:0}
+    @media (max-width:1280px){
+      .premium-kpi{grid-column:span 4}
+      .premium-snapshot{grid-column:span 12}
+      .premium-main{grid-template-columns:1fr}
+    }
+    @media (max-width:768px){
+      .premium-kpi{grid-column:span 12}
+      .premium-header-title h2{font-size:1.45rem}
+      .premium-actions{width:100%}
+      .premium-actions .premium-btn{flex:1}
+    }
+
+
+    .responses-card { margin-top: 16px; display: none; }
+    .responses-card.open { display: block; }
+    .responses-list { display: grid; gap: 10px; margin-top: 10px; }
+    .responses-item { border: 1px solid rgba(255, 255, 255, .08); border-radius: 10px; padding: 10px 12px; background: rgba(255, 255, 255, .02); }
+    .responses-item-question { font-weight: 600; margin: 0 0 6px; }
+    .responses-item-answer { margin: 0; color: #d5dde8; white-space: pre-wrap; word-break: break-word; }
     .remove-program-overlay {
       position: fixed;
       inset: 0;
@@ -144,233 +211,180 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
       opacity: 0;
       transition: opacity .2s ease;
     }
-    .remove-program-overlay.open {
-      display: flex;
-      opacity: 1;
-    }
+    .remove-program-overlay.open { display:flex; opacity:1; }
     .remove-program-modal {
-      width: min(520px, 100%);
-      border-radius: 14px;
-      background: #1a2026;
-      border: 1px solid rgba(255, 255, 255, .1);
-      box-shadow: 0 22px 55px rgba(0, 0, 0, .45);
-      padding: 18px;
-      color: #eef3f7;
-      transform: scale(.96);
-      transition: transform .2s ease;
+      width:min(520px,100%);border-radius:14px;background:#1a2026;border:1px solid rgba(255,255,255,.1);box-shadow:0 22px 55px rgba(0,0,0,.45);padding:18px;color:#eef3f7;transform:scale(.96);transition:transform .2s ease;
     }
     .remove-program-overlay.open .remove-program-modal { transform: scale(1); }
-    .remove-program-meta {
-      margin-top: 12px;
-      padding: 10px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, .03);
-      border: 1px solid rgba(255, 255, 255, .08);
-    }
-    .remove-program-actions {
-      margin-top: 14px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .responses-card {
-      margin-top: 16px;
-      display: none;
-    }
-    .responses-card.open {
-      display: block;
-    }
-    .responses-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .responses-item {
-      border: 1px solid rgba(255, 255, 255, .08);
-      border-radius: 10px;
-      padding: 10px 12px;
-      background: rgba(255, 255, 255, .02);
-    }
-    .responses-item-question {
-      font-weight: 600;
-      margin: 0 0 6px;
-    }
-    .responses-item-answer {
-      margin: 0;
-      color: #d5dde8;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+    .remove-program-meta {margin-top:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);}
+    .remove-program-actions {margin-top:14px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;}
   </style>
-  <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <a class="btn" href="clienti.php">← Indietro</a>
-      <h2 class="section-title" style="margin:0">Scheda Cliente - <?= h($clienteNome) ?></h2>
+
+  <div class="premium-header">
+    <div class="premium-header-title">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <a class="premium-btn" href="clienti.php">← Indietro</a>
+        <span class="premium-pill info">Scheda cliente</span>
+      </div>
+      <h2><?= h($clienteNome) ?></h2>
+      <p>Vista completa del cliente con dati anagrafici, programmi attivi, questionari, compilazioni e storico associazioni in un'unica interfaccia più pulita e leggibile.</p>
     </div>
     <?php if ($cliente): ?>
-      <button class="btn" type="button" data-toggle-contact>Mostra mail contatto</button>
+      <div class="premium-actions">
+        <button class="premium-btn" type="button" data-toggle-contact>Nascondi mail contatto</button>
+        <button class="premium-btn" type="button" data-toggle-physical>Nascondi dati fisici</button>
+      </div>
     <?php endif; ?>
   </div>
 
   <?php foreach ($errors as $error): ?>
-    <div class="alert" style="margin-bottom:10px"><?= h($error) ?></div>
+    <div class="alert" style="margin-top:12px"><?= h($error) ?></div>
   <?php endforeach; ?>
 
   <?php if ($cliente): ?>
-    <div data-contact-mail style="display:none;margin:10px 0 14px">
-      <div class="stat">
-        <p style="margin:0"><strong>Mail contatto cliente:</strong> <?= h($clienteEmail) ?></p>
-      </div>
+    <div class="premium-kpi-wrap">
+      <article class="premium-kpi" data-contact-mail>
+        <small>Email contatto</small>
+        <strong style="font-size:1.35rem"><?= h($clienteEmail ?: '—') ?></strong>
+        <small>Contatto principale del cliente</small>
+      </article>
+      <article class="premium-kpi" data-physical-line>
+        <small>Età / Altezza</small>
+        <strong><?= h(isset($cliente['eta']) ? (string)$cliente['eta'] : '—') ?> · <?= h(isset($cliente['altezzaCm']) ? (string)$cliente['altezzaCm'] . ' cm' : '—') ?></strong>
+        <small>Profilo fisico attuale</small>
+      </article>
+      <article class="premium-kpi">
+        <small>Peso</small>
+        <strong><?= h(isset($cliente['pesoKg']) ? (string)$cliente['pesoKg'] . ' kg' : '—') ?></strong>
+        <small>Ultimo valore registrato</small>
+      </article>
+      <?php
+        $totProgrammi = count($programmiAssegnati);
+        $programmiAttivi = count(array_filter($programmiAssegnati, static function ($p) { return in_array((string)$p['stato'], ['attivo', 'attiva'], true); }));
+        $progRate = $totProgrammi > 0 ? (int)round(($programmiAttivi / $totProgrammi) * 100) : 0;
+        $totComp = count($questionariCompilazioni);
+        $compInviate = count(array_filter($questionariCompilazioni, static function ($q) { return ((string)$q['stato']) === 'inviato'; }));
+        $compRate = $totComp > 0 ? (int)round(($compInviate / $totComp) * 100) : 0;
+      ?>
+      <article class="premium-snapshot">
+        <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Snapshot cliente</h3><strong style="font-size:.9rem"><?= $progRate ?>%</strong></div>
+        <p class="premium-sub">Aderenza programmi</p>
+        <div class="premium-progress"><span style="width:<?= $progRate ?>%"></span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><p class="premium-sub" style="margin:0">Compilazioni questionari</p><strong style="font-size:.9rem"><?= $compInviate ?> inviate</strong></div>
+        <div class="premium-progress"><span style="width:<?= $compRate ?>%"></span></div>
+        <div style="margin-top:12px;padding:10px;border-radius:10px;background:rgba(15,23,42,.55);border:1px solid rgba(255,255,255,.1);font-size:.8rem;color:#cbd5e1">Cliente <?= $programmiAttivi > 0 ? 'attivo con programma in corso.' : 'senza programmi attivi.' ?> <?= $totComp > 0 ? 'Storico questionari disponibile.' : 'Nessuna compilazione al momento.' ?></div>
+      </article>
     </div>
 
-    <div class="stat" style="margin-bottom:16px">
-      <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
-        <h3 style="margin:0">Dati fisici</h3>
-        <button class="btn" type="button" data-toggle-physical>Nascondi dati fisici</button>
-      </div>
-      <p data-physical-line style="margin:0">
-        <strong>Età:</strong> <?= h(isset($cliente['eta']) ? (string)$cliente['eta'] : '—') ?> ·
-        <strong>Altezza:</strong> <?= h(isset($cliente['altezzaCm']) ? (string)$cliente['altezzaCm'] . ' cm' : '—') ?> ·
-        <strong>Peso:</strong> <?= h(isset($cliente['pesoKg']) ? (string)$cliente['pesoKg'] . ' kg' : '—') ?>
-      </p>
-    </div>
-
-    <h3>Programmi di allenamento assegnati</h3>
-    <div class="toolbar" style="justify-content:flex-end;gap:10px;margin-bottom:10px">
-      <?php if ($ultimoProgramma): ?>
-      <?php else: ?>
-        <a class="btn primary" href="allenamenti.php">+ Assegna programma</a>
-      <?php endif; ?>
-    </div>
-    <table>
-      <thead>
-        <tr><th>Titolo</th><th>Stato</th><th>Data assegnazione</th><th>Azione</th></tr>
-      </thead>
-      <tbody>
-        <?php if (!$programmiAssegnati): ?>
-          <tr><td colspan="4" class="muted">Nessun programma assegnato.</td></tr>
-        <?php endif; ?>
-        <?php foreach ($programmiAssegnati as $programma): ?>
-          <tr>
-            <td><?= h((string)$programma['titolo']) ?></td>
-            <td data-program-status><?= h((string)$programma['stato']) ?></td>
-            <td><?= h((string)$programma['assegnatoIl']) ?></td>
-            <td style="display:flex;gap:8px;flex-wrap:wrap">
-              <a class="btn" href="programma.php?id=<?= (int)$programma['idProgramma'] ?>">Apri programma</a>
-              <a class="btn" href="progressi_programma.php?idCliente=<?= (int)$idCliente ?>&idProgramma=<?= (int)$programma['idProgramma'] ?>">Visualizza Progressi</a>
-              <?php if (in_array((string)$programma['stato'], ['attivo', 'attiva'], true)): ?>
-                <button
-                  class="btn"
-                  type="button"
-                  data-remove-program
-                  data-id-cliente="<?= (int)$idCliente ?>"
-                  data-id-programma="<?= (int)$programma['idProgramma'] ?>"
-                  data-titolo="<?= h((string)$programma['titolo']) ?>"
-                  data-assegnato-il="<?= h((string)$programma['assegnatoIl']) ?>"
-                >Rimuovi</button>
-              <?php endif; ?>
-            </td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-
-    <div class="divider"></div>
-
-    <h3>Questionari assegnati</h3>
-    <div style="overflow:auto">
-      <table>
-        <thead><tr><th>Questionario</th><th>Stato</th><th>Assegnato il</th><th>Disattivato il</th></tr></thead>
-        <tbody>
-          <?php if (!$questionariAssegnati): ?>
-            <tr><td colspan="4" class="muted">Nessun questionario assegnato.</td></tr>
+    <div class="premium-main">
+      <div class="premium-grid">
+        <section class="premium-section">
+          <div class="premium-header" style="align-items:center">
+            <div>
+              <h3>Programmi di allenamento assegnati</h3>
+              <p class="premium-sub">Programmi attualmente disponibili per il cliente e relativo stato di avanzamento</p>
+            </div>
+            <?php if (!$ultimoProgramma): ?><a class="premium-btn primary" href="allenamenti.php">+ Assegna programma</a><?php endif; ?>
+          </div>
+          <?php if (!$programmiAssegnati): ?>
+            <p class="muted" style="margin-top:12px">Nessun programma assegnato.</p>
           <?php endif; ?>
-          <?php foreach ($questionariAssegnati as $qa): ?>
-            <tr>
-              <td><?= h($qa['titolo']) ?></td>
-              <td><?= h($qa['stato']) ?></td>
-              <td><?= h($qa['assegnatoIl']) ?></td>
-              <td><?= h($qa['disattivatoIl'] ?: '—') ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-
-    <h3 style="margin-top:14px">Compilazioni questionari</h3>
-    <div style="overflow:auto">
-      <table>
-        <thead><tr><th>Questionario</th><th>#</th><th>Stato</th><th>Inviato il</th><th>Data ricompilazione</th><th>Apri</th></tr></thead>
-        <tbody>
-          <?php if (!$questionariCompilazioni): ?>
-            <tr><td colspan="6" class="muted">Nessuna compilazione disponibile.</td></tr>
-          <?php endif; ?>
-          <?php foreach ($questionariCompilazioni as $qc): ?>
-            <tr>
-              <td><?= h($qc['titolo']) ?></td>
-              <td><?= (int)$qc['numeroCompilazione'] ?></td>
-              <td><?= h($qc['stato']) ?></td>
-              <td><?= h($qc['inviatoIl'] ?: '—') ?></td>
-              <td><?= h($qc['ricompilazioneDi'] ? $qc['aggiornatoIl'] : '—') ?></td>
-              <td>
-                <a
-                  class="btn"
-                  href="scheda_cliente.php?idCliente=<?= (int)$idCliente ?>&idCompilazione=<?= (int)$qc['idCompilazione'] ?>#visualizzazione-risposte"
-                  data-open-responses
-                  data-id-compilazione="<?= (int)$qc['idCompilazione'] ?>"
-                  data-questionario="<?= h((string)$qc['titolo']) ?>"
-                  data-numero="<?= (int)$qc['numeroCompilazione'] ?>"
-                  data-inviato-il="<?= h((string)($qc['inviatoIl'] ?: '—')) ?>"
-                >Apri risposte</a>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="stat responses-card" data-responses-card>
-      <div class="toolbar" style="justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <h3 style="margin:0">Visualizzazione risposte</h3>
-        <button class="btn" type="button" data-close-responses>Chiudi</button>
-      </div>
-      <p class="muted" style="margin:8px 0 0" data-responses-meta>Seleziona una compilazione per visualizzare le risposte.</p>
-      <p class="muted" style="margin:8px 0 0;display:none" data-responses-feedback></p>
-      <div class="responses-list" data-responses-list></div>
-    </div>
-
-    <button class="btn" type="button" data-toggle-associazioni>
-      &gt; Storico associazioni con questo cliente
-    </button>
-
-    <div data-associazioni-container style="display:none;margin-top:10px">
-      <table>
-        <thead>
-          <tr>
-            <th>Tipo</th>
-            <th>Data inizio</th>
-            <th>Data fine</th>
-            <th>Stato</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($storicoAssociazioni as $associazione): ?>
-            <tr>
-              <td><?= h((string)$associazione['tipoAssociazione']) ?></td>
-              <td><?= h((string)$associazione['iniziataIl']) ?></td>
-              <td><?= h((string)$associazione['terminataIl'] ?: '—') ?></td>
-              <td>
-                <?php if ((int)$associazione['attivaFlag'] === 1): ?>
-                  <span class="status ok">Attiva</span>
-                <?php else: ?>
-                  <span class="status warn">Terminata</span>
+          <?php foreach ($programmiAssegnati as $programma): ?>
+            <?php $isActive = in_array((string)$programma['stato'], ['attivo','attiva'], true); $mockProgress = $isActive ? 76 : 24; ?>
+            <article class="program-card">
+              <div class="program-top">
+                <div>
+                  <h4 style="margin:0 0 4px"><?= h((string)$programma['titolo']) ?></h4>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                    <span class="premium-pill <?= $isActive ? 'success' : 'warn' ?>"><?= h((string)$programma['stato']) ?></span>
+                    <small style="color:#94a3b8">Assegnato il <?= h((string)$programma['assegnatoIl']) ?></small>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center"><small style="color:#94a3b8">Progressi visualizzati</small><strong style="font-size:.8rem"><?= $mockProgress ?>%</strong></div>
+              <div class="premium-progress"><span style="width:<?= $mockProgress ?>%"></span></div>
+              <div class="program-actions">
+                <a class="premium-btn" href="programma.php?id=<?= (int)$programma['idProgramma'] ?>">Apri programma</a>
+                <a class="premium-btn" href="progressi_programma.php?idCliente=<?= (int)$idCliente ?>&idProgramma=<?= (int)$programma['idProgramma'] ?>">Visualizza progressi</a>
+                <?php if ($isActive): ?>
+                  <button class="premium-btn ghost-danger" type="button" data-remove-program data-id-cliente="<?= (int)$idCliente ?>" data-id-programma="<?= (int)$programma['idProgramma'] ?>" data-titolo="<?= h((string)$programma['titolo']) ?>" data-assegnato-il="<?= h((string)$programma['assegnatoIl']) ?>">Rimuovi</button>
                 <?php endif; ?>
-              </td>
-            </tr>
+              </div>
+            </article>
           <?php endforeach; ?>
-        </tbody>
-      </table>
+        </section>
+
+        <section class="premium-section">
+          <div class="premium-header" style="align-items:center">
+            <div>
+              <h3>Compilazioni questionari</h3>
+              <p class="premium-sub">Storico invii del cliente con accesso rapido alle risposte</p>
+            </div>
+            <button class="premium-btn" type="button">Esporta storico</button>
+          </div>
+          <div class="premium-table-wrap">
+            <table class="premium-table">
+              <thead><tr><th>Questionario</th><th>#</th><th>Stato</th><th>Inviato il</th><th>Data ricompilazione</th><th>Apri</th></tr></thead>
+              <tbody>
+              <?php if (!$questionariCompilazioni): ?><tr><td colspan="6" class="muted">Nessuna compilazione disponibile.</td></tr><?php endif; ?>
+              <?php foreach ($questionariCompilazioni as $qc): ?>
+                <tr>
+                  <td><?= h($qc['titolo']) ?></td>
+                  <td><?= (int)$qc['numeroCompilazione'] ?></td>
+                  <td><span class="premium-pill info"><?= h($qc['stato']) ?></span></td>
+                  <td><?= h($qc['inviatoIl'] ?: '—') ?></td>
+                  <td><?= h($qc['ricompilazioneDi'] ? $qc['aggiornatoIl'] : '—') ?></td>
+                  <td><a class="premium-btn" href="scheda_cliente.php?idCliente=<?= (int)$idCliente ?>&idCompilazione=<?= (int)$qc['idCompilazione'] ?>#visualizzazione-risposte" data-open-responses data-id-compilazione="<?= (int)$qc['idCompilazione'] ?>" data-questionario="<?= h((string)$qc['titolo']) ?>" data-numero="<?= (int)$qc['numeroCompilazione'] ?>" data-inviato-il="<?= h((string)($qc['inviatoIl'] ?: '—')) ?>">Apri risposte</a></td>
+                </tr>
+              <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="premium-grid">
+        <section class="premium-section">
+          <div class="premium-header" style="align-items:center">
+            <div><h3>Questionari assegnati</h3><p class="premium-sub">Questionari attivi e stato dell'assegnazione</p></div>
+            <button class="premium-btn primary" type="button">Nuovo questionario</button>
+          </div>
+          <div class="compact-list">
+            <?php if (!$questionariAssegnati): ?><p class="muted">Nessun questionario assegnato.</p><?php endif; ?>
+            <?php foreach ($questionariAssegnati as $qa): ?>
+              <article class="compact-item">
+                <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><strong><?= h($qa['titolo']) ?></strong><span class="premium-pill <?= ((string)$qa['stato']==='attivo' ? 'success':'info') ?>"><?= h($qa['stato']) ?></span></div>
+                <p class="premium-sub" style="margin-top:8px">Assegnato il <?= h($qa['assegnatoIl']) ?></p>
+                <p class="premium-sub" style="margin:4px 0 0">Disattivato il <?= h($qa['disattivatoIl'] ?: '—') ?></p>
+              </article>
+            <?php endforeach; ?>
+          </div>
+        </section>
+
+        <section class="premium-section">
+          <div class="premium-header" style="align-items:center"><div><h3>Storico associazioni</h3><p class="premium-sub">Relazione professionale e stato corrente del collegamento</p></div><button class="premium-btn" type="button" data-toggle-associazioni>&gt; Storico associazioni con questo cliente</button></div>
+          <div class="compact-list" data-associazioni-container style="display:none">
+            <?php foreach ($storicoAssociazioni as $associazione): ?>
+              <article class="compact-item">
+                <small class="premium-sub" style="display:block"><?= strtoupper(h((string)$associazione['tipoAssociazione'])) ?></small>
+                <p style="margin:8px 0 0"><strong>Inizio</strong> <?= h((string)$associazione['iniziataIl']) ?></p>
+                <p style="margin:4px 0 0"><strong>Fine</strong> <?= h((string)$associazione['terminataIl'] ?: '—') ?></p>
+                <span class="premium-pill <?= ((int)$associazione['attivaFlag']===1 ? 'success' : 'warn') ?>" style="margin-top:8px"><?= ((int)$associazione['attivaFlag']===1 ? 'Attiva' : 'Terminata') ?></span>
+              </article>
+            <?php endforeach; ?>
+          </div>
+        </section>
+
+        <section class="premium-section quick-actions">
+          <h3>Azioni rapide</h3>
+          <p class="premium-sub">Comandi frequenti per lavorare sul profilo cliente</p>
+          <div class="premium-grid" style="margin-top:12px">
+            <a class="premium-btn" href="supporto.php?idCliente=<?= (int)$idCliente ?>">Apri chat cliente</a>
+            <a class="premium-btn" href="allenamenti.php?idCliente=<?= (int)$idCliente ?>">Assegna nuovo programma</a>
+            <a class="premium-btn primary" href="overview.php?idCliente=<?= (int)$idCliente ?>">Apri dashboard completa</a>
+          </div>
+        </section>
+      </div>
     </div>
   <?php endif; ?>
 </section>
