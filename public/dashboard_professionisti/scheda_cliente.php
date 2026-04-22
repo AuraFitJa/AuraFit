@@ -132,6 +132,7 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
 ?>
 <section class="card premium-client-card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
   <style>
+    :root{--max:1380px;}
     .premium-client-card {
       background:
         radial-gradient(1200px 400px at 10% -10%, rgba(34, 211, 238, .12), transparent 52%),
@@ -162,8 +163,8 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     .premium-snapshot{grid-column:span 3;background:rgba(15,23,42,.75);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px}
     .premium-progress{height:7px;border-radius:999px;background:rgba(148,163,184,.25);overflow:hidden}
     .premium-progress > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#22d3ee,#34d399)}
-    .premium-main{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,.95fr);gap:14px;margin-top:18px}
-    .premium-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.11);border-radius:18px;padding:16px}
+    .premium-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,380px);gap:14px;margin-top:18px;align-items:start}
+    .premium-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.11);border-radius:18px;padding:16px;min-width:0;position:relative;z-index:0}
     .premium-section h3{margin:0;font-size:1.03rem}
     .premium-sub{margin:4px 0 0;color:#94a3b8;font-size:.8rem}
     .program-card{margin-top:12px;padding:14px;border-radius:14px;background:rgba(2,6,23,.62);border:1px solid rgba(255,255,255,.12)}
@@ -178,7 +179,8 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     .compact-item{padding:12px;border-radius:12px;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.1)}
     .quick-actions .premium-btn{width:100%;justify-content:flex-start}
     .quick-actions .premium-btn.primary{justify-content:center}
-    @media (max-width:1150px){
+    .premium-main > div{min-width:0}
+    @media (max-width:1280px){
       .premium-kpi{grid-column:span 4}
       .premium-snapshot{grid-column:span 12}
       .premium-main{grid-template-columns:1fr}
