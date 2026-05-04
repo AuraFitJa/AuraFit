@@ -21,6 +21,43 @@ function formatActivityTime(?string $dateTime): string {
   return $dt->format('d/m/Y, H:i');
 }
 
+function overviewTableExists(string $table): bool {
+  try {
+    $row = Database::exec('SHOW TABLES LIKE ?', [$table])->fetch();
+    return (bool)$row;
+  } catch (Throwable $e) {
+    return false;
+  }
+}
+
+function overviewTableColumns(string $table): array {
+  try {
+    $rows = Database::exec('SHOW COLUMNS FROM ' . $table)->fetchAll();
+    if (!is_array($rows)) {
+      return [];
+    }
+    $out = [];
+    foreach ($rows as $row) {
+      $field = (string)($row['Field'] ?? '');
+      if ($field !== '') {
+        $out[] = $field;
+      }
+    }
+    return $out;
+  } catch (Throwable $e) {
+    return [];
+  }
+}
+
+function overviewPickColumn(array $columns, array $candidates): ?string {
+  foreach ($candidates as $candidate) {
+    if (in_array($candidate, $columns, true)) {
+      return $candidate;
+    }
+  }
+  return null;
+}
+
 if ($dbAvailable) {
   try {
     $professionistaId = getProfessionistaId($userId);
@@ -47,40 +84,75 @@ if ($dbAvailable) {
       $idKeyUtilizzate = (int)($idKeyStats['utilizzate'] ?? 0);
       $overview['idKeyTotaliPiano'] = (int)($idKeyStats['totali'] ?? $overview['idKeyTotaliPiano']);
 
-      $activityRows = Database::exec(
-        "(SELECT CONCAT(u.nome, ' ', LEFT(u.cognome, 1), '.') AS cliente,
-                 'Questionario compilato' AS evento,
-                 qc.inviatoIl AS eventoIl,
-                 'info' AS tono
-          FROM QuestionarioCompilazioni qc
-          INNER JOIN Questionari q ON q.idQuestionario = qc.questionario
-          INNER JOIN Clienti c ON c.idCliente = qc.cliente
-          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-          WHERE q.professionista = ? AND qc.stato = 'inviato' AND qc.inviatoIl IS NOT NULL)
-         UNION ALL
-         (SELECT CONCAT(u.nome, ' ', LEFT(u.cognome, 1), '.') AS cliente,
-                 'Diario nutrizionale aggiornato' AS evento,
-                 v.creatoIl AS eventoIl,
-                 'success' AS tono
-          FROM VociDiarioAlimentare v
-          INNER JOIN Associazioni a ON a.cliente = v.cliente AND a.professionista = ? AND a.attivaFlag = 1
-          INNER JOIN Clienti c ON c.idCliente = v.cliente
-          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-          WHERE v.creatoIl IS NOT NULL)
-         UNION ALL
-         (SELECT CONCAT(u.nome, ' ', LEFT(u.cognome, 1), '.') AS cliente,
-                 'Allenamento registrato' AS evento,
-                 s.svoltaIl AS eventoIl,
-                 'default' AS tono
-          FROM SessioniAllenamento s
-          INNER JOIN Associazioni a ON a.cliente = s.cliente AND a.professionista = ? AND a.attivaFlag = 1
-          INNER JOIN Clienti c ON c.idCliente = s.cliente
-          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-          WHERE s.svoltaIl IS NOT NULL)
-         ORDER BY eventoIl DESC
-         LIMIT 8",
-        [$professionistaId, $professionistaId, $professionistaId]
-      )->fetchAll();
+      $activityRows = [];
+
+      if (overviewTableExists('QuestionarioCompilazioni') && overviewTableExists('Questionari')) {
+        $questionariRows = Database::exec(
+          "SELECT CONCAT(u.nome, ' ', LEFT(u.cognome, 1), '.') AS cliente,
+                  'Questionario compilato' AS evento,
+                  COALESCE(qc.inviatoIl, qc.aggiornatoIl, qc.iniziatoIl) AS eventoIl,
+                  'info' AS tono
+           FROM QuestionarioCompilazioni qc
+           INNER JOIN Questionari q ON q.idQuestionario = qc.questionario
+           INNER JOIN Clienti c ON c.idCliente = qc.cliente
+           INNER JOIN Utenti u ON u.idUtente = c.idUtente
+           WHERE q.professionista = ?
+             AND qc.stato = 'inviato'
+             AND COALESCE(qc.inviatoIl, qc.aggiornatoIl, qc.iniziatoIl) IS NOT NULL
+           ORDER BY COALESCE(qc.inviatoIl, qc.aggiornatoIl, qc.iniziatoIl) DESC
+           LIMIT 12",
+          [$professionistaId]
+        )->fetchAll();
+        $activityRows = array_merge($activityRows, is_array($questionariRows) ? $questionariRows : []);
+      }
+
+      if (overviewTableExists('VociDiarioAlimentare')) {
+        $cols = overviewTableColumns('VociDiarioAlimentare');
+        $clienteCol = overviewPickColumn($cols, ['cliente', 'idCliente']);
+        $timeCol = overviewPickColumn($cols, ['creatoIl', 'createdAt', 'inseritoIl', 'dataRiferimento', 'dataDiario', 'data']);
+        if ($clienteCol && $timeCol) {
+          $nutrizioneRows = Database::exec(
+            "SELECT CONCAT(u.nome, ' ', LEFT(u.cognome, 1), '.') AS cliente,
+                    'Diario nutrizionale aggiornato' AS evento,
+                    v." . $timeCol . " AS eventoIl,
+                    'success' AS tono
+             FROM VociDiarioAlimentare v
+             INNER JOIN Associazioni a ON a.cliente = v." . $clienteCol . " AND a.professionista = ? AND a.attivaFlag = 1
+             INNER JOIN Clienti c ON c.idCliente = v." . $clienteCol . "
+             INNER JOIN Utenti u ON u.idUtente = c.idUtente
+             WHERE v." . $timeCol . " IS NOT NULL
+             ORDER BY v." . $timeCol . " DESC
+             LIMIT 12",
+            [$professionistaId]
+          )->fetchAll();
+          $activityRows = array_merge($activityRows, is_array($nutrizioneRows) ? $nutrizioneRows : []);
+        }
+      }
+
+      if (overviewTableExists('SessioniAllenamento')) {
+        $allenamentoRows = Database::exec(
+          "SELECT CONCAT(u.nome, ' ', LEFT(u.cognome, 1), '.') AS cliente,
+                  'Allenamento registrato' AS evento,
+                  s.svoltaIl AS eventoIl,
+                  'default' AS tono
+           FROM SessioniAllenamento s
+           INNER JOIN Associazioni a ON a.cliente = s.cliente AND a.professionista = ? AND a.attivaFlag = 1
+           INNER JOIN Clienti c ON c.idCliente = s.cliente
+           INNER JOIN Utenti u ON u.idUtente = c.idUtente
+           WHERE s.svoltaIl IS NOT NULL
+           ORDER BY s.svoltaIl DESC
+           LIMIT 12",
+          [$professionistaId]
+        )->fetchAll();
+        $activityRows = array_merge($activityRows, is_array($allenamentoRows) ? $allenamentoRows : []);
+      }
+
+      usort($activityRows, static function (array $a, array $b): int {
+        $at = strtotime((string)($a['eventoIl'] ?? '')) ?: 0;
+        $bt = strtotime((string)($b['eventoIl'] ?? '')) ?: 0;
+        return $bt <=> $at;
+      });
+      $activityRows = array_slice($activityRows, 0, 8);
 
       if ($activityRows) {
         $latestActivities = array_map(static function (array $row): array {
