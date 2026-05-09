@@ -188,11 +188,11 @@ renderStart('Overview dashboard', 'overview', $email, $roleBadge, $isPt, $isNutr
 ?>
 <style>
 .overview-shell{min-height:100vh;border-radius:30px;padding:10px}
-.kpi-link{text-decoration:none;color:inherit;display:block}
+.kpi-link{text-decoration:none;color:inherit;display:block;height:100%}
 /* existing styles */
 .overview-grid{display:grid;gap:16px}.hero-redesign{border:1px solid rgba(255,255,255,.1);border-radius:30px;padding:30px;background:radial-gradient(circle at 85% 20%,rgba(56,189,248,.16),transparent 35%),radial-gradient(circle at 20% 20%,rgba(99,102,241,.2),transparent 40%),linear-gradient(145deg,rgba(15,23,42,.95),rgba(15,23,42,.82));box-shadow:0 22px 42px rgba(0,0,0,.35)}
 .hero-layout{display:grid;grid-template-columns:1fr;gap:16px;align-items:stretch}.hero-title{margin:12px 0 0;font-size:clamp(34px,4vw,52px);line-height:1.02;letter-spacing:-.03em}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.kpi-card{border:1px solid rgba(255,255,255,.1);border-radius:28px;padding:18px;background:linear-gradient(165deg,rgba(255,255,255,.05),rgba(255,255,255,.02));box-shadow:0 14px 30px rgba(0,0,0,.32)}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;grid-auto-rows:1fr;align-items:stretch}.kpi-card{border:1px solid rgba(255,255,255,.1);border-radius:28px;padding:18px;background:linear-gradient(165deg,rgba(255,255,255,.05),rgba(255,255,255,.02));box-shadow:0 14px 30px rgba(0,0,0,.32);height:100%;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
 .kpi-link .kpi-card{transition:transform .15s ease,border-color .15s ease,background .2s ease}.kpi-link:hover .kpi-card{transform:translateY(-2px);border-color:rgba(103,232,249,.5);background:linear-gradient(165deg,rgba(255,255,255,.08),rgba(255,255,255,.03))}
 .kpi-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8}.kpi-value{margin:8px 0 6px;font-size:clamp(30px,3.5vw,44px);font-weight:800;line-height:1.05}.kpi-helper{margin:0;color:#cbd5e1}.acc-default .kpi-value{color:#e2e8f0}.acc-info .kpi-value{color:#67e8f9}.acc-success .kpi-value{color:#6ee7b7}.acc-warning .kpi-value{color:#fcd34d}
 .content-grid{display:grid;grid-template-columns:1.4fr .9fr;gap:14px}.card-redesign{border:1px solid rgba(255,255,255,.1);border-radius:28px;padding:20px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));box-shadow:0 16px 36px rgba(0,0,0,.34)}
