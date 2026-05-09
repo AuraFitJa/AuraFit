@@ -391,7 +391,7 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": String(document.querySelector('input[name=\"csrf_token\"]')?.value || '')
+          "X-CSRF-Token": String(document.querySelector("input[name=\"csrf_token\"]")?.value || "")
         },
         body: JSON.stringify({ idProgramma, clienti: selected })
       });
