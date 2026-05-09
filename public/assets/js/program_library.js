@@ -1,10 +1,18 @@
 (function () {
+  function getCsrfToken() {
+    return String(document.querySelector('input[name="csrf_token"]')?.value || '');
+  }
+
   async function postForm(action, payload) {
     const form = new FormData();
     form.set('action', action);
     Object.entries(payload || {}).forEach(([k, v]) => form.set(k, v));
 
-    const res = await fetch('../controllers/programmi_controller.php', { method: 'POST', body: form });
+    const res = await fetch('../controllers/programmi_controller.php', {
+      method: 'POST',
+      body: form,
+      headers: { 'X-CSRF-Token': getCsrfToken() }
+    });
     const data = await res.json();
     if (!res.ok || !data.ok) {
       throw new Error(data.message || 'Errore richiesta');
@@ -118,7 +126,8 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-Token': getCsrfToken()
             },
             body: JSON.stringify({
               idCartella: editingCartellaId,
@@ -398,7 +407,8 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': getCsrfToken()
         },
         body: JSON.stringify({ idCartella: deleteFolderId })
       });

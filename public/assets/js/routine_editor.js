@@ -8,7 +8,12 @@
 
   async function api(action, method, payload, extraOptions = {}) {
     let url = `../controllers/routine_controller.php?action=${encodeURIComponent(action)}`;
-    const options = { method, headers: { 'X-Requested-With': 'XMLHttpRequest' }, ...extraOptions };
+    const csrfToken = String(document.querySelector('input[name="csrf_token"]')?.value || '');
+    const options = {
+      method,
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-Token': csrfToken },
+      ...extraOptions
+    };
 
     if (method === 'GET') {
       const query = new URLSearchParams(payload || {}).toString();

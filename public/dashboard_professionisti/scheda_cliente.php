@@ -726,7 +726,8 @@ renderEnd(<<<'HTML'
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': String(document.querySelector('input[name="csrf_token"]')?.value || '')
         },
         body: JSON.stringify(payload)
       });
