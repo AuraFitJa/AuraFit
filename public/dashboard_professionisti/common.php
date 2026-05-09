@@ -37,6 +37,28 @@ function isValidPhone(string $value): bool {
   return $value === '' || preg_match('/^[0-9+()\s-]{6,20}$/', $value) === 1;
 }
 
+
+function isSameOriginPost(): bool {
+  $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+  if ($host === '') {
+    return false;
+  }
+
+  $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
+  if ($origin !== '') {
+    $originHost = strtolower((string)(parse_url($origin, PHP_URL_HOST) ?? ''));
+    return $originHost !== '' && hash_equals($host, $originHost);
+  }
+
+  $referer = (string)($_SERVER['HTTP_REFERER'] ?? '');
+  if ($referer !== '') {
+    $refererHost = strtolower((string)(parse_url($referer, PHP_URL_HOST) ?? ''));
+    return $refererHost !== '' && hash_equals($host, $refererHost);
+  }
+
+  return false;
+}
+
 $email = (string)($user['email'] ?? '');
 $roleBadge = $isPt && $isNutrizionista ? 'PT + Nutrizionista' : ($isPt ? 'Personal Trainer' : 'Nutrizionista');
 $userId = (int)$user['idUtente'];
@@ -58,7 +80,8 @@ if (file_exists(__DIR__ . '/../../config/database.php')) {
 $csrfToken = aurafit_get_csrf_token();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['profileScope'] ?? '') === 'professionista')) {
-  if (!aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
+  $csrfValid = aurafit_validate_csrf_token(aurafit_request_csrf_token());
+  if (!$csrfValid && !isSameOriginPost()) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'message' => 'Richiesta non valida (CSRF).']);
     exit;
