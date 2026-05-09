@@ -389,7 +389,10 @@ renderEnd('<script src="../assets/js/program_library.js"></script><script src=".
     try {
       const res = await fetch("api/assegna_programma_clienti.php", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": String(document.querySelector('input[name=\"csrf_token\"]')?.value || '')
+        },
         body: JSON.stringify({ idProgramma, clienti: selected })
       });
 

@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../lib/security.php';
+aurafit_start_secure_session();
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../config/database.php';
@@ -27,6 +28,10 @@ if (!$user || empty($user['idUtente'])) {
 $roles = array_map('strtolower', (array)($user['roles'] ?? []));
 if (!in_array('pt', $roles, true)) {
     jsonResponse(403, ['ok' => false, 'message' => 'Accesso consentito solo ai PT.']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
+    jsonResponse(403, ['ok' => false, 'message' => 'Richiesta non valida (CSRF).']);
 }
 
 $action = (string)($_REQUEST['action'] ?? '');

@@ -9,6 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   exit;
 }
 
+if (!aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
+  http_response_code(403);
+  echo json_encode(['ok' => false, 'error' => 'Richiesta non valida (CSRF).']);
+  exit;
+}
+
 if (!$dbAvailable) {
   http_response_code(500);
   echo json_encode(['ok' => false, 'error' => $dbError ?? 'Database non disponibile.']);

@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../lib/security.php';
+aurafit_start_secure_session();
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../../config/database.php';
@@ -32,6 +33,10 @@ if (!in_array('pt', $roles, true)) {
 $professionistaId = ProgrammiModel::getProfessionistaIdByUserId((int)$user['idUtente']);
 if (!$professionistaId) {
     jsonResponse(409, ['ok' => false, 'message' => 'Profilo professionista non trovato.']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
+    jsonResponse(403, ['ok' => false, 'message' => 'Richiesta non valida (CSRF).']);
 }
 
 $action = (string)($_REQUEST['action'] ?? '');

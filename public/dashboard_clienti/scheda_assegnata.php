@@ -866,6 +866,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
         headers: {
           'Content-Type': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': String(document.querySelector('input[name="csrf_token"]')?.value || ''),
         },
         body: JSON.stringify(requestPayload),
       });
@@ -1081,6 +1082,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
           headers: {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': String(document.querySelector('input[name="csrf_token"]')?.value || ''),
           },
           body: JSON.stringify({
             programId: PROGRAM_ID,
@@ -1248,6 +1250,7 @@ renderStart('Scheda assegnata', 'allenamenti', $email);
         headers: {
           'Content-Type': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': String(document.querySelector('input[name="csrf_token"]')?.value || ''),
         },
         body: JSON.stringify({
           programId: PROGRAM_ID,
