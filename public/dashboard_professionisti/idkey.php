@@ -229,17 +229,13 @@ $idKeysTotaliCount = count($idKeys) + count($idKeysEliminate);
 renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
 <style>
+  .idkey-mobile-shell { display: none; }
   @media (max-width: 820px) {
     html, body { overflow-x: hidden; }
     *, *::before, *::after { box-sizing: border-box; }
     .card > .section-title, .card > .toolbar, .card > table, .card > .divider, .card > #toggleIdKeyEliminate, .card > #storicoIdKeyEliminate { display: none; }
     .idkey-mobile-shell { max-width: 100%; min-width: 0; padding: 10px 0 94px; }
-    .idkey-mobile-header { position: sticky; top: 0; z-index: 30; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; margin:0 -2px 12px; background:#0f172a; border:1px solid rgba(255,255,255,.08); border-radius:14px; }
-    .idkey-mobile-brand { display:flex; align-items:center; gap:10px; min-width:0; }
-    .idkey-mobile-avatar { width:32px; height:32px; border-radius:9px; background:#1f2937; color:#fff; font-size:12px; font-weight:700; display:grid; place-items:center; }
-    .idkey-mobile-brand p { margin:0; min-width:0; line-height:1.2; }
-    .idkey-mobile-brand-top { font-size:11px; text-transform:uppercase; color:#9ca3af; letter-spacing:.04em; }
-    .idkey-mobile-brand-role { font-size:13px; color:#f3f4f6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .idkey-mobile-shell { display: block; }
     .idkey-mobile-title, .idkey-mobile-summary, .idkey-mobile-card, .idkey-mobile-key-card, .idkey-mobile-history { background:#0f172a; border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:12px; margin-bottom:10px; min-width:0; }
     .idkey-mobile-title .label { margin:0 0 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; }
     .idkey-mobile-title h3 { margin:0; font-size:24px; }
@@ -279,17 +275,6 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   <?php endforeach; ?>
 
   <div class="idkey-mobile-shell">
-    <div class="idkey-mobile-header">
-      <div class="idkey-mobile-brand">
-        <div class="idkey-mobile-avatar">AF</div>
-        <div>
-          <p class="idkey-mobile-brand-top">Aurafit professionista</p>
-          <p class="idkey-mobile-brand-role"><?= h($professionistaRuoloLabel) ?></p>
-        </div>
-      </div>
-      <a class="btn" href="logout.php" style="padding:7px 10px;border-radius:10px">Logout</a>
-    </div>
-
     <section class="idkey-mobile-title">
       <p class="label">Gestione accessi</p>
       <h3>ID-Key</h3>
@@ -434,19 +419,8 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
 
   <div class="divider"></div>
 
-  <button
-    id="toggleIdKeyEliminate"
-    class="btn"
-    type="button"
-    aria-expanded="false"
-    aria-controls="storicoIdKeyEliminate"
-    style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;"
-  >
-    <span id="toggleIdKeyEliminateIcon" aria-hidden="true">&gt;</span>
-    <span>Storico ID-Key eliminate</span>
-  </button>
 
-  <div id="storicoIdKeyEliminate" hidden>
+  <div id="storicoIdKeyEliminate">
     <table>
       <thead><tr><th>ID-Key</th><th>Tipo</th><th>Cliente collegato</th><th>Stato</th><th>Azioni</th></tr></thead>
       <tbody>
@@ -506,16 +480,6 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 </div>
 <script>
-  const toggleIdKeyEliminateBtn = document.getElementById('toggleIdKeyEliminate');
-  const storicoIdKeyEliminate = document.getElementById('storicoIdKeyEliminate');
-  const toggleIdKeyEliminateIcon = document.getElementById('toggleIdKeyEliminateIcon');
-
-  toggleIdKeyEliminateBtn?.addEventListener('click', () => {
-    const isOpen = !storicoIdKeyEliminate.hidden;
-    storicoIdKeyEliminate.hidden = isOpen;
-    toggleIdKeyEliminateBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-    toggleIdKeyEliminateIcon.textContent = isOpen ? '>' : 'v';
-  });
 
   const idKeyConfirmModal = document.querySelector('[data-idkey-confirm-modal]');
   const idKeyConfirmCancel = document.querySelector('[data-idkey-confirm-cancel]');
