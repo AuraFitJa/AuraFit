@@ -133,7 +133,13 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
 <section class="premium-client-card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
   <style>
     :root{--max:1380px;}
-    .premium-client-card {display:grid;gap:14px}
+    .premium-client-card {
+      display:grid;
+      gap:14px;
+      min-width:0;
+      max-width:100%;
+      overflow-x:hidden;
+    }
     .premium-surface{
       background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
       border-radius:var(--radius);
@@ -153,14 +159,14 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     .premium-btn:hover{border-color:rgba(34,211,238,.45);color:#fff;transform:translateY(-1px)}
     .premium-btn.primary{background:linear-gradient(90deg,#4f46e5,#06b6d4);border:none;color:#fff}
     .premium-btn.ghost-danger{border-color:rgba(244,63,94,.45);color:#fda4af;background:rgba(190,24,93,.08)}
-    .premium-kpi-wrap{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:18px}
+    .premium-kpi-wrap{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:18px;min-width:0}
     .premium-kpi{grid-column:span 3;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;box-shadow:inset 0 1px rgba(255,255,255,.06)}
     .premium-kpi strong{display:block;font-size:1.55rem;line-height:1.15;margin-top:8px;color:#f8fafc}
     .premium-kpi small{color:#64748b;font-size:.73rem}
     .premium-snapshot{grid-column:span 3;background:rgba(15,23,42,.75);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px}
     .premium-progress{height:7px;border-radius:999px;background:rgba(148,163,184,.25);overflow:hidden}
     .premium-progress > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#22d3ee,#34d399)}
-    .premium-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,380px);gap:14px;margin-top:18px;align-items:start}
+    .premium-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:14px;margin-top:18px;align-items:start;min-width:0}
     .premium-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.11);border-radius:18px;padding:16px;min-width:0;position:relative;z-index:0}
     .premium-section h3{margin:0;font-size:1.03rem}
     .premium-sub{margin:4px 0 0;color:#94a3b8;font-size:.8rem}
