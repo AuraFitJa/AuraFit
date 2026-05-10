@@ -231,6 +231,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
 <style>
   .idkey-mobile-shell { display: none; }
   #toggleIdKeyEliminate { display: inline-flex; }
+  #storicoIdKeyEliminate[hidden] { display: none !important; }
   @media (max-width: 820px) {
     html, body { overflow-x: hidden; }
     *, *::before, *::after { box-sizing: border-box; }
