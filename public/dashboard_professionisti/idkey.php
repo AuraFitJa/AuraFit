@@ -427,7 +427,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     aria-controls="storicoIdKeyEliminate"
     style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;"
   >
-    <span id="toggleIdKeyEliminateIcon" aria-hidden="true">v</span>
+    <span id="toggleIdKeyEliminateIcon" aria-hidden="true">&gt;</span>
     <span>Storico ID-Key terminate</span>
   </button>
 
@@ -491,6 +491,19 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 </div>
 <script>
+  const toggleIdKeyEliminateBtn = document.getElementById('toggleIdKeyEliminate');
+  const storicoIdKeyEliminate = document.getElementById('storicoIdKeyEliminate');
+  const toggleIdKeyEliminateIcon = document.getElementById('toggleIdKeyEliminateIcon');
+
+  toggleIdKeyEliminateBtn?.addEventListener('click', () => {
+    if (!storicoIdKeyEliminate) return;
+    const isOpen = !storicoIdKeyEliminate.hidden;
+    storicoIdKeyEliminate.hidden = isOpen;
+    toggleIdKeyEliminateBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    if (toggleIdKeyEliminateIcon) {
+      toggleIdKeyEliminateIcon.textContent = isOpen ? '>' : 'v';
+    }
+  });
 
   const idKeyConfirmModal = document.querySelector('[data-idkey-confirm-modal]');
   const idKeyConfirmCancel = document.querySelector('[data-idkey-confirm-cancel]');
