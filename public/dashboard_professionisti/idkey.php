@@ -230,10 +230,12 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
 ?>
 <style>
   .idkey-mobile-shell { display: none; }
+  #toggleIdKeyEliminate { display: inline-flex; }
   @media (max-width: 820px) {
     html, body { overflow-x: hidden; }
     *, *::before, *::after { box-sizing: border-box; }
-    .card > .section-title, .card > .toolbar, .card > table, .card > .divider, .card > #toggleIdKeyEliminate, .card > #storicoIdKeyEliminate { display: none; }
+    .card > .section-title, .card > .toolbar, .card > table, .card > .divider, .card > #storicoIdKeyEliminate { display: none; }
+    #toggleIdKeyEliminate { display: none !important; }
     .idkey-mobile-shell { max-width: 100%; min-width: 0; padding: 10px 0 94px; }
     .idkey-mobile-shell { display: block; }
     .idkey-mobile-title, .idkey-mobile-summary, .idkey-mobile-card, .idkey-mobile-key-card, .idkey-mobile-history { background:#0f172a; border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:12px; margin-bottom:10px; min-width:0; }
