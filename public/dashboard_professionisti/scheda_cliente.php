@@ -130,18 +130,21 @@ $clienteEmail = $cliente ? (string)$cliente['email'] : '';
 $ultimoProgramma = $programmiAssegnati[0] ?? null;
 renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
-<section class="card premium-client-card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
+<section class="premium-client-card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
   <style>
     :root{--max:1380px;}
     .premium-client-card {
-      background:
-        radial-gradient(1200px 400px at 10% -10%, rgba(34, 211, 238, .12), transparent 52%),
-        radial-gradient(900px 360px at 92% -15%, rgba(79, 70, 229, .15), transparent 55%),
-        #020617;
-      border: 1px solid rgba(255, 255, 255, .1);
-      border-radius: 24px;
-      padding: clamp(16px, 2.6vw, 32px);
-      box-shadow: 0 35px 80px rgba(2, 6, 23, .7);
+      display:grid;
+      gap:14px;
+      min-width:0;
+      max-width:100%;
+      overflow-x:hidden;
+    }
+    .premium-surface{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-radius:var(--radius);
+      box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05);
+      padding:18px;
     }
     .premium-grid{display:grid;gap:16px}
     .premium-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
@@ -156,14 +159,14 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     .premium-btn:hover{border-color:rgba(34,211,238,.45);color:#fff;transform:translateY(-1px)}
     .premium-btn.primary{background:linear-gradient(90deg,#4f46e5,#06b6d4);border:none;color:#fff}
     .premium-btn.ghost-danger{border-color:rgba(244,63,94,.45);color:#fda4af;background:rgba(190,24,93,.08)}
-    .premium-kpi-wrap{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:18px}
+    .premium-kpi-wrap{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:18px;min-width:0}
     .premium-kpi{grid-column:span 3;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;box-shadow:inset 0 1px rgba(255,255,255,.06)}
     .premium-kpi strong{display:block;font-size:1.55rem;line-height:1.15;margin-top:8px;color:#f8fafc}
     .premium-kpi small{color:#64748b;font-size:.73rem}
     .premium-snapshot{grid-column:span 3;background:rgba(15,23,42,.75);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px}
     .premium-progress{height:7px;border-radius:999px;background:rgba(148,163,184,.25);overflow:hidden}
     .premium-progress > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#22d3ee,#34d399)}
-    .premium-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,380px);gap:14px;margin-top:18px;align-items:start}
+    .premium-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:14px;margin-top:18px;align-items:start;min-width:0}
     .premium-section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.11);border-radius:18px;padding:16px;min-width:0;position:relative;z-index:0}
     .premium-section h3{margin:0;font-size:1.03rem}
     .premium-sub{margin:4px 0 0;color:#94a3b8;font-size:.8rem}
@@ -220,7 +223,7 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     .remove-program-actions {margin-top:14px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;}
   </style>
 
-  <div class="premium-header">
+  <div class="premium-surface premium-header">
     <div class="premium-header-title">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <a class="premium-btn" href="clienti.php">← Indietro</a>
@@ -242,7 +245,7 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
   <?php endforeach; ?>
 
   <?php if ($cliente): ?>
-    <div class="premium-kpi-wrap">
+    <div class="premium-kpi-wrap premium-surface">
       <article class="premium-kpi" data-contact-mail>
         <small>Email contatto</small>
         <strong style="font-size:1.35rem"><?= h($clienteEmail ?: '—') ?></strong>
