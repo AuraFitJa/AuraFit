@@ -139,9 +139,9 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
         radial-gradient(900px 360px at 92% -15%, rgba(79, 70, 229, .15), transparent 55%),
         #020617;
       border: 1px solid rgba(255, 255, 255, .1);
-      border-radius: 24px;
-      padding: clamp(16px, 2.6vw, 32px);
-      box-shadow: 0 35px 80px rgba(2, 6, 23, .7);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 18px 42px rgba(2, 6, 23, .5);
     }
     .premium-grid{display:grid;gap:16px}
     .premium-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
