@@ -491,16 +491,6 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 </div>
 <script>
-  const toggleIdKeyEliminateBtn = document.getElementById('toggleIdKeyEliminate');
-  const storicoIdKeyEliminate = document.getElementById('storicoIdKeyEliminate');
-  const toggleIdKeyEliminateIcon = document.getElementById('toggleIdKeyEliminateIcon');
-
-  toggleIdKeyEliminateBtn?.addEventListener('click', () => {
-    const isOpen = !storicoIdKeyEliminate.hidden;
-    storicoIdKeyEliminate.hidden = isOpen;
-    toggleIdKeyEliminateBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-    toggleIdKeyEliminateIcon.textContent = isOpen ? '>' : 'v';
-  });
 
   const idKeyConfirmModal = document.querySelector('[data-idkey-confirm-modal]');
   const idKeyConfirmCancel = document.querySelector('[data-idkey-confirm-cancel]');
