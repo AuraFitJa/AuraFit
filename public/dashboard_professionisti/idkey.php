@@ -264,7 +264,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   }
 </style>
 <section class="card">
-  <h2 class="section-title">Gestione ID-Key (RF-020, RF-021, RF-018)</h2>
+  <h2 class="section-title">Gestione ID-Key</h2>
 
   <?php foreach ($messages as $message): ?>
     <div class="okbox" style="margin-bottom:10px"><?= h($message) ?></div>
@@ -322,8 +322,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
         </div>
         <p class="idkey-mobile-subtext"><?= h(strtoupper((string)$key['tipo'])) ?> · <?= h($key['clienteCollegato']) ?></p>
         <div class="idkey-mobile-key-card-footer">
-          <span class="muted">Creata: —</span>
-          <div class="idkey-mobile-actions">
+          <div class="idkey-mobile-actions" style="margin-left:auto">
             <button class="btn" type="button" data-copy-idkey="<?= h($key['key']) ?>">Copia</button>
             <?php if ($mobileStatus !== 'eliminata'): ?>
               <form method="post" data-confirm-delete-idkey>
@@ -420,6 +419,18 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   <div class="divider"></div>
 
 
+  <button
+    id="toggleIdKeyEliminate"
+    class="btn"
+    type="button"
+    aria-expanded="true"
+    aria-controls="storicoIdKeyEliminate"
+    style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;"
+  >
+    <span id="toggleIdKeyEliminateIcon" aria-hidden="true">&gt;</span>
+    <span>Storico ID-Key terminate</span>
+  </button>
+
   <div id="storicoIdKeyEliminate">
     <table>
       <thead><tr><th>ID-Key</th><th>Tipo</th><th>Cliente collegato</th><th>Stato</th><th>Azioni</th></tr></thead>
@@ -480,6 +491,19 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 </div>
 <script>
+  const toggleIdKeyEliminateBtn = document.getElementById('toggleIdKeyEliminate');
+  const storicoIdKeyEliminate = document.getElementById('storicoIdKeyEliminate');
+  const toggleIdKeyEliminateIcon = document.getElementById('toggleIdKeyEliminateIcon');
+
+  toggleIdKeyEliminateBtn?.addEventListener('click', () => {
+    if (!storicoIdKeyEliminate) return;
+    const isOpen = !storicoIdKeyEliminate.hidden;
+    storicoIdKeyEliminate.hidden = isOpen;
+    toggleIdKeyEliminateBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    if (toggleIdKeyEliminateIcon) {
+      toggleIdKeyEliminateIcon.textContent = isOpen ? '>' : 'v';
+    }
+  });
 
   const idKeyConfirmModal = document.querySelector('[data-idkey-confirm-modal]');
   const idKeyConfirmCancel = document.querySelector('[data-idkey-confirm-cancel]');
