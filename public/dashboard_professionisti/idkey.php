@@ -9,6 +9,7 @@ $idKeysEliminate = [];
 $canGenerateIdKey = false;
 $limiteClienti = null;
 $clientiAttiviCount = 0;
+$professionistaRuoloLabel = 'Professionista';
 
 if (!$dbAvailable) {
   $errors[] = $dbError ?? 'Database non disponibile.';
@@ -212,8 +213,56 @@ if (!$dbAvailable) {
   }
 }
 
+$professionistaRuoloLabel = ($isPt && $isNutrizionista)
+  ? 'PT + Nutrizionista'
+  : ($isPt ? 'PT' : ($isNutrizionista ? 'Nutrizionista' : 'Professionista'));
+
+$idKeysDisponibiliCount = 0;
+foreach ($idKeys as $mobileKeyRow) {
+  if (strtolower((string)($mobileKeyRow['stato'] ?? '')) === 'attiva' && ($mobileKeyRow['clienteCollegato'] ?? '') === 'Nessun cliente collegato') {
+    $idKeysDisponibiliCount++;
+  }
+}
+
+$idKeysTotaliCount = count($idKeys) + count($idKeysEliminate);
+
 renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
+<style>
+  .idkey-mobile-shell { display: none; }
+  @media (max-width: 820px) {
+    html, body { overflow-x: hidden; }
+    *, *::before, *::after { box-sizing: border-box; }
+    .card > .section-title, .card > .toolbar, .card > table, .card > .divider, .card > #toggleIdKeyEliminate, .card > #storicoIdKeyEliminate { display: none; }
+    .idkey-mobile-shell { max-width: 100%; min-width: 0; padding: 10px 0 94px; }
+    .idkey-mobile-shell { display: block; }
+    .idkey-mobile-title, .idkey-mobile-summary, .idkey-mobile-card, .idkey-mobile-key-card, .idkey-mobile-history { background:#0f172a; border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:12px; margin-bottom:10px; min-width:0; }
+    .idkey-mobile-title .label { margin:0 0 6px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; }
+    .idkey-mobile-title h3 { margin:0; font-size:24px; }
+    .idkey-mobile-title p { margin:8px 0 0; color:#cbd5e1; font-size:14px; }
+    .idkey-mobile-summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .idkey-mobile-summary .metric-label { display:block; font-size:11px; color:#94a3b8; margin-bottom:3px; }
+    .idkey-mobile-summary .metric-value { font-size:18px; font-weight:600; color:#f8fafc; }
+    .idkey-mobile-plan { margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,.08); color:#cbd5e1; font-size:13px; }
+    .idkey-mobile-card h4, .idkey-mobile-history summary { margin:0 0 10px; font-size:16px; }
+    .idkey-mobile-form { display:grid; gap:10px; }
+    .idkey-mobile-form .field { height:44px; padding:0 12px; border-radius:12px; width:100%; min-width:0; }
+    .idkey-mobile-form .btn { width:100%; border-radius:12px; }
+    .idkey-mobile-key-card-head, .idkey-mobile-key-card-sub, .idkey-mobile-key-card-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; }
+    .idkey-mobile-key-code { margin:0; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .idkey-mobile-subtext { margin:6px 0 10px; color:#cbd5e1; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .idkey-mobile-badge { padding:3px 8px; border-radius:999px; font-size:11px; text-transform:lowercase; border:1px solid transparent; }
+    .idkey-mobile-badge.attiva { background:rgba(34,197,94,.15); border-color:rgba(34,197,94,.4); color:#bbf7d0; }
+    .idkey-mobile-badge.disponibile { background:rgba(6,182,212,.14); border-color:rgba(6,182,212,.4); color:#a5f3fc; }
+    .idkey-mobile-badge.eliminata { background:rgba(148,163,184,.16); border-color:rgba(148,163,184,.35); color:#e2e8f0; }
+    .idkey-mobile-key-card-footer .muted { font-size:12px; }
+    .idkey-mobile-actions { display:flex; gap:8px; flex-shrink:0; }
+    .idkey-mobile-actions .btn { padding:6px 10px; border-radius:10px; font-size:12px; }
+    .idkey-mobile-history details { margin:0; }
+    .idkey-mobile-history ul { list-style:none; margin:8px 0 0; padding:0; display:grid; gap:8px; }
+    .idkey-mobile-history li { border-top:1px solid rgba(255,255,255,.08); padding-top:8px; }
+  }
+</style>
 <section class="card">
   <h2 class="section-title">Gestione ID-Key (RF-020, RF-021, RF-018)</h2>
 
@@ -224,6 +273,84 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   <?php foreach ($errors as $error): ?>
     <div class="alert" style="margin-bottom:10px"><?= h($error) ?></div>
   <?php endforeach; ?>
+
+  <div class="idkey-mobile-shell">
+    <section class="idkey-mobile-title">
+      <p class="label">Gestione accessi</p>
+      <h3>ID-Key</h3>
+      <p>Genera e gestisci i codici di collegamento dei tuoi clienti.</p>
+    </section>
+
+    <section class="idkey-mobile-summary">
+      <div class="idkey-mobile-summary-grid">
+        <div><span class="metric-label">Clienti</span><span class="metric-value"><?= (int)$clientiAttiviCount ?></span></div>
+        <div><span class="metric-label">Disponibili</span><span class="metric-value"><?= (int)$idKeysDisponibiliCount ?></span></div>
+        <div><span class="metric-label">Totali</span><span class="metric-value"><?= (int)$idKeysTotaliCount ?></span></div>
+      </div>
+      <div class="idkey-mobile-plan">Limite piano: <?= $limiteClienti !== null ? (int)$limiteClienti : 'illimitato' ?></div>
+    </section>
+
+    <section class="idkey-mobile-card">
+      <h4>Nuova ID-Key</h4>
+      <form method="post" class="idkey-mobile-form">
+        <input type="hidden" name="action" value="generate_idkey" />
+        <?php if ($isPt && $isNutrizionista): ?>
+          <select name="tipo" class="field"><option value="pt">PT</option><option value="nutrizionista">Nutrizionista</option></select>
+        <?php elseif ($isPt): ?>
+          <input type="hidden" name="tipo" value="pt" />
+        <?php else: ?>
+          <input type="hidden" name="tipo" value="nutrizionista" />
+        <?php endif; ?>
+        <button class="btn primary" type="submit" <?= $canGenerateIdKey ? '' : 'disabled' ?>>Genera nuova ID-Key</button>
+      </form>
+    </section>
+
+    <?php if (!$idKeys): ?>
+      <section class="idkey-mobile-card"><p class="muted" style="margin:0">Nessuna ID-Key presente.</p></section>
+    <?php endif; ?>
+
+    <?php foreach ($idKeys as $key): ?>
+      <?php
+        $mobileStatus = strtolower((string)$key['stato']);
+        $isDisponibile = $mobileStatus === 'attiva' && ($key['clienteCollegato'] ?? '') === 'Nessun cliente collegato';
+        $badgeText = $isDisponibile ? 'disponibile' : ($mobileStatus === 'eliminata' ? 'eliminata' : 'attiva');
+      ?>
+      <section class="idkey-mobile-key-card">
+        <div class="idkey-mobile-key-card-head">
+          <p class="idkey-mobile-key-code"><?= h($key['key']) ?></p>
+          <span class="idkey-mobile-badge <?= h($badgeText) ?>"><?= h($badgeText) ?></span>
+        </div>
+        <p class="idkey-mobile-subtext"><?= h(strtoupper((string)$key['tipo'])) ?> · <?= h($key['clienteCollegato']) ?></p>
+        <div class="idkey-mobile-key-card-footer">
+          <span class="muted">Creata: —</span>
+          <div class="idkey-mobile-actions">
+            <button class="btn" type="button" data-copy-idkey="<?= h($key['key']) ?>">Copia</button>
+            <?php if ($mobileStatus !== 'eliminata'): ?>
+              <form method="post" data-confirm-delete-idkey>
+                <input type="hidden" name="action" value="delete_idkey" />
+                <input type="hidden" name="idKey" value="<?= (int)$key['idKey'] ?>" />
+                <button class="btn danger" type="submit">Elimina</button>
+              </form>
+            <?php endif; ?>
+          </div>
+        </div>
+      </section>
+    <?php endforeach; ?>
+
+    <section class="idkey-mobile-history">
+      <details>
+        <summary>Storico ID-Key eliminate</summary>
+        <ul>
+          <?php if (!$idKeysEliminate): ?>
+            <li><span class="muted">Nessuna ID-Key eliminata.</span></li>
+          <?php endif; ?>
+          <?php foreach ($idKeysEliminate as $key): ?>
+            <li><code><?= h($key['key']) ?></code><br><span class="muted"><?= h(strtoupper((string)$key['tipo'])) ?> · eliminata</span></li>
+          <?php endforeach; ?>
+        </ul>
+      </details>
+    </section>
+  </div>
 
   <div class="toolbar">
     <form method="post" style="display:flex;gap:8px;flex-wrap:wrap">
@@ -292,19 +419,8 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
 
   <div class="divider"></div>
 
-  <button
-    id="toggleIdKeyEliminate"
-    class="btn"
-    type="button"
-    aria-expanded="false"
-    aria-controls="storicoIdKeyEliminate"
-    style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;"
-  >
-    <span id="toggleIdKeyEliminateIcon" aria-hidden="true">&gt;</span>
-    <span>Storico ID-Key eliminate</span>
-  </button>
 
-  <div id="storicoIdKeyEliminate" hidden>
+  <div id="storicoIdKeyEliminate">
     <table>
       <thead><tr><th>ID-Key</th><th>Tipo</th><th>Cliente collegato</th><th>Stato</th><th>Azioni</th></tr></thead>
       <tbody>
@@ -364,16 +480,6 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
   </div>
 </div>
 <script>
-  const toggleIdKeyEliminateBtn = document.getElementById('toggleIdKeyEliminate');
-  const storicoIdKeyEliminate = document.getElementById('storicoIdKeyEliminate');
-  const toggleIdKeyEliminateIcon = document.getElementById('toggleIdKeyEliminateIcon');
-
-  toggleIdKeyEliminateBtn?.addEventListener('click', () => {
-    const isOpen = !storicoIdKeyEliminate.hidden;
-    storicoIdKeyEliminate.hidden = isOpen;
-    toggleIdKeyEliminateBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-    toggleIdKeyEliminateIcon.textContent = isOpen ? '>' : 'v';
-  });
 
   const idKeyConfirmModal = document.querySelector('[data-idkey-confirm-modal]');
   const idKeyConfirmCancel = document.querySelector('[data-idkey-confirm-cancel]');
@@ -488,6 +594,35 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     if (event.key === 'Escape' && idKeyGeneratedModal?.classList.contains('open')) {
       closeGeneratedIdKeyModal();
     }
+  });
+
+  document.querySelectorAll('[data-copy-idkey]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const keyValue = btn.getAttribute('data-copy-idkey') || '';
+      if (!keyValue) return;
+      let copied = false;
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(keyValue);
+          copied = true;
+        } catch (error) {
+          copied = false;
+        }
+      }
+      if (!copied) {
+        const tempInput = document.createElement('input');
+        tempInput.value = keyValue;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        copied = document.execCommand('copy');
+        tempInput.remove();
+      }
+      const oldLabel = btn.textContent;
+      btn.textContent = copied ? 'Copiato' : 'Riprova';
+      setTimeout(() => {
+        btn.textContent = oldLabel;
+      }, 1200);
+    });
   });
 </script>
 <?php
