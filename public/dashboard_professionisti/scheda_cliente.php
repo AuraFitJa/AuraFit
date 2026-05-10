@@ -130,18 +130,15 @@ $clienteEmail = $cliente ? (string)$cliente['email'] : '';
 $ultimoProgramma = $programmiAssegnati[0] ?? null;
 renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
-<section class="card premium-client-card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
+<section class="premium-client-card" data-client-card<?= $compilazioneApertaMeta ? ' style="display:none"' : '' ?>>
   <style>
     :root{--max:1380px;}
-    .premium-client-card {
-      background:
-        radial-gradient(1200px 400px at 10% -10%, rgba(34, 211, 238, .12), transparent 52%),
-        radial-gradient(900px 360px at 92% -15%, rgba(79, 70, 229, .15), transparent 55%),
-        #020617;
-      border: 1px solid rgba(255, 255, 255, .1);
-      border-radius: 24px;
-      padding: clamp(16px, 2.6vw, 32px);
-      box-shadow: 0 35px 80px rgba(2, 6, 23, .7);
+    .premium-client-card {display:grid;gap:14px}
+    .premium-surface{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-radius:var(--radius);
+      box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.05);
+      padding:18px;
     }
     .premium-grid{display:grid;gap:16px}
     .premium-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
@@ -220,7 +217,7 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
     .remove-program-actions {margin-top:14px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;}
   </style>
 
-  <div class="premium-header">
+  <div class="premium-surface premium-header">
     <div class="premium-header-title">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <a class="premium-btn" href="clienti.php">← Indietro</a>
@@ -242,7 +239,7 @@ renderStart('Scheda Cliente', 'clienti', $email, $roleBadge, $isPt, $isNutrizion
   <?php endforeach; ?>
 
   <?php if ($cliente): ?>
-    <div class="premium-kpi-wrap">
+    <div class="premium-kpi-wrap premium-surface">
       <article class="premium-kpi" data-contact-mail>
         <small>Email contatto</small>
         <strong style="font-size:1.35rem"><?= h($clienteEmail ?: '—') ?></strong>
