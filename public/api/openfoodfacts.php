@@ -142,6 +142,7 @@ try {
     $carbCol = off_pick_column($diaryCols, ['carboFinali', 'carboidratiFinali', 'carboidrati']);
     $fatCol = off_pick_column($diaryCols, ['grassiFinali', 'grassi']);
     $dateCol = off_pick_column($diaryCols, ['dataDiario', 'dataRiferimento', 'data', 'giorno']);
+    $consumedCol = off_pick_column($diaryCols, ['consumatoIl']);
     $createdCol = off_pick_column($diaryCols, ['creatoIl', 'createdAt', 'inseritoIl']);
 
     if (!$idCol || !$clientCol || !$mealCol || !$kcalCol || !$proCol || !$carbCol || !$fatCol) {
@@ -176,6 +177,10 @@ try {
       if ($dateCol) {
         $cols[] = $dateCol;
         $vals[] = $today;
+      }
+      if ($consumedCol) {
+        $cols[] = $consumedCol;
+        $vals[] = $today . ' ' . $entryTime . ':00';
       }
       if ($createdCol) {
         $cols[] = $createdCol;
