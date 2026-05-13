@@ -989,8 +989,11 @@ renderStart('Nutrizione cliente', 'nutrizione', $email);
       form.append('barcode', selectedProduct.barcode);
       form.append('mode', offModal.querySelector('[data-off-mode]').value);
       form.append('amount', offModal.querySelector('[data-off-amount]').value);
-      form.append('meal_type', offMeal.value);
-      form.append('entry_time', offModal.querySelector('[data-off-time]').value);
+      const mealType = (offMeal && offMeal.value ? offMeal.value : 'spuntini');
+      const entryTimeField = offModal.querySelector('[data-off-time]');
+      const entryTime = (entryTimeField && entryTimeField.value ? entryTimeField.value : new Date().toTimeString().slice(0,5));
+      form.append('meal_type', mealType);
+      form.append('entry_time', entryTime);
       await offApi(form);
       window.location.reload();
     } catch(error){ alert(error.message || 'Errore salvataggio alimento'); }
