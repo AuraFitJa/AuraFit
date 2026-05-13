@@ -1,18 +1,25 @@
 <?php
+require_once __DIR__ . '/lib/security.php';
+aurafit_start_secure_session();
+
+$csrfToken = aurafit_get_csrf_token();
+
 $flows = [
   [
     'title' => 'Lato cliente',
     'description' => 'Simula l’esperienza utente: onboarding, scelta obiettivi e percorso fitness.',
-    'label' => 'Avvia test cliente',
-    'href' => '/cliente.php',
+    'label' => 'Accedi come cliente demo',
+    'email' => 'cliente@test.it',
+    'password' => 'password123',
     'icon' => '👤',
     'class' => 'client'
   ],
   [
     'title' => 'Lato professionista',
     'description' => 'Prova gli strumenti dedicati a trainer, coach e operatori fitness.',
-    'label' => 'Avvia test professionista',
-    'href' => '/professionista.php',
+    'label' => 'Accedi come professionista demo',
+    'email' => 'pt@test.it',
+    'password' => 'password123',
     'icon' => '🏋️',
     'class' => 'pro'
   ],
@@ -180,7 +187,6 @@ $flows = [
       display: block;
     }
 
-
     .hero {
       max-width: 710px;
       margin-bottom: 30px;
@@ -215,8 +221,13 @@ $flows = [
       margin-top: 34px;
     }
 
+    .flow-form {
+      margin: 0;
+    }
+
     .flow-card {
       position: relative;
+      width: 100%;
       min-height: 220px;
       display: flex;
       flex-direction: column;
@@ -234,6 +245,14 @@ $flows = [
         border-color .18s ease,
         background .18s ease,
         box-shadow .18s ease;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    button.flow-card {
+      appearance: none;
+      -webkit-appearance: none;
     }
 
     .flow-card::before {
@@ -315,6 +334,7 @@ $flows = [
 
     .client .flow-cta {
       background: linear-gradient(135deg, var(--brand-purple), #8D7DFF);
+      color: #fff;
     }
 
     .pro .flow-cta {
@@ -373,36 +393,42 @@ $flows = [
             Testa i flussi <span class="gradient-text">AuraFit</span>
           </h1>
           <p class="intro">
-            Scegli il profilo da simulare e avvia rapidamente il percorso più adatto:
-            esperienza cliente oppure strumenti per professionisti.
+            Scegli il profilo demo da usare: entrerai automaticamente con un account
+            già configurato, senza dover inserire manualmente email e password.
           </p>
         </div>
 
-        <div class="actions" aria-label="Flussi disponibili">
+        <div class="actions" aria-label="Account demo disponibili">
           <?php foreach ($flows as $flow): ?>
-            <a
-              class="flow-card <?= htmlspecialchars($flow['class'], ENT_QUOTES, 'UTF-8') ?>"
-              href="<?= htmlspecialchars($flow['href'], ENT_QUOTES, 'UTF-8') ?>"
-            >
-              <div>
-                <div class="flow-icon" aria-hidden="true">
-                  <?= htmlspecialchars($flow['icon'], ENT_QUOTES, 'UTF-8') ?>
-                </div>
+            <form class="flow-form" method="post" action="/public/login.php">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+              <input type="hidden" name="email" value="<?= htmlspecialchars($flow['email'], ENT_QUOTES, 'UTF-8') ?>">
+              <input type="hidden" name="password" value="<?= htmlspecialchars($flow['password'], ENT_QUOTES, 'UTF-8') ?>">
 
-                <h2 class="flow-title">
-                  <?= htmlspecialchars($flow['title'], ENT_QUOTES, 'UTF-8') ?>
-                </h2>
+              <button
+                class="flow-card <?= htmlspecialchars($flow['class'], ENT_QUOTES, 'UTF-8') ?>"
+                type="submit"
+              >
+                <span>
+                  <span class="flow-icon" aria-hidden="true">
+                    <?= htmlspecialchars($flow['icon'], ENT_QUOTES, 'UTF-8') ?>
+                  </span>
 
-                <p class="flow-description">
-                  <?= htmlspecialchars($flow['description'], ENT_QUOTES, 'UTF-8') ?>
-                </p>
-              </div>
+                  <h2 class="flow-title">
+                    <?= htmlspecialchars($flow['title'], ENT_QUOTES, 'UTF-8') ?>
+                  </h2>
 
-              <span class="flow-cta">
-                <?= htmlspecialchars($flow['label'], ENT_QUOTES, 'UTF-8') ?>
-                <span class="arrow" aria-hidden="true">→</span>
-              </span>
-            </a>
+                  <span class="flow-description">
+                    <?= htmlspecialchars($flow['description'], ENT_QUOTES, 'UTF-8') ?>
+                  </span>
+                </span>
+
+                <span class="flow-cta">
+                  <?= htmlspecialchars($flow['label'], ENT_QUOTES, 'UTF-8') ?>
+                  <span class="arrow" aria-hidden="true">→</span>
+                </span>
+              </button>
+            </form>
           <?php endforeach; ?>
         </div>
 
