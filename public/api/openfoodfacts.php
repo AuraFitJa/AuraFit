@@ -127,6 +127,14 @@ try {
     if (!$product) {
       off_json_error('Prodotto non trovato.');
     }
+    $productName = trim((string)($product['name'] ?? ''));
+    if ($productName === '') {
+      $productName = 'Prodotto OFF ' . ($product['barcode'] ?? $barcode);
+    }
+    $snapshotJson = json_encode($product, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    if (!is_string($snapshotJson) || $snapshotJson === '') {
+      $snapshotJson = null;
+    }
 
     $macros = off_calculate_macros($product, $mode, $amount);
 
@@ -214,7 +222,7 @@ try {
       $pushCol('ordine', $nextOrder);
       $pushCol('fonteDati', 'openfoodfacts');
       $pushCol('offBarcode', $product['barcode']);
-      $pushCol('nomeAlimento', $product['name']);
+      $pushCol('nomeAlimento', $productName);
       $pushCol('marca', $product['brand'] ?: null);
       $pushCol('imageUrl', $product['image_url'] ?: null);
       $pushCol('quantita', $amount);
@@ -227,7 +235,7 @@ try {
       $pushCol('carboidrati', $macros['carboidrati']);
       $pushCol('grassi', $macros['grassi']);
       $pushCol('calorie', $macros['calorie']);
-      $pushCol('rawSnapshotJson', json_encode($product, JSON_UNESCAPED_UNICODE));
+      $pushCol('rawSnapshotJson', $snapshotJson);
       if (isset($diaryFoodCols['consumatoIl'])) {
         $pushCol('consumatoIl', $today . ' ' . $entryTime . ':00');
       }
