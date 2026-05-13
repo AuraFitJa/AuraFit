@@ -226,6 +226,10 @@ try {
     $pushCol('grassi', $macros['grassi']);
     $pushCol('calorie', $macros['calorie']);
     $pushCol('rawSnapshotJson', json_encode($product, JSON_UNESCAPED_UNICODE));
+    if (isset($diaryFoodCols['consumatoIl'])) {
+      $consumedAt = $today . ' ' . $entryTime . ':00';
+      $pushCol('consumatoIl', $consumedAt);
+    }
     $pushCol('creatoIl', date('Y-m-d H:i:s'));
     $pushCol('aggiornatoIl', date('Y-m-d H:i:s'));
 
