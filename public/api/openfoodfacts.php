@@ -133,6 +133,7 @@ try {
 
     $diaryCols = off_table_columns('VociDiarioAlimentare');
     $idCol = off_pick_column($diaryCols, ['idVoceDiario', 'idVoceDiarioAlimentare', 'idVoce']);
+    $clientCol = off_pick_column($diaryCols, ['idCliente', 'cliente', 'clienteId']);
     $mealCol = off_pick_column($diaryCols, ['tipologiaPasto', 'tipoPasto', 'slotPasto', 'pasto']);
     $timeCol = off_pick_column($diaryCols, ['orario', 'oraPasto', 'orarioPasto']);
     $descCol = off_pick_column($diaryCols, ['descrizione', 'voce', 'nomeVoce', 'alimento']);
@@ -143,13 +144,13 @@ try {
     $dateCol = off_pick_column($diaryCols, ['dataDiario', 'dataRiferimento', 'data', 'giorno']);
     $createdCol = off_pick_column($diaryCols, ['creatoIl', 'createdAt', 'inseritoIl']);
 
-    if (!$idCol || !$mealCol || !$kcalCol || !$proCol || !$carbCol || !$fatCol) {
+    if (!$idCol || !$clientCol || !$mealCol || !$kcalCol || !$proCol || !$carbCol || !$fatCol) {
       off_json_error('Schema VociDiarioAlimentare incompleto.');
     }
 
     $today = date('Y-m-d');
     $params = [$clienteId, $mealType];
-    $where = 'idCliente = ? AND ' . $mealCol . ' = ?';
+    $where = $clientCol . ' = ? AND ' . $mealCol . ' = ?';
     if ($dateCol) {
       $where .= ' AND ' . $dateCol . ' = ?';
       $params[] = $today;
@@ -162,7 +163,7 @@ try {
     if ($existing) {
       $voceId = (int)$existing['idVoce'];
     } else {
-      $cols = ['idCliente', $mealCol, $kcalCol, $proCol, $carbCol, $fatCol];
+      $cols = [$clientCol, $mealCol, $kcalCol, $proCol, $carbCol, $fatCol];
       $vals = [$clienteId, $mealType, 0, 0, 0, 0];
       if ($timeCol) {
         $cols[] = $timeCol;
