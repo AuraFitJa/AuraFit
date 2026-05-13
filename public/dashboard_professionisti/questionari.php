@@ -118,8 +118,8 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   </section>
 
   <section class="mobile-collapsible" id="mobile-new-questionario" data-mobile-collapsible hidden>
-    <h4>Nuovo questionario</h4>
-  <h3>Libreria Questionari</h3>
+    <div class="mobile-create-head"><h4>Nuovo questionario</h4><span>rapido</span></div>
+  <h3 class="mobile-create-title">Libreria Questionari</h3>
   <form method="post" class="toolbar mobile-form" style="gap:8px;align-items:flex-end">
     <input type="hidden" name="createQuestionario" value="1">
     <label class="field"><span>Titolo</span><input name="titolo" required></label>
@@ -138,10 +138,8 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     </td>
   </tr><?php endforeach; ?></tbody></table></div>
   <section class="mobile-library">
-  <button class="mobile-toggle-btn mobile-toggle-btn--inline" type="button" data-mobile-toggle="mobile-compilazioni" aria-expanded="false" aria-controls="mobile-compilazioni">+</button>
-
-    <div class="mobile-library__head"><h3>Libreria</h3><span><?= count($questionari) ?> elementi</span></div>
-    <div class="mobile-search"><input type="text" placeholder="Cerca questionario" disabled></div>
+      <div class="mobile-library__head"><h3>Libreria</h3><span><?= count($questionari) ?> elementi</span></div>
+    <div class="mobile-search"><input type="text" placeholder="Cerca questionario"></div>
     <?php foreach ($questionari as $q): ?>
       <article class="mobile-q-card">
         <div class="mobile-q-card__title"><strong><?= h($q['titolo']) ?></strong><span class="mobile-pill <?= h($q['stato'])==='attivo' ? 'is-active' : '' ?>"><?= h($q['stato']) ?></span></div>
@@ -448,30 +446,26 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   .mobile-q-header,.mobile-library,.mobile-collapsible,.mobile-toggle-btn--inline,.mobile-submissions-shell{display:none}
   .desktop-only{display:block}
   @media (max-width:820px){
-    .mobile-q-header,.mobile-library,.mobile-collapsible{display:block}
-    .mobile-q-header{padding:16px;border:1px solid rgba(92,126,198,.38);border-radius:18px;background:radial-gradient(120% 110% at 92% 2%, rgba(50,111,177,.35), transparent 42%), linear-gradient(180deg, rgba(18,35,74,.98), rgba(11,20,44,.98));margin-bottom:14px;box-shadow:0 18px 30px rgba(0,0,0,.32)}
-    .mobile-q-header__top{display:flex;justify-content:space-between;align-items:center}.mobile-q-header__eyebrow{margin:0;text-transform:uppercase;font-size:11px;letter-spacing:.14em}.mobile-q-header__title{margin:8px 0 4px;font-size:34px}.mobile-q-header__subtitle{margin:0 0 12px;font-size:14px}
-    .mobile-toggle-btn{width:42px;height:42px;border-radius:14px;border:2px solid #fff;background:#fff;color:#111;font-size:28px;line-height:1}
-    .mobile-q-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mobile-q-stats article{border:1px solid rgba(143,175,255,.26);border-radius:12px;padding:10px}.mobile-q-stats span{font-size:11px;display:block}.mobile-q-stats strong{font-size:28px}
-    .mobile-collapsible{margin-bottom:14px;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(16,25,48,.85)}
-    .mobile-library__head{display:flex;justify-content:space-between;align-items:center}.mobile-search input{width:100%;padding:10px;border-radius:12px;background:#0a1227;border:1px solid rgba(255,255,255,.15);color:#98a8c9}
-    .mobile-q-card{margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(9,14,28,.8)}.mobile-q-card__title{display:flex;justify-content:space-between;align-items:center}
-    .mobile-pill{padding:2px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.25);font-size:12px}.mobile-pill.is-active{color:#8af0ba;border-color:#42cc8f}.mobile-q-card p{margin:6px 0 8px;font-size:13px}
-    .mobile-q-card__stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-q-card__stats>div{border:1px solid rgba(255,255,255,.11);border-radius:10px;padding:8px}
-    .mobile-q-card__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.mobile-q-card__actions form .btn,.mobile-q-card__actions .btn{width:100%}
-    .mobile-submissions-shell{margin-top:12px}
-    .mobile-submissions-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:14px;border:1px solid rgba(92,126,198,.3);background:linear-gradient(180deg, rgba(18,35,74,.85), rgba(11,20,44,.85));color:#fff}
-    .mobile-submissions-toggle h3{margin:0;font-size:40px;font-size:clamp(24px,7vw,44px);line-height:1}
-    .mobile-submissions-toggle span{font-weight:800}
-    .mobile-sub-card{margin-top:8px;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;display:flex;justify-content:space-between;background:rgba(255,255,255,.03)}
-    .mobile-sub-card p{margin:4px 0 0;font-size:12px;color:rgba(255,255,255,.72)}
-    .mobile-sub-card small{display:block;color:rgba(255,255,255,.55)}
-    .desktop-only{display:none}
-
-    .desktop-table{display:none}
-    .mobile-form .field{width:100% !important;min-width:0 !important}
-    .mobile-toggle-btn--inline{display:none}
+    .desktop-only,.desktop-table{display:none}
+    .mobile-q-header,.mobile-library,.mobile-collapsible,.mobile-submissions-shell{display:block}
+    .mobile-q-header{padding:14px;border:1px solid rgba(95,127,192,.45);border-radius:22px;background:radial-gradient(120% 130% at 95% 0%,rgba(49,118,186,.30),transparent 45%),linear-gradient(180deg,#13244b 0%,#0b1737 100%);box-shadow:0 20px 40px rgba(0,0,0,.38)}
+    .mobile-q-header__top{display:flex;justify-content:space-between;align-items:flex-start}
+    .mobile-q-header__eyebrow{margin:0;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:#b7cffc}
+    .mobile-q-header__title{margin:8px 0 4px;font-size:48px;line-height:.92;font-weight:900}
+    .mobile-q-header__subtitle{margin:0 0 12px;font-size:15px;color:rgba(235,243,255,.9)}
+    .mobile-toggle-btn{width:44px;height:44px;border-radius:14px;border:0;background:#fff;color:#0a1228;font-size:30px;font-weight:500}
+    .mobile-q-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mobile-q-stats article{border:1px solid rgba(145,176,255,.3);border-radius:14px;background:rgba(5,13,31,.28);padding:10px}.mobile-q-stats span{font-size:11px;color:#b6c8ee}.mobile-q-stats strong{display:block;font-size:36px;line-height:1}
+    .mobile-collapsible{margin-top:10px;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:#101a37;padding:12px}
+    .mobile-create-head{display:flex;justify-content:space-between;align-items:center}.mobile-create-head span{font-size:11px;background:rgba(99,102,241,.22);padding:3px 10px;border-radius:999px}.mobile-create-title{margin:10px 0 8px;font-size:44px;line-height:.95}
+    .mobile-form{display:block !important}.mobile-form .field{display:block;width:100% !important;min-width:0 !important;margin-bottom:10px}.mobile-form input{width:100%}.mobile-form .btn.primary{width:100%;border-radius:14px;background:linear-gradient(90deg,#6c63ff,#4cc4f0)}
+    .mobile-library{margin-top:12px}.mobile-library__head{display:flex;justify-content:space-between;align-items:center}.mobile-library__head h3{font-size:40px}.mobile-search input{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:#08132f;color:#eaf1ff;padding:11px 12px}
+    .mobile-q-card{margin-top:10px;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}.mobile-q-card__title{display:flex;justify-content:space-between}.mobile-q-card__title strong{font-size:32px;line-height:1}
+    .mobile-pill{padding:4px 10px;border-radius:999px;border:1px solid rgba(99,255,188,.4);color:#8af8cd}.mobile-q-card p{font-size:14px;color:rgba(239,247,255,.76)}
+    .mobile-q-card__stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-q-card__stats>div{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px}.mobile-q-card__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mobile-q-card__actions .btn{width:100%;border-radius:11px;background:rgba(255,255,255,.06)}
+    .mobile-submissions-shell{margin-top:12px}.mobile-submissions-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:16px;border:1px solid rgba(95,127,192,.45);background:linear-gradient(180deg,#13244b,#0c193c);color:#fff}.mobile-submissions-toggle h3{margin:0;font-size:46px;line-height:.92}
+    .mobile-sub-card{margin-top:8px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;background:rgba(255,255,255,.04)}
   }
+
 
 </style>
 <?php renderEnd('<script>
