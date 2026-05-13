@@ -3,45 +3,52 @@ require __DIR__ . '/common.php';
 
 $clientiPeso = [];
 $clientiError = null;
+$misurazioniTableExists = false;
 
 if ($dbAvailable) {
   try {
-    Database::exec(
-      'CREATE TABLE IF NOT EXISTS MisurazioniPeso (
-        idMisurazione BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        idCliente BIGINT UNSIGNED NOT NULL,
-        pesoKg DECIMAL(5,2) NOT NULL,
-        dataMisurazione DATE NOT NULL,
-        creatoIl TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        aggiornatoIl TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_cliente_data (idCliente, dataMisurazione),
-        KEY idx_cliente_data (idCliente, dataMisurazione),
-        CONSTRAINT fk_misurazionipeso_cliente FOREIGN KEY (idCliente) REFERENCES Clienti(idCliente) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
-    );
+    $table = Database::exec("SHOW TABLES LIKE 'MisurazioniPeso'")->fetch();
+    $misurazioniTableExists = (bool)$table;
 
     $professionista = getProfessionistaId($userId);
     if ($professionista) {
-      $rows = Database::exec(
-        'SELECT c.idCliente, u.nome, u.cognome, mp.dataMisurazione, mp.pesoKg
+      $rowsClienti = Database::exec(
+        'SELECT c.idCliente, u.nome, u.cognome
          FROM Associazioni a
          INNER JOIN Clienti c ON c.idCliente = a.cliente
          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-         LEFT JOIN MisurazioniPeso mp ON mp.idCliente = c.idCliente
          WHERE a.professionista = ? AND a.attiva = 1
-         ORDER BY u.cognome, u.nome, mp.dataMisurazione',
+         ORDER BY u.cognome, u.nome',
         [$professionista]
       )->fetchAll();
 
-      foreach ($rows as $row) {
-        $idCliente = (int)$row['idCliente'];
-        if (!isset($clientiPeso[$idCliente])) {
-          $nomeCompleto = trim((string)$row['nome'] . ' ' . (string)$row['cognome']);
-          $clientiPeso[$idCliente] = ['nome' => $nomeCompleto, 'labels' => [], 'data' => []];
-        }
-        if (!empty($row['dataMisurazione']) && $row['pesoKg'] !== null) {
-          $clientiPeso[$idCliente]['labels'][] = (string)$row['dataMisurazione'];
-          $clientiPeso[$idCliente]['data'][] = (float)$row['pesoKg'];
+      foreach ($rowsClienti as $rowCliente) {
+        $idCliente = (int)$rowCliente['idCliente'];
+        $nomeCompleto = trim((string)$rowCliente['nome'] . ' ' . (string)$rowCliente['cognome']);
+        $clientiPeso[$idCliente] = ['nome' => $nomeCompleto, 'labels' => [], 'data' => []];
+      }
+
+      if ($misurazioniTableExists && $clientiPeso) {
+        $rowsPeso = Database::exec(
+          'SELECT idCliente, dataMisurazione, pesoKg
+           FROM MisurazioniPeso
+           WHERE idCliente IN (
+             SELECT c.idCliente
+             FROM Associazioni a
+             INNER JOIN Clienti c ON c.idCliente = a.cliente
+             WHERE a.professionista = ? AND a.attiva = 1
+           )
+           ORDER BY dataMisurazione',
+          [$professionista]
+        )->fetchAll();
+
+        foreach ($rowsPeso as $rowPeso) {
+          $idCliente = (int)$rowPeso['idCliente'];
+          if (!isset($clientiPeso[$idCliente])) {
+            continue;
+          }
+          $clientiPeso[$idCliente]['labels'][] = (string)$rowPeso['dataMisurazione'];
+          $clientiPeso[$idCliente]['data'][] = (float)$rowPeso['pesoKg'];
         }
       }
     }
@@ -62,6 +69,8 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     <div class="alert"><?= h($clientiError) ?></div>
   <?php elseif (!$clientiPeso): ?>
     <p class="muted">Nessun cliente associato trovato.</p>
+  <?php elseif (!$misurazioniTableExists): ?>
+    <p class="muted">Nessuna misurazione peso disponibile: la tabella MisurazioniPeso non è ancora presente nel database.</p>
   <?php else: ?>
     <div class="grid">
       <?php foreach ($clientiPeso as $idCliente => $item): ?>
