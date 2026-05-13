@@ -492,11 +492,13 @@ const mobileCreateCard=document.querySelector("[data-mobile-create-card]") || do
 function syncMobileCreateState(isOpen){
   if(!mobileCreateToggle || !mobileCreateCard) return;
   mobileCreateCard.hidden=!isOpen;
+  mobileCreateCard.style.display=isOpen ? "block" : "none";
   mobileCreateToggle.setAttribute("aria-expanded", String(isOpen));
   mobileCreateToggle.textContent=isOpen ? "−" : "+";
 }
 if(mobileCreateToggle && mobileCreateCard){
-  syncMobileCreateState(!mobileCreateCard.hasAttribute("hidden"));
+  const startOpen=mobileCreateToggle.getAttribute("aria-expanded")==="true" && !mobileCreateCard.hasAttribute("hidden");
+  syncMobileCreateState(startOpen);
   mobileCreateToggle.addEventListener("click", ()=>{
     syncMobileCreateState(mobileCreateCard.hidden);
   });
@@ -514,17 +516,24 @@ mobileSearch?.addEventListener("input", ()=>{
 const mobileSubsToggle=document.querySelector("[data-mobile-submissions-toggle]");
 const mobileSubsList=document.querySelector("[data-mobile-submissions-list]");
 const mobileSubsText=document.querySelector("[data-mobile-submissions-text]");
-mobileSubsToggle?.addEventListener("click", ()=>{
-  if(!mobileSubsList) return;
-  const open=mobileSubsList.hidden;
-  mobileSubsList.hidden=!open;
-  mobileSubsToggle.setAttribute("aria-expanded", String(open));
+function syncMobileSubmissionsState(isOpen){
+  if(!mobileSubsToggle || !mobileSubsList) return;
+  mobileSubsList.hidden=!isOpen;
+  mobileSubsList.style.display=isOpen ? "grid" : "none";
+  mobileSubsToggle.setAttribute("aria-expanded", String(isOpen));
   if(mobileSubsText){
-    mobileSubsText.textContent=open
+    mobileSubsText.textContent=isOpen
       ?"Tap su una scheda per aprire il dettaglio risposte."
       :"Sezione minimizzata. Tocca per vedere le ultime risposte.";
   }
-});
+}
+if(mobileSubsToggle && mobileSubsList){
+  const startOpen=mobileSubsToggle.getAttribute("aria-expanded")==="true" && !mobileSubsList.hasAttribute("hidden");
+  syncMobileSubmissionsState(startOpen);
+  mobileSubsToggle.addEventListener("click", ()=>{
+    syncMobileSubmissionsState(mobileSubsList.hidden);
+  });
+}
 
 const add=document.getElementById("addDomandaForm"); const fb=document.getElementById("builderFeedback");
 const tipoDomanda=add?.querySelector(\'select[name="tipoDomanda"]\');
