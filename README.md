@@ -2,80 +2,98 @@
 
 ![AuraFit Logo](https://i.imgur.com/q8qW3dv.png)
 
-AuraFit è una piattaforma web per **allenamento, nutrizione e coaching** pensata per  
-**Clienti, Personal Trainer e Nutrizionisti**.
-
-Un unico hub per gestire programmi di allenamento, diario alimentare, comunicazione e monitoraggio dei progressi in modo semplice e strutturato.
-
-Test Commit pc 20
-Test Commit pc 13
-Test Commit pc 14
-
-Test Commit pc 13
----
-
-## 🔖 Badge
-
-![PHP](https://cdn-icons-png.flaticon.com/128/919/919830.png)
-![MySQL](https://cdn-icons-png.flaticon.com/128/919/919836.png)
-![Status](https://cdn-icons-png.flaticon.com/128/3022/3022148.png)
-![Deploy](https://cdn-icons-png.flaticon.com/128/18565/18565727.png)
-
+> **Fitness & Nutrition Coaching Platform**  
+> Un ecosistema digitale dove clienti e professionisti lavorano insieme su allenamento, nutrizione e risultati.
 
 ---
 
-## ✨ Funzionalità principali
+## ✨ Visione
 
-### 👤 Clienti
-- Registrazione e gestione profilo
-- Diario allenamenti
-- Diario alimentare (con supporto AI opzionale)
-- Monitoraggio progressi con grafici e report
-- Chat con PT e/o Nutrizionista
+**AuraFit** nasce per trasformare la gestione del percorso fitness in un’esperienza chiara, continua e misurabile.
 
-### 🧑‍🏫 Personal Trainer / Nutrizionisti
-- Registrazione con ruolo
-- Gestione clienti tramite **ID-Key**
-- Creazione programmi di allenamento e piani nutrizionali
-- Monitoraggio aderenza
-- Chat, notifiche e report automatici
+La piattaforma unisce:
+- pianificazione professionale;
+- operatività quotidiana del cliente;
+- controllo dei risultati nel tempo.
 
-### 🔐 Sicurezza & Privacy
-- Autenticazione sicura
-- Gestione ruoli e permessi
-- Protezione dei dati sensibili
-- Progettato per essere **GDPR-ready**
+Dall’assegnazione dei programmi al monitoraggio dell’aderenza, tutto avviene in un flusso unico e coerente.
 
 ---
 
-## 🛠️ Stack tecnologico
+## 👥 Esperienza utente per ruolo
 
-- **Backend:** PHP (PDO)
+### Cliente
+- Dashboard personale con panoramica immediata.
+- Accesso ai programmi assegnati.
+- Tracciamento progressi e routine.
+- Supporto nella gestione nutrizionale.
+
+### Personal Trainer / Nutrizionista
+- Area professionista dedicata.
+- Gestione clienti tramite **ID-Key**.
+- Creazione e assegnazione di programmi.
+- Controllo avanzamento, aderenza e report.
+
+---
+
+## 🧩 Funzionalità in evidenza
+
+- **Autenticazione e ruoli separati** (cliente/professionista).
+- **Dashboard verticali** con strumenti specifici per ogni profilo.
+- **Gestione programmi** con libreria e assegnazione rapida.
+- **Monitoraggio percorso** per seguire evoluzione e costanza.
+- **Moduli nutrizione e questionari** per una raccolta dati strutturata.
+
+---
+
+## 🖥️ Architettura applicativa (high-level)
+
+AuraFit è sviluppata come web application con stack classico e solido:
+
+- **Backend:** PHP
 - **Database:** MySQL / MariaDB
-- **Frontend:** HTML5, CSS3
-- **Autenticazione:** password_hash / password_verify
-- **Deploy:** AlterVista
-- **Versionamento:** Git + GitHub
+- **Frontend:** HTML, CSS, JavaScript
 
----
-
-## 📁 Struttura del progetto
+Organizzazione del progetto:
 
 ```text
-/
-├── config/
-│   ├── database.sample.php
-│   └── database.php
-│
-├── public/
-│   ├── index.php
-│   ├── login.php
-│   ├── register.php
-│   ├── dashboard_cliente.php
-│   └── dashboard_professionista.php
-│
-├── sql/
-│   └── my_aurafit.sql
-│
-├── .gitignore
+AuraFit/
+├── app/                         # Modelli e logica applicativa
+├── config/                      # Configurazioni ambiente
+├── public/                      # Interfaccia web, controller e asset
+├── sql/                         # Schema e dati di base
 └── README.md
+```
+
+---
+
+## 📊 Cosa rende AuraFit efficace
+
+- **Centralizzazione operativa:** meno frammentazione tra chat, fogli e strumenti esterni.
+- **Maggiore continuità:** cliente e professionista condividono lo stesso contesto.
+- **Approccio data-informed:** progressi e feedback restano tracciabili.
+- **Scalabilità del lavoro professionale:** gestione multi-cliente più ordinata.
+
+---
+
+## 🔐 Affidabilità e gestione dati
+
+La piattaforma è progettata con attenzione a:
+- separazione dei permessi per ruolo;
+- gestione controllata degli accessi;
+- tutela dei dati sensibili nel flusso operativo.
+
+---
+
+## 🧭 Stato del progetto
+
+AuraFit è un progetto in evoluzione continua, con focus su:
+- miglioramento UX delle dashboard;
+- strumenti reportistici più avanzati;
+- estensione delle funzionalità di coaching digitale.
+
+---
+
+## 📌 Nota
+
+Questo repository presenta AuraFit come **prodotto/showcase applicativo**.
