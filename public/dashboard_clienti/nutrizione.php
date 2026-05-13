@@ -233,6 +233,7 @@ if ($dbAvailable) {
       if (tableExistsClientNutrition('VociDiarioAlimentare')) {
         $diaryColumns = fetchTableColumnsClientNutrition('VociDiarioAlimentare');
         $diaryMap['id'] = pickFirstExistingColumn($diaryColumns, ['idVoceDiarioAlimentare', 'idVoceDiario', 'idVoce', 'id']);
+        $diaryMap['client'] = pickFirstExistingColumn($diaryColumns, ['idCliente', 'cliente', 'clienteId']);
         $diaryMap['mealType'] = pickFirstExistingColumn($diaryColumns, ['tipologiaPasto', 'tipoPasto', 'slotPasto', 'pasto', 'tipologia']);
         $diaryMap['time'] = pickFirstExistingColumn($diaryColumns, ['orario', 'oraPasto', 'orarioPasto']);
         $diaryMap['description'] = pickFirstExistingColumn($diaryColumns, ['descrizione', 'voce', 'nomeVoce', 'alimento']);
@@ -275,7 +276,7 @@ if ($dbAvailable) {
               redirectNutritionPage();
             }
 
-            $insertCols = ['idCliente'];
+            $insertCols = [$diaryMap['client'] ?: 'idCliente'];
             $insertValues = [$clienteId];
 
             if ($diaryMap['mealType']) {
@@ -344,7 +345,7 @@ if ($dbAvailable) {
             $owned = safeFetchOneClientNutrition(
               'SELECT ' . $diaryMap['id'] . ' AS id
                FROM VociDiarioAlimentare
-               WHERE ' . $diaryMap['id'] . ' = ? AND idCliente = ?
+               WHERE ' . $diaryMap['id'] . ' = ? AND ' . ($diaryMap['client'] ?: 'idCliente') . ' = ?
                LIMIT 1',
               [$entryId, $clienteId]
             );
@@ -356,7 +357,7 @@ if ($dbAvailable) {
 
             $deleted = safeExecClientNutrition(
               'DELETE FROM VociDiarioAlimentare
-               WHERE ' . $diaryMap['id'] . ' = ? AND idCliente = ?
+               WHERE ' . $diaryMap['id'] . ' = ? AND ' . ($diaryMap['client'] ?: 'idCliente') . ' = ?
                LIMIT 1',
               [$entryId, $clienteId]
             );
@@ -370,7 +371,7 @@ if ($dbAvailable) {
           }
         }
 
-        $selectCols = ['idCliente'];
+        $selectCols = [($diaryMap['client'] ?: 'idCliente') . ' AS diary_client_id'];
         if ($diaryMap['id']) { $selectCols[] = $diaryMap['id'] . ' AS entry_id'; }
         if ($diaryMap['mealType']) { $selectCols[] = $diaryMap['mealType'] . ' AS meal_type'; }
         if ($diaryMap['time']) { $selectCols[] = $diaryMap['time'] . ' AS entry_time'; }
@@ -395,8 +396,8 @@ if ($dbAvailable) {
         $diaryEntries = safeFetchAllClientNutrition(
           'SELECT ' . implode(',', $selectCols) . '
            FROM VociDiarioAlimentare
-           WHERE idCliente = ?' . $whereDateSql . '
-           ORDER BY COALESCE(' . ($diaryMap['time'] ?? "'00:00'") . ', "00:00") ASC, ' . ($diaryMap['id'] ?? 'idCliente') . ' ASC',
+           WHERE ' . ($diaryMap['client'] ?: 'idCliente') . ' = ?' . $whereDateSql . '
+           ORDER BY COALESCE(' . ($diaryMap['time'] ?? "'00:00'") . ', "00:00") ASC, ' . ($diaryMap['id'] ?? ($diaryMap['client'] ?: 'idCliente')) . ' ASC',
           $params
         );
 
