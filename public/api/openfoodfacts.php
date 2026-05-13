@@ -181,6 +181,11 @@ try {
         $cols[] = $descCol;
         $vals[] = 'Open Food Facts';
       }
+      $sourceCol = off_pick_column($diaryCols, ['fonteDati', 'source']);
+      if ($sourceCol) {
+        $cols[] = $sourceCol;
+        $vals[] = 'openfoodfacts';
+      }
       if ($dateCol) {
         $cols[] = $dateCol;
         $vals[] = $today;
