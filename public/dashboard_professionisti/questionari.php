@@ -107,10 +107,9 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
 
   <section class="questionari-mobile-only questionari-mobile-hero" aria-label="Questionari mobile">
     <div class="questionari-mobile-hero__top">
-      <p class="questionari-mobile-hero__eyebrow">Questionari</p>
-      <button class="questionari-mobile-toggle-btn" type="button" data-mobile-create-toggle aria-expanded="true" aria-controls="mobile-new-questionario">−</button>
+      <h3 class="questionari-mobile-hero__title">Libreria mobile</h3>
+      <button class="questionari-mobile-toggle-btn" type="button" data-mobile-create-toggle aria-expanded="false" aria-controls="mobile-new-questionario">+</button>
     </div>
-    <h3 class="questionari-mobile-hero__title">Libreria mobile</h3>
     <p class="questionari-mobile-hero__subtitle">Gestisci moduli, invii e risposte senza tabelle schiacciate.</p>
     <div class="questionari-mobile-hero__stats">
       <article><span>Totali</span><strong><?= count($questionari) ?></strong></article>
@@ -119,7 +118,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     </div>
   </section>
 
-  <section class="questionari-mobile-only questionari-mobile-create" id="mobile-new-questionario" data-mobile-create-card>
+  <section class="questionari-mobile-only questionari-mobile-create" id="mobile-new-questionario" data-mobile-create-card hidden>
     <div class="questionari-mobile-create__head"><h4>Nuovo questionario</h4><span>rapido</span></div>
   <form method="post" class="toolbar mobile-form" style="gap:8px;align-items:flex-end">
     <input type="hidden" name="createQuestionario" value="1">
@@ -452,9 +451,8 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     .desktop-only,.questionari-desktop-table,.desktop-table{display:none}
     .questionari-mobile-only{display:block}
     .questionari-mobile-hero{padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:22px;background:linear-gradient(180deg,#151B2B,#0c1426)}
-    .questionari-mobile-hero__top{display:flex;justify-content:space-between;align-items:flex-start}
-    .questionari-mobile-hero__eyebrow{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:#b9cfff}
-    .questionari-mobile-hero__title{margin:8px 0 4px;font-size:40px;line-height:1;font-weight:900}
+    .questionari-mobile-hero__top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .questionari-mobile-hero__title{margin:0;font-size:40px;line-height:1;font-weight:900;flex:1}
     .questionari-mobile-hero__subtitle{margin:0 0 12px;font-size:14px;color:rgba(239,247,255,.78)}
     .questionari-mobile-toggle-btn{width:40px;height:40px;border:0;border-radius:14px;background:#f4f7ff;color:#0a1228;font-size:27px}
     .questionari-mobile-hero__stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -492,11 +490,13 @@ const mobileCreateCard=document.querySelector("[data-mobile-create-card]") || do
 function syncMobileCreateState(isOpen){
   if(!mobileCreateToggle || !mobileCreateCard) return;
   mobileCreateCard.hidden=!isOpen;
+  mobileCreateCard.style.display=isOpen ? "block" : "none";
   mobileCreateToggle.setAttribute("aria-expanded", String(isOpen));
   mobileCreateToggle.textContent=isOpen ? "−" : "+";
 }
 if(mobileCreateToggle && mobileCreateCard){
-  syncMobileCreateState(!mobileCreateCard.hasAttribute("hidden"));
+  const startOpen=mobileCreateToggle.getAttribute("aria-expanded")==="true" && !mobileCreateCard.hasAttribute("hidden");
+  syncMobileCreateState(startOpen);
   mobileCreateToggle.addEventListener("click", ()=>{
     syncMobileCreateState(mobileCreateCard.hidden);
   });
@@ -514,17 +514,24 @@ mobileSearch?.addEventListener("input", ()=>{
 const mobileSubsToggle=document.querySelector("[data-mobile-submissions-toggle]");
 const mobileSubsList=document.querySelector("[data-mobile-submissions-list]");
 const mobileSubsText=document.querySelector("[data-mobile-submissions-text]");
-mobileSubsToggle?.addEventListener("click", ()=>{
-  if(!mobileSubsList) return;
-  const open=mobileSubsList.hidden;
-  mobileSubsList.hidden=!open;
-  mobileSubsToggle.setAttribute("aria-expanded", String(open));
+function syncMobileSubmissionsState(isOpen){
+  if(!mobileSubsToggle || !mobileSubsList) return;
+  mobileSubsList.hidden=!isOpen;
+  mobileSubsList.style.display=isOpen ? "grid" : "none";
+  mobileSubsToggle.setAttribute("aria-expanded", String(isOpen));
   if(mobileSubsText){
-    mobileSubsText.textContent=open
+    mobileSubsText.textContent=isOpen
       ?"Tap su una scheda per aprire il dettaglio risposte."
       :"Sezione minimizzata. Tocca per vedere le ultime risposte.";
   }
-});
+}
+if(mobileSubsToggle && mobileSubsList){
+  const startOpen=mobileSubsToggle.getAttribute("aria-expanded")==="true" && !mobileSubsList.hasAttribute("hidden");
+  syncMobileSubmissionsState(startOpen);
+  mobileSubsToggle.addEventListener("click", ()=>{
+    syncMobileSubmissionsState(mobileSubsList.hidden);
+  });
+}
 
 const add=document.getElementById("addDomandaForm"); const fb=document.getElementById("builderFeedback");
 const tipoDomanda=add?.querySelector(\'select[name="tipoDomanda"]\');
