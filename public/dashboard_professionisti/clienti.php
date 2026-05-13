@@ -150,6 +150,106 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
     .cliente-row:hover {
       background: rgba(255, 255, 255, 0.03);
     }
+
+    .clienti-mobile {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .clienti-desktop {
+        display: none;
+      }
+
+      .clienti-mobile {
+        display: block;
+      }
+
+      .clienti-mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 12px;
+      }
+
+      .clienti-mobile-count {
+        color: #8da8d8;
+        font-size: .9rem;
+      }
+
+      .cliente-mobile-card {
+        border: 1px solid #233659;
+        border-radius: 18px;
+        padding: 14px;
+        background: linear-gradient(180deg, rgba(17, 29, 54, 0.95), rgba(11, 20, 40, 0.95));
+        margin-bottom: 12px;
+      }
+
+      .cliente-mobile-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .cliente-mobile-name {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .cliente-mobile-email {
+        margin-top: 6px;
+        color: #8da8d8;
+        word-break: break-word;
+      }
+
+      .cliente-mobile-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 14px;
+        margin: 14px 0;
+        padding-top: 12px;
+        border-top: 1px solid rgba(141, 168, 216, 0.18);
+      }
+
+      .cliente-mobile-label {
+        display: block;
+        color: #8da8d8;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+        margin-bottom: 4px;
+      }
+
+      .cliente-mobile-value {
+        font-weight: 600;
+      }
+
+      .cliente-mobile-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .cliente-mobile-actions .btn {
+        flex: 1;
+      }
+
+      .btn.client-open-btn {
+        background: linear-gradient(180deg, #5ec0ff, #3a8df2);
+        border-color: #4ea4ff;
+        color: #021126;
+        font-weight: 700;
+      }
+
+      .btn.client-open-btn:hover {
+        filter: brightness(1.04);
+      }
+
+      .storico-mobile-toggle {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 6px;
+      }
+    }
   </style>
 
   <h2 class="section-title">Gestione Clienti</h2>
@@ -162,6 +262,87 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
     <div class="alert" style="margin-bottom:10px"><?= h($error) ?></div>
   <?php endforeach; ?>
 
+  <div class="clienti-mobile">
+    <div class="clienti-mobile-header">
+      <h3 style="margin:0">Clienti attivi</h3>
+      <span class="clienti-mobile-count"><?= count($clientiAttivi) ?> attivi</span>
+    </div>
+
+    <?php if (!$clientiAttivi): ?>
+      <div class="muted">Nessun cliente attivo associato.</div>
+    <?php endif; ?>
+
+    <?php foreach ($clientiAttivi as $cliente): ?>
+      <article class="cliente-mobile-card">
+        <div class="cliente-mobile-head">
+          <div>
+            <h4 class="cliente-mobile-name"><?= h($cliente['nome']) ?></h4>
+          </div>
+          <span class="status ok"><?= h($cliente['stato']) ?></span>
+        </div>
+
+        <div class="cliente-mobile-meta">
+          <div>
+            <span class="cliente-mobile-label">Tipo</span>
+            <span class="cliente-mobile-value"><?= h(strtoupper($cliente['tipo'])) ?></span>
+          </div>
+          <div>
+            <span class="cliente-mobile-label">Associazione</span>
+            <span class="cliente-mobile-value"><?= h($cliente['associazione']) ?></span>
+          </div>
+        </div>
+
+        <div class="cliente-mobile-actions">
+          <a class="btn client-open-btn" href="scheda_cliente.php?idCliente=<?= (int)$cliente['idCliente'] ?>">Apri scheda</a>
+          <form method="post" style="display:inline-flex;flex:1" data-confirm-terminate-association>
+            <input type="hidden" name="action" value="terminate_association" />
+            <input type="hidden" name="idAssociazione" value="<?= (int)$cliente['idAssociazione'] ?>" />
+            <button class="btn danger" style="width:100%" type="submit">Termina</button>
+          </form>
+        </div>
+      </article>
+    <?php endforeach; ?>
+
+    <button
+      id="toggleStoricoTerminatiMobile"
+      class="btn storico-mobile-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="storicoTerminatiMobile"
+    >
+      <span>Storico clienti terminati</span>
+      <span id="toggleStoricoTerminatiMobileIcon" aria-hidden="true">&gt;</span>
+    </button>
+
+    <div id="storicoTerminatiMobile" hidden style="margin-top:12px;">
+      <?php if (!$clientiTerminati): ?>
+        <div class="muted">Nessuna associazione terminata.</div>
+      <?php endif; ?>
+
+      <?php foreach ($clientiTerminati as $cliente): ?>
+        <article class="cliente-mobile-card">
+          <div class="cliente-mobile-head">
+            <div>
+              <h4 class="cliente-mobile-name"><?= h($cliente['nome']) ?></h4>
+              </div>
+            <span class="status warn"><?= h($cliente['stato']) ?></span>
+          </div>
+          <div class="cliente-mobile-meta">
+            <div>
+              <span class="cliente-mobile-label">Tipo</span>
+              <span class="cliente-mobile-value"><?= h(strtoupper($cliente['tipo'])) ?></span>
+            </div>
+            <div>
+              <span class="cliente-mobile-label">Chiusura</span>
+              <span class="cliente-mobile-value"><?= h($cliente['chiusura']) ?></span>
+            </div>
+          </div>
+        </article>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <div class="clienti-desktop">
   <table>
     <thead><tr><th>Cliente</th><th>Email</th><th>Tipo</th><th>Stato</th><th>Data associazione</th><th>Ultimo aggiornamento</th><th>Azioni</th></tr></thead>
     <tbody>
@@ -223,6 +404,7 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
       </tbody>
     </table>
   </div>
+  </div>
 </section>
 
 <div class="profile-modal" data-terminate-association-confirm-modal aria-hidden="true">
@@ -244,12 +426,22 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
   const toggleStoricoBtn = document.getElementById('toggleStoricoTerminati');
   const storicoTerminati = document.getElementById('storicoTerminati');
   const toggleStoricoIcon = document.getElementById('toggleStoricoTerminatiIcon');
+  const toggleStoricoBtnMobile = document.getElementById('toggleStoricoTerminatiMobile');
+  const storicoTerminatiMobile = document.getElementById('storicoTerminatiMobile');
+  const toggleStoricoIconMobile = document.getElementById('toggleStoricoTerminatiMobileIcon');
 
   toggleStoricoBtn?.addEventListener('click', () => {
     const isOpen = !storicoTerminati.hidden;
     storicoTerminati.hidden = isOpen;
     toggleStoricoBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
     toggleStoricoIcon.textContent = isOpen ? '>' : 'v';
+  });
+
+  toggleStoricoBtnMobile?.addEventListener('click', () => {
+    const isOpen = !storicoTerminatiMobile.hidden;
+    storicoTerminatiMobile.hidden = isOpen;
+    toggleStoricoBtnMobile.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    toggleStoricoIconMobile.textContent = isOpen ? '>' : 'v';
   });
 
   const terminateAssociationConfirmModal = document.querySelector('[data-terminate-association-confirm-modal]');
