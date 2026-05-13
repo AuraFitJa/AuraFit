@@ -277,7 +277,6 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
         <div class="cliente-mobile-head">
           <div>
             <h4 class="cliente-mobile-name"><?= h($cliente['nome']) ?></h4>
-            <div class="cliente-mobile-email"><?= h($cliente['email']) ?></div>
           </div>
           <span class="status ok"><?= h($cliente['stato']) ?></span>
         </div>
@@ -325,8 +324,7 @@ renderStart('Gestione Clienti', 'clienti', $email, $roleBadge, $isPt, $isNutrizi
           <div class="cliente-mobile-head">
             <div>
               <h4 class="cliente-mobile-name"><?= h($cliente['nome']) ?></h4>
-              <div class="cliente-mobile-email"><?= h($cliente['email']) ?></div>
-            </div>
+              </div>
             <span class="status warn"><?= h($cliente['stato']) ?></span>
           </div>
           <div class="cliente-mobile-meta">
