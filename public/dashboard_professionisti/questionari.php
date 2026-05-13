@@ -486,14 +486,19 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
 (function(){
 
 const mobileCreateToggle=document.querySelector("[data-mobile-create-toggle]");
-const mobileCreateCard=document.querySelector("[data-mobile-create-card]");
-mobileCreateToggle?.addEventListener("click", ()=>{
-  if(!mobileCreateCard) return;
-  const open=mobileCreateCard.hidden;
-  mobileCreateCard.hidden=!open;
-  mobileCreateToggle.setAttribute("aria-expanded", String(open));
-  mobileCreateToggle.textContent=open?"−":"+";
-});
+const mobileCreateCard=document.querySelector("[data-mobile-create-card]") || document.getElementById("mobile-new-questionario");
+function syncMobileCreateState(isOpen){
+  if(!mobileCreateToggle || !mobileCreateCard) return;
+  mobileCreateCard.hidden=!isOpen;
+  mobileCreateToggle.setAttribute("aria-expanded", String(isOpen));
+  mobileCreateToggle.textContent=isOpen ? "−" : "+";
+}
+if(mobileCreateToggle && mobileCreateCard){
+  syncMobileCreateState(!mobileCreateCard.hasAttribute("hidden"));
+  mobileCreateToggle.addEventListener("click", ()=>{
+    syncMobileCreateState(mobileCreateCard.hidden);
+  });
+}
 
 const mobileSearch=document.querySelector("[data-mobile-questionario-search]");
 mobileSearch?.addEventListener("input", ()=>{
