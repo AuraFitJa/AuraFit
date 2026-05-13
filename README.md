@@ -2,131 +2,98 @@
 
 ![AuraFit Logo](https://i.imgur.com/q8qW3dv.png)
 
-> **La piattaforma web per coaching fitness e nutrizione**: un unico spazio per clienti, personal trainer e nutrizionisti.
+> **Fitness & Nutrition Coaching Platform**  
+> Un ecosistema digitale dove clienti e professionisti lavorano insieme su allenamento, nutrizione e risultati.
 
 ---
 
-## 🚀 Cos’è AuraFit
+## ✨ Visione
 
-**AuraFit** è una web app pensata per digitalizzare il rapporto tra professionista e cliente nel mondo wellness.
+**AuraFit** nasce per trasformare la gestione del percorso fitness in un’esperienza chiara, continua e misurabile.
 
-Con AuraFit puoi:
-- organizzare allenamenti e piani nutrizionali;
-- monitorare i progressi nel tempo;
-- semplificare la comunicazione tra cliente e professionista;
-- gestire ruoli e accessi in modo ordinato.
+La piattaforma unisce:
+- pianificazione professionale;
+- operatività quotidiana del cliente;
+- controllo dei risultati nel tempo.
 
-L’obiettivo è avere un flusso completo: **assegnazione programma → esecuzione → feedback → miglioramento continuo**.
-
----
-
-## 🎯 Per chi è pensata
-
-### 👤 Clienti
-- Accesso a dashboard personale.
-- Consultazione programmi assegnati.
-- Diario allenamenti e avanzamento.
-- Tracciamento abitudini alimentari.
-- Comunicazione con il professionista.
-
-### 🧑‍🏫 Personal Trainer / Nutrizionisti
-- Gestione clienti tramite sistema **ID-Key**.
-- Creazione, modifica e assegnazione programmi.
-- Controllo aderenza e progressi.
-- Organizzazione report e panoramica attività.
+Dall’assegnazione dei programmi al monitoraggio dell’aderenza, tutto avviene in un flusso unico e coerente.
 
 ---
 
-## ✨ Funzionalità principali
+## 👥 Esperienza utente per ruolo
 
-- **Autenticazione utenti** con separazione ruoli.
-- **Dashboard dedicate** per clienti e professionisti.
-- **Libreria programmi** con assegnazione rapida ai clienti.
-- **Monitoraggio progressi** e stato esecuzione.
-- **Sezioni nutrizione e questionari** per raccolta dati utili.
-- **Strumenti di supporto operativo** per una gestione più efficace.
+### Cliente
+- Dashboard personale con panoramica immediata.
+- Accesso ai programmi assegnati.
+- Tracciamento progressi e routine.
+- Supporto nella gestione nutrizionale.
+
+### Personal Trainer / Nutrizionista
+- Area professionista dedicata.
+- Gestione clienti tramite **ID-Key**.
+- Creazione e assegnazione di programmi.
+- Controllo avanzamento, aderenza e report.
 
 ---
 
-## 🧱 Stack tecnologico
+## 🧩 Funzionalità in evidenza
+
+- **Autenticazione e ruoli separati** (cliente/professionista).
+- **Dashboard verticali** con strumenti specifici per ogni profilo.
+- **Gestione programmi** con libreria e assegnazione rapida.
+- **Monitoraggio percorso** per seguire evoluzione e costanza.
+- **Moduli nutrizione e questionari** per una raccolta dati strutturata.
+
+---
+
+## 🖥️ Architettura applicativa (high-level)
+
+AuraFit è sviluppata come web application con stack classico e solido:
 
 - **Backend:** PHP
 - **Database:** MySQL / MariaDB
 - **Frontend:** HTML, CSS, JavaScript
-- **Architettura:** organizzazione per aree (`public`, `sql`, `config`, `app`)
-- **Versionamento:** Git + GitHub
 
----
-
-## 📂 Struttura del repository
+Organizzazione del progetto:
 
 ```text
 AuraFit/
-├── app/                         # Modelli e logica lato applicazione
-├── config/                      # Configurazioni (DB sample incluso)
-├── public/                      # Entry point web, dashboard, controller, asset
-│   ├── assets/
-│   ├── controllers/
-│   ├── dashboard_professionisti/
-│   └── models/
-├── sql/                         # Schema e seed del database
-├── ToDoList.txt
+├── app/                         # Modelli e logica applicativa
+├── config/                      # Configurazioni ambiente
+├── public/                      # Interfaccia web, controller e asset
+├── sql/                         # Schema e dati di base
 └── README.md
 ```
 
 ---
 
-## ⚙️ Setup rapido (locale)
+## 📊 Cosa rende AuraFit efficace
 
-1. **Clona il repository**
-   ```bash
-   git clone <repo-url>
-   cd AuraFit
-   ```
-
-2. **Configura il database**
-   - crea un database MySQL/MariaDB;
-   - importa gli script presenti in `sql/` (schema + eventuali seed);
-   - crea `config/database.php` partendo da `config/database.sample.php`.
-
-3. **Avvia in locale**
-   - usa un ambiente PHP (es. Apache/Nginx + PHP);
-   - imposta `public/` come document root, oppure raggiungi l’app dalla route corretta.
+- **Centralizzazione operativa:** meno frammentazione tra chat, fogli e strumenti esterni.
+- **Maggiore continuità:** cliente e professionista condividono lo stesso contesto.
+- **Approccio data-informed:** progressi e feedback restano tracciabili.
+- **Scalabilità del lavoro professionale:** gestione multi-cliente più ordinata.
 
 ---
 
-## 🔐 Sicurezza e buone pratiche
+## 🔐 Affidabilità e gestione dati
 
-- Gestione credenziali tramite file di configurazione locale non versionato.
-- Separazione dei ruoli applicativi.
-- Flusso orientato alla protezione dati utente.
-
-> Suggerimento: in produzione, abilita sempre HTTPS, policy robuste per password e backup periodici del database.
-
----
-
-## 🗺️ Roadmap (high-level)
-
-- Miglioramento analytics progressi.
-- Potenziamento area report professionisti.
-- Ottimizzazione UX dashboard mobile.
-- Integrazioni future con servizi esterni.
+La piattaforma è progettata con attenzione a:
+- separazione dei permessi per ruolo;
+- gestione controllata degli accessi;
+- tutela dei dati sensibili nel flusso operativo.
 
 ---
 
-## 🤝 Contributi
+## 🧭 Stato del progetto
 
-Contributi, issue e suggerimenti sono benvenuti.
-
-Se vuoi collaborare:
-1. apri una issue;
-2. proponi una soluzione chiara;
-3. invia una pull request con modifiche focalizzate.
+AuraFit è un progetto in evoluzione continua, con focus su:
+- miglioramento UX delle dashboard;
+- strumenti reportistici più avanzati;
+- estensione delle funzionalità di coaching digitale.
 
 ---
 
-## 📄 Licenza
+## 📌 Nota
 
-Se non diversamente specificato, tutti i diritti sono riservati agli autori del progetto.
-
-Per introdurre una licenza open-source, aggiungere un file `LICENSE` in root.
+Questo repository presenta AuraFit come **prodotto/showcase applicativo**.
