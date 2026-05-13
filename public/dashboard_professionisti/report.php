@@ -3,22 +3,20 @@ require __DIR__ . '/common.php';
 
 $clientiPeso = [];
 $clientiError = null;
-$misurazioniTableExists = false;
 
 if ($dbAvailable) {
   try {
-    $table = Database::exec("SHOW TABLES LIKE 'MisurazioniPeso'")->fetch();
-    $misurazioniTableExists = (bool)$table;
-
     $professionista = getProfessionistaId($userId);
     if ($professionista) {
       $rowsClienti = Database::exec(
-        'SELECT c.idCliente, u.nome, u.cognome
+        "SELECT c.idCliente, u.nome, u.cognome
          FROM Associazioni a
          INNER JOIN Clienti c ON c.idCliente = a.cliente
          INNER JOIN Utenti u ON u.idUtente = c.idUtente
-         WHERE a.professionista = ? AND a.attiva = 1
-         ORDER BY u.cognome, u.nome',
+         WHERE a.professionista = ?
+           AND a.attivaFlag = 1
+           AND (a.stato = 'attiva' OR a.stato = 'attivo')
+         ORDER BY u.cognome, u.nome",
         [$professionista]
       )->fetchAll();
 
@@ -28,17 +26,20 @@ if ($dbAvailable) {
         $clientiPeso[$idCliente] = ['nome' => $nomeCompleto, 'labels' => [], 'data' => []];
       }
 
-      if ($misurazioniTableExists && $clientiPeso) {
+      if ($clientiPeso) {
         $rowsPeso = Database::exec(
-          'SELECT idCliente, dataMisurazione, pesoKg
-           FROM MisurazioniPeso
-           WHERE idCliente IN (
-             SELECT c.idCliente
-             FROM Associazioni a
-             INNER JOIN Clienti c ON c.idCliente = a.cliente
-             WHERE a.professionista = ? AND a.attiva = 1
-           )
-           ORDER BY dataMisurazione',
+          "SELECT m.cliente AS idCliente, m.misurataIl, m.valore
+           FROM Misurazioni m
+           WHERE LOWER(m.tipoMisura) = 'peso'
+             AND m.cliente IN (
+               SELECT c.idCliente
+               FROM Associazioni a
+               INNER JOIN Clienti c ON c.idCliente = a.cliente
+               WHERE a.professionista = ?
+                 AND a.attivaFlag = 1
+                 AND (a.stato = 'attiva' OR a.stato = 'attivo')
+             )
+           ORDER BY m.misurataIl ASC",
           [$professionista]
         )->fetchAll();
 
@@ -47,8 +48,8 @@ if ($dbAvailable) {
           if (!isset($clientiPeso[$idCliente])) {
             continue;
           }
-          $clientiPeso[$idCliente]['labels'][] = (string)$rowPeso['dataMisurazione'];
-          $clientiPeso[$idCliente]['data'][] = (float)$rowPeso['pesoKg'];
+          $clientiPeso[$idCliente]['labels'][] = date('Y-m-d H:i', strtotime((string)$rowPeso['misurataIl']));
+          $clientiPeso[$idCliente]['data'][] = (float)$rowPeso['valore'];
         }
       }
     }
@@ -69,8 +70,6 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     <div class="alert"><?= h($clientiError) ?></div>
   <?php elseif (!$clientiPeso): ?>
     <p class="muted">Nessun cliente associato trovato.</p>
-  <?php elseif (!$misurazioniTableExists): ?>
-    <p class="muted">Nessuna misurazione peso disponibile: la tabella MisurazioniPeso non è ancora presente nel database.</p>
   <?php else: ?>
     <div class="grid">
       <?php foreach ($clientiPeso as $idCliente => $item): ?>
