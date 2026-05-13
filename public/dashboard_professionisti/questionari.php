@@ -142,7 +142,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     <div class="mobile-search"><input type="text" placeholder="Cerca questionario"></div>
     <?php foreach ($questionari as $q): ?>
       <article class="mobile-q-card">
-        <div class="mobile-q-card__title"><strong><?= h($q['titolo']) ?></strong><span class="mobile-pill <?= h($q['stato'])==='attivo' ? 'is-active' : '' ?>"><?= h($q['stato']) ?></span></div>
+        <div class="mobile-q-card__title"><strong><?= h($q['titolo']) ?></strong><span class="mobile-tag"><?= strtoupper(h((string)$q['categoria'] ?: 'GEN')) ?></span><span class="mobile-pill <?= h($q['stato'])==='attivo' ? 'is-active' : '' ?>"><?= h($q['stato']) ?></span></div>
         <p><?= h($q['descrizione']) ?></p>
         <div class="mobile-q-card__stats"><div><span>Assegnazioni</span><strong><?= (int)$q['assegnazioniAttive'] ?></strong></div><div><span>Compilazioni</span><strong><?= (int)$q['compilazioniRicevute'] ?></strong></div></div>
         <div class="mobile-q-card__actions">
@@ -448,22 +448,23 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   @media (max-width:820px){
     .desktop-only,.desktop-table{display:none}
     .mobile-q-header,.mobile-library,.mobile-collapsible,.mobile-submissions-shell{display:block}
-    .mobile-q-header{padding:14px;border:1px solid rgba(95,127,192,.45);border-radius:22px;background:radial-gradient(120% 130% at 95% 0%,rgba(49,118,186,.30),transparent 45%),linear-gradient(180deg,#13244b 0%,#0b1737 100%);box-shadow:0 20px 40px rgba(0,0,0,.38)}
+    .mobile-q-header{padding:14px;border:1px solid rgba(95,127,192,.35);border-radius:20px;background:radial-gradient(140% 120% at 100% 0%,rgba(36,126,196,.26),transparent 45%),linear-gradient(180deg,#112244 0%,#0b1737 100%);box-shadow:0 20px 40px rgba(0,0,0,.35)}
     .mobile-q-header__top{display:flex;justify-content:space-between;align-items:flex-start}
-    .mobile-q-header__eyebrow{margin:0;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:#b7cffc}
-    .mobile-q-header__title{margin:8px 0 4px;font-size:48px;line-height:.92;font-weight:900}
-    .mobile-q-header__subtitle{margin:0 0 12px;font-size:15px;color:rgba(235,243,255,.9)}
-    .mobile-toggle-btn{width:44px;height:44px;border-radius:14px;border:0;background:#fff;color:#0a1228;font-size:30px;font-weight:500}
-    .mobile-q-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mobile-q-stats article{border:1px solid rgba(145,176,255,.3);border-radius:14px;background:rgba(5,13,31,.28);padding:10px}.mobile-q-stats span{font-size:11px;color:#b6c8ee}.mobile-q-stats strong{display:block;font-size:36px;line-height:1}
-    .mobile-collapsible{margin-top:10px;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:#101a37;padding:12px}
-    .mobile-create-head{display:flex;justify-content:space-between;align-items:center}.mobile-create-head span{font-size:11px;background:rgba(99,102,241,.22);padding:3px 10px;border-radius:999px}.mobile-create-title{margin:10px 0 8px;font-size:44px;line-height:.95}
-    .mobile-form{display:block !important}.mobile-form .field{display:block;width:100% !important;min-width:0 !important;margin-bottom:10px}.mobile-form input{width:100%}.mobile-form .btn.primary{width:100%;border-radius:14px;background:linear-gradient(90deg,#6c63ff,#4cc4f0)}
-    .mobile-library{margin-top:12px}.mobile-library__head{display:flex;justify-content:space-between;align-items:center}.mobile-library__head h3{font-size:40px}.mobile-search input{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:#08132f;color:#eaf1ff;padding:11px 12px}
-    .mobile-q-card{margin-top:10px;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}.mobile-q-card__title{display:flex;justify-content:space-between}.mobile-q-card__title strong{font-size:32px;line-height:1}
-    .mobile-pill{padding:4px 10px;border-radius:999px;border:1px solid rgba(99,255,188,.4);color:#8af8cd}.mobile-q-card p{font-size:14px;color:rgba(239,247,255,.76)}
-    .mobile-q-card__stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-q-card__stats>div{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px}.mobile-q-card__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mobile-q-card__actions .btn{width:100%;border-radius:11px;background:rgba(255,255,255,.06)}
-    .mobile-submissions-shell{margin-top:12px}.mobile-submissions-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:16px;border:1px solid rgba(95,127,192,.45);background:linear-gradient(180deg,#13244b,#0c193c);color:#fff}.mobile-submissions-toggle h3{margin:0;font-size:46px;line-height:.92}
-    .mobile-sub-card{margin-top:8px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;background:rgba(255,255,255,.04)}
+    .mobile-q-header__eyebrow{margin:0;text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:700;color:#b7cffc}
+    .mobile-q-header__title{margin:6px 0 3px;font-size:44px;line-height:.95;font-weight:900}
+    .mobile-q-header__subtitle{margin:0 0 12px;font-size:14px;color:rgba(235,243,255,.86)}
+    .mobile-toggle-btn{width:40px;height:40px;border-radius:14px;border:0;background:#f6f9ff;color:#0a1228;font-size:30px;font-weight:400}
+    .mobile-q-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mobile-q-stats article{border:1px solid rgba(145,176,255,.22);border-radius:14px;background:rgba(5,13,31,.32);padding:10px}.mobile-q-stats span{font-size:10px;color:#9eb7e8}.mobile-q-stats strong{display:block;margin-top:2px;font-size:34px;line-height:1}
+    .mobile-collapsible{margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:#101a37;padding:14px}
+    .mobile-create-head{display:flex;justify-content:space-between;align-items:center}.mobile-create-head h4{margin:0;font-size:31px}.mobile-create-head span{font-size:11px;background:rgba(99,102,241,.22);padding:4px 10px;border-radius:999px}.mobile-create-title{display:none}
+    .mobile-form{display:block !important}.mobile-form .field{display:block;width:100% !important;min-width:0 !important;margin-bottom:10px}.mobile-form input{width:100%}.mobile-form .btn.primary{width:100%;border-radius:14px;background:linear-gradient(90deg,#6c63ff,#1bb5f3)}
+    .mobile-library{margin-top:14px}.mobile-library__head{display:flex;justify-content:space-between;align-items:center}.mobile-library__head h3{font-size:35px;margin:0}.mobile-library__head span{font-size:12px;color:rgba(232,240,255,.65)}.mobile-search input{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:#08132f;color:#eaf1ff;padding:11px 12px}
+    .mobile-q-card{margin-top:10px;padding:13px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.02))}.mobile-q-card__title{display:flex;align-items:center;gap:7px}.mobile-q-card__title strong{font-size:32px;line-height:1;flex:1}
+    .mobile-tag{padding:2px 9px;border-radius:999px;border:1px solid rgba(148,206,255,.38);background:rgba(69,130,175,.2);font-size:10px;font-weight:700;color:#d7eeff}
+    .mobile-pill{margin-left:auto;padding:4px 10px;border-radius:999px;border:1px solid rgba(99,255,188,.4);background:rgba(75,212,165,.14);font-size:12px;font-weight:700;color:#8af8cd}.mobile-q-card p{font-size:14px;color:rgba(239,247,255,.76)}
+    .mobile-q-card__stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-q-card__stats>div{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px}.mobile-q-card__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mobile-q-card__actions .btn{width:100%;border-radius:11px;background:rgba(255,255,255,.08)}
+    .mobile-submissions-shell{margin-top:14px;border:1px solid rgba(255,255,255,.11);border-radius:18px;padding:10px;background:rgba(255,255,255,.02)}.mobile-submissions-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:4px;border-radius:12px;border:0;background:transparent;color:#fff}.mobile-submissions-toggle h3{margin:0;font-size:35px;line-height:1}
+    .mobile-sub-card{margin-top:8px;padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;background:rgba(255,255,255,.03)}
   }
 
 
