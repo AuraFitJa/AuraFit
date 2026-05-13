@@ -382,7 +382,7 @@ $flows = [
         <header class="topbar">
           <div class="brand" aria-label="AuraFit">
             <div class="brand-mark" aria-hidden="true">
-              <img src="/media/logo.png" alt="">
+              <img src="media/logo.png" alt="">
             </div>
             <span>AuraFit</span>
           </div>
