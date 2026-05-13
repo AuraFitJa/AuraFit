@@ -1,42 +1,86 @@
 <?php
+$flows = [
+  [
+    'title' => 'Lato cliente',
+    'description' => 'Simula l’esperienza utente: onboarding, scelta obiettivi e percorso fitness.',
+    'label' => 'Avvia test cliente',
+    'href' => '/cliente.php',
+    'icon' => '👤',
+    'class' => 'client'
+  ],
+  [
+    'title' => 'Lato professionista',
+    'description' => 'Prova gli strumenti dedicati a trainer, coach e operatori fitness.',
+    'label' => 'Avvia test professionista',
+    'href' => '/professionista.php',
+    'icon' => '🏋️',
+    'class' => 'pro'
+  ],
+];
 ?><!doctype html>
 <html lang="it">
 <head>
   <meta charset="utf-8">
   <title>AuraFit - Demo Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070A12">
+
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="AuraFit">
+
   <link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
+
   <style>
-    :root{
-      --bg:#070A12;
-      --text:#EAF0FF;
-      --muted: rgba(234,240,255,.68);
-      --line: rgba(234,240,255,.12);
-      --brand1:#6D5EF3;
-      --brand2:#2EE1A5;
-      --brand3:#4CC9F0;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    :root {
+      --bg: #070A12;
+      --bg-soft: #0D1220;
+      --text: #EAF0FF;
+      --muted: rgba(234, 240, 255, .68);
+      --muted-strong: rgba(234, 240, 255, .82);
+      --line: rgba(234, 240, 255, .13);
+
+      --brand-purple: #6D5EF3;
+      --brand-green: #2EE1A5;
+      --brand-cyan: #4CC9F0;
+      --brand-pink: #FF5EA8;
+
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+
+      --shadow: 0 24px 70px rgba(0, 0, 0, .42);
+      --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    * { box-sizing: border-box; }
-    html, body { width:100%; max-width:100%; overflow-x:hidden; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
       font-family: var(--sans);
       color: var(--text);
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(109, 94, 243, .35), transparent 34rem),
+        radial-gradient(circle at top right, rgba(46, 225, 165, .22), transparent 32rem),
+        radial-gradient(circle at bottom, rgba(76, 201, 240, .18), transparent 34rem),
+        var(--bg);
       display: grid;
       place-items: center;
-      padding: 24px 16px;
-      padding-top: calc(24px + env(safe-area-inset-top));
+      padding: 28px 16px;
+      padding-top: calc(28px + env(safe-area-inset-top));
       padding-right: calc(16px + env(safe-area-inset-right));
-      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      padding-bottom: calc(28px + env(safe-area-inset-bottom));
       padding-left: calc(16px + env(safe-area-inset-left));
       position: relative;
     }
@@ -45,78 +89,364 @@
       content: "";
       position: fixed;
       inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), transparent 75%);
+      z-index: -2;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      width: 420px;
+      height: 420px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(109,94,243,.24), rgba(46,225,165,.16));
+      filter: blur(28px);
+      opacity: .72;
+      transform: translate(28vw, 22vh);
       z-index: -1;
-      background:
-        radial-gradient(1200px 800px at 20% -10%, rgba(109,94,243,.35), transparent 55%),
-        radial-gradient(1100px 700px at 90% 10%, rgba(46,225,165,.22), transparent 55%),
-        radial-gradient(900px 700px at 55% 95%, rgba(76,201,240,.18), transparent 55%);
       pointer-events: none;
     }
 
-    .card {
-      width: min(92vw, 460px);
+    .shell {
+      width: min(100%, 920px);
+    }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
       border: 1px solid var(--line);
-      border-radius: 20px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      box-shadow: 0 18px 45px rgba(0,0,0,.35);
-      padding: 24px;
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.035)),
+        rgba(13,18,32,.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(109,94,243,.16), transparent 34%),
+        linear-gradient(315deg, rgba(46,225,165,.13), transparent 38%);
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      padding: clamp(24px, 5vw, 48px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: clamp(28px, 5vw, 48px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, var(--brand-purple), var(--brand-green));
+      color: #fff;
+      box-shadow: 0 14px 28px rgba(109, 94, 243, .32);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--muted-strong);
+      background: rgba(255,255,255,.055);
+      font-size: .88rem;
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--brand-green);
+      box-shadow: 0 0 0 5px rgba(46,225,165,.12);
+    }
+
+    .hero {
+      max-width: 710px;
+      margin-bottom: 30px;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--brand-green);
+      font-size: .86rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: clamp(24px, 4.8vw, 32px);
-      line-height: 1.1;
-      text-align: center;
+      margin: 0;
+      font-size: clamp(2.35rem, 7vw, 5.15rem);
+      line-height: .94;
+      letter-spacing: -.075em;
     }
 
-    p {
-      margin: 0 0 20px;
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 12%, #BFC8FF 44%, #82FFE0 86%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .intro {
+      max-width: 580px;
+      margin: 20px 0 0;
       color: var(--muted);
-      text-align: center;
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+      line-height: 1.65;
     }
 
     .actions {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 34px;
+    }
+
+    .flow-card {
+      position: relative;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 22px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.055);
+      color: inherit;
+      text-decoration: none;
+      overflow: hidden;
+      transition:
+        transform .18s ease,
+        border-color .18s ease,
+        background .18s ease,
+        box-shadow .18s ease;
+    }
+
+    .flow-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -40px -70px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      opacity: .32;
+      filter: blur(4px);
+      transition: transform .18s ease, opacity .18s ease;
+    }
+
+    .flow-card.client::before {
+      background: var(--brand-purple);
+    }
+
+    .flow-card.pro::before {
+      background: var(--brand-green);
+    }
+
+    .flow-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,.26);
+      background: rgba(255,255,255,.085);
+      box-shadow: 0 22px 46px rgba(0,0,0,.28);
+    }
+
+    .flow-card:hover::before {
+      transform: scale(1.08);
+      opacity: .45;
+    }
+
+    .flow-card:focus-visible {
+      outline: 3px solid rgba(76,201,240,.72);
+      outline-offset: 4px;
+    }
+
+    .flow-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: rgba(255,255,255,.1);
+      font-size: 1.45rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+    }
+
+    .flow-title {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+      letter-spacing: -.03em;
+    }
+
+    .flow-description {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: .96rem;
+    }
+
+    .flow-cta {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 12px;
+      width: 100%;
+      border-radius: var(--radius-md);
+      padding: 13px 14px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      background: rgba(255,255,255,.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
     }
 
-    .btn {
-      appearance: none;
-      border: 0;
-      border-radius: 14px;
-      padding: 13px 16px;
-      font-weight: 700;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
-      box-shadow: 0 10px 20px rgba(0,0,0,.22);
-      color: #fff;
+    .client .flow-cta {
+      background: linear-gradient(135deg, var(--brand-purple), #8D7DFF);
     }
 
-    .btn:active { transform: translateY(1px) scale(.995); }
-    .btn:hover { filter: brightness(1.06); }
-
-    .btn-cliente {
-      background: linear-gradient(135deg, var(--brand1), #8D7DFF);
-    }
-
-    .btn-professionista {
-      background: linear-gradient(135deg, #1DBA8A, var(--brand3));
+    .pro .flow-cta {
+      background: linear-gradient(135deg, #1DBA8A, var(--brand-cyan));
       color: #021018;
+    }
+
+    .arrow {
+      transition: transform .18s ease;
+    }
+
+    .flow-card:hover .arrow {
+      transform: translateX(3px);
+    }
+
+    .footer-note {
+      margin: 22px 0 0;
+      color: rgba(234,240,255,.48);
+      font-size: .88rem;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .badge {
+        display: none;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-card {
+        min-height: 190px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
     }
   </style>
 </head>
-<body>
-  <main class="card" role="main">
-    <h1>Demo AuraFit</h1>
-    <p>Seleziona il flusso da testare.</p>
 
-    <div class="actions">
-      <button type="button" class="btn btn-cliente">Test AuraFit lato cliente</button>
-      <button type="button" class="btn btn-professionista">Test AuraFit lato professionista</button>
-    </div>
+<body>
+  <main class="shell" role="main">
+    <section class="panel" aria-labelledby="page-title">
+      <div class="content">
+        <header class="topbar">
+          <div class="brand" aria-label="AuraFit">
+            <div class="brand-mark" aria-hidden="true">A</div>
+            <span>AuraFit</span>
+          </div>
+
+          <div class="badge">
+            <span class="badge-dot" aria-hidden="true"></span>
+            Demo test attiva
+          </div>
+        </header>
+
+        <div class="hero">
+          <p class="eyebrow">Ambiente demo</p>
+          <h1 id="page-title">
+            Testa i flussi <span class="gradient-text">AuraFit</span>
+          </h1>
+          <p class="intro">
+            Scegli il profilo da simulare e avvia rapidamente il percorso più adatto:
+            esperienza cliente oppure strumenti per professionisti.
+          </p>
+        </div>
+
+        <div class="actions" aria-label="Flussi disponibili">
+          <?php foreach ($flows as $flow): ?>
+            <a
+              class="flow-card <?= htmlspecialchars($flow['class'], ENT_QUOTES, 'UTF-8') ?>"
+              href="<?= htmlspecialchars($flow['href'], ENT_QUOTES, 'UTF-8') ?>"
+            >
+              <div>
+                <div class="flow-icon" aria-hidden="true">
+                  <?= htmlspecialchars($flow['icon'], ENT_QUOTES, 'UTF-8') ?>
+                </div>
+
+                <h2 class="flow-title">
+                  <?= htmlspecialchars($flow['title'], ENT_QUOTES, 'UTF-8') ?>
+                </h2>
+
+                <p class="flow-description">
+                  <?= htmlspecialchars($flow['description'], ENT_QUOTES, 'UTF-8') ?>
+                </p>
+              </div>
+
+              <span class="flow-cta">
+                <?= htmlspecialchars($flow['label'], ENT_QUOTES, 'UTF-8') ?>
+                <span class="arrow" aria-hidden="true">→</span>
+              </span>
+            </a>
+          <?php endforeach; ?>
+        </div>
+
+        <p class="footer-note">
+          Versione demo · Ottimizzata per mobile e installazione PWA
+        </p>
+      </div>
+    </section>
   </main>
 </body>
 </html>
