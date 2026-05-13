@@ -190,74 +190,92 @@ try {
       $voceId = (int)Database::pdo()->lastInsertId();
     }
 
+    $insertedDiaryFood = false;
     $diaryFoodCols = off_table_columns('VociDiarioAlimentareAlimenti');
-    if (empty($diaryFoodCols)) {
-      off_json_error('Tabella VociDiarioAlimentareAlimenti non disponibile.');
+    if (!empty($diaryFoodCols)) {
+      $nextOrder = 1;
+      if (isset($diaryFoodCols['ordine'])) {
+        $orderRow = Database::exec(
+          'SELECT COALESCE(MAX(ordine),0) + 1 AS nextOrd FROM VociDiarioAlimentareAlimenti WHERE voceDiario = ?',
+          [$voceId]
+        )->fetch();
+        $nextOrder = max(1, (int)($orderRow['nextOrd'] ?? 1));
+      }
+
+      $insertCols = [];
+      $insertVals = [];
+      $pushCol = static function (string $name, $value) use ($diaryFoodCols, &$insertCols, &$insertVals): void {
+        if (isset($diaryFoodCols[$name])) {
+          $insertCols[] = $name;
+          $insertVals[] = $value;
+        }
+      };
+
+      $pushCol('voceDiario', $voceId);
+      $pushCol('ordine', $nextOrder);
+      $pushCol('fonteDati', 'openfoodfacts');
+      $pushCol('offBarcode', $product['barcode']);
+      $pushCol('nomeAlimento', $product['name']);
+      $pushCol('marca', $product['brand'] ?: null);
+      $pushCol('imageUrl', $product['image_url'] ?: null);
+      $pushCol('quantita', $amount);
+      $pushCol('unita', $mode === 'servings' ? 'porzioni' : 'g');
+      $pushCol('numeroPorzioni', $macros['numeroPorzioni']);
+      $pushCol('grammiTotali', $macros['grammiTotali']);
+      $pushCol('offServingSize', $product['serving_size_label'] ?: null);
+      $pushCol('offServingQuantityG', $product['serving_quantity_g']);
+      $pushCol('proteine', $macros['proteine']);
+      $pushCol('carboidrati', $macros['carboidrati']);
+      $pushCol('grassi', $macros['grassi']);
+      $pushCol('calorie', $macros['calorie']);
+      $pushCol('rawSnapshotJson', json_encode($product, JSON_UNESCAPED_UNICODE));
+      if (isset($diaryFoodCols['consumatoIl'])) {
+        $pushCol('consumatoIl', $today . ' ' . $entryTime . ':00');
+      }
+      $pushCol('creatoIl', date('Y-m-d H:i:s'));
+      $pushCol('aggiornatoIl', date('Y-m-d H:i:s'));
+
+      if (count($insertCols) >= 6) {
+        try {
+          Database::exec(
+            'INSERT INTO VociDiarioAlimentareAlimenti (' . implode(',', $insertCols) . ') VALUES (' . implode(',', array_fill(0, count($insertCols), '?')) . ')',
+            $insertVals
+          );
+          $insertedDiaryFood = true;
+        } catch (Throwable $childInsertError) {
+          // Fallback: keep diary totals consistent even if detail table schema differs.
+          $insertedDiaryFood = false;
+        }
+      }
     }
 
-    $nextOrder = 1;
-    if (isset($diaryFoodCols['ordine'])) {
-      $orderRow = Database::exec(
-        'SELECT COALESCE(MAX(ordine),0) + 1 AS nextOrd FROM VociDiarioAlimentareAlimenti WHERE voceDiario = ?',
+    if ($insertedDiaryFood) {
+      $totals = Database::exec(
+        'SELECT COALESCE(SUM(proteine),0) AS proteine, COALESCE(SUM(carboidrati),0) AS carbo, COALESCE(SUM(grassi),0) AS grassi, COALESCE(SUM(calorie),0) AS calorie
+         FROM VociDiarioAlimentareAlimenti
+         WHERE voceDiario = ?',
         [$voceId]
       )->fetch();
-      $nextOrder = max(1, (int)($orderRow['nextOrd'] ?? 1));
+      Database::exec(
+        'UPDATE VociDiarioAlimentare SET ' . $proCol . ' = ?, ' . $carbCol . ' = ?, ' . $fatCol . ' = ?, ' . $kcalCol . ' = ? WHERE ' . $idCol . ' = ? LIMIT 1',
+        [(float)$totals['proteine'], (float)$totals['carbo'], (float)$totals['grassi'], (float)$totals['calorie'], $voceId]
+      );
+    } else {
+      $currentTotals = Database::exec(
+        'SELECT ' . $proCol . ' AS proteine, ' . $carbCol . ' AS carbo, ' . $fatCol . ' AS grassi, ' . $kcalCol . ' AS calorie FROM VociDiarioAlimentare WHERE ' . $idCol . ' = ? LIMIT 1',
+        [$voceId]
+      )->fetch() ?: ['proteine' => 0, 'carbo' => 0, 'grassi' => 0, 'calorie' => 0];
+      Database::exec(
+        'UPDATE VociDiarioAlimentare SET ' . $proCol . ' = ?, ' . $carbCol . ' = ?, ' . $fatCol . ' = ?, ' . $kcalCol . ' = ? WHERE ' . $idCol . ' = ? LIMIT 1',
+        [
+          (float)$currentTotals['proteine'] + (float)$macros['proteine'],
+          (float)$currentTotals['carbo'] + (float)$macros['carboidrati'],
+          (float)$currentTotals['grassi'] + (float)$macros['grassi'],
+          (float)$currentTotals['calorie'] + (float)$macros['calorie'],
+          $voceId
+        ]
+      );
     }
-
-    $insertCols = [];
-    $insertVals = [];
-    $pushCol = static function (string $name, $value) use ($diaryFoodCols, &$insertCols, &$insertVals): void {
-      if (isset($diaryFoodCols[$name])) {
-        $insertCols[] = $name;
-        $insertVals[] = $value;
-      }
-    };
-
-    $pushCol('voceDiario', $voceId);
-    $pushCol('ordine', $nextOrder);
-    $pushCol('fonteDati', 'openfoodfacts');
-    $pushCol('offBarcode', $product['barcode']);
-    $pushCol('nomeAlimento', $product['name']);
-    $pushCol('marca', $product['brand'] ?: null);
-    $pushCol('imageUrl', $product['image_url'] ?: null);
-    $pushCol('quantita', $amount);
-    $pushCol('unita', $mode === 'servings' ? 'porzioni' : 'g');
-    $pushCol('numeroPorzioni', $macros['numeroPorzioni']);
-    $pushCol('grammiTotali', $macros['grammiTotali']);
-    $pushCol('offServingSize', $product['serving_size_label'] ?: null);
-    $pushCol('offServingQuantityG', $product['serving_quantity_g']);
-    $pushCol('proteine', $macros['proteine']);
-    $pushCol('carboidrati', $macros['carboidrati']);
-    $pushCol('grassi', $macros['grassi']);
-    $pushCol('calorie', $macros['calorie']);
-    $pushCol('rawSnapshotJson', json_encode($product, JSON_UNESCAPED_UNICODE));
-    if (isset($diaryFoodCols['consumatoIl'])) {
-      $consumedAt = $today . ' ' . $entryTime . ':00';
-      $pushCol('consumatoIl', $consumedAt);
-    }
-    $pushCol('creatoIl', date('Y-m-d H:i:s'));
-    $pushCol('aggiornatoIl', date('Y-m-d H:i:s'));
-
-    if (count($insertCols) < 6) {
-      off_json_error('Schema VociDiarioAlimentareAlimenti incompleto.');
-    }
-
-    Database::exec(
-      'INSERT INTO VociDiarioAlimentareAlimenti (' . implode(',', $insertCols) . ') VALUES (' . implode(',', array_fill(0, count($insertCols), '?')) . ')',
-      $insertVals
-    );
-
-    $totals = Database::exec(
-      'SELECT COALESCE(SUM(proteine),0) AS proteine, COALESCE(SUM(carboidrati),0) AS carbo, COALESCE(SUM(grassi),0) AS grassi, COALESCE(SUM(calorie),0) AS calorie
-       FROM VociDiarioAlimentareAlimenti
-       WHERE voceDiario = ?',
-      [$voceId]
-    )->fetch();
-
-    Database::exec(
-      'UPDATE VociDiarioAlimentare SET ' . $proCol . ' = ?, ' . $carbCol . ' = ?, ' . $fatCol . ' = ?, ' . $kcalCol . ' = ? WHERE ' . $idCol . ' = ? LIMIT 1',
-      [(float)$totals['proteine'], (float)$totals['carbo'], (float)$totals['grassi'], (float)$totals['calorie'], $voceId]
-    );
 
     off_json_ok(['macros' => $macros]);
   }
