@@ -370,7 +370,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     border-color: rgba(99, 102, 241, 0.85);
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
   }
-  body.modal-open { overflow: hidden; }
+  body.modal-open { overflow: hidden; position: fixed; inset: 0; width: 100%; }
   .assign-modal-layer {
     position: fixed;
     inset: 0;
@@ -383,7 +383,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   }
   .assign-modal-layer.open { display: flex; }
   .builder-modal-layer{z-index:1250}
-  .builder-modal-card{width:min(980px,100%);max-height:min(88vh,860px);overflow:auto}
+  .builder-modal-card{width:min(980px,100%);max-height:min(88vh,860px);overflow:auto !important;-webkit-overflow-scrolling:touch}
   .builder-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 
   .assign-modal-card {
@@ -593,9 +593,22 @@ add?.addEventListener("submit", async function(e){
 const builderModal=document.querySelector("[data-builder-questionario-modal]");
 const closeBuilderBtn=document.querySelector("[data-close-builder-modal]");
 const selectedQuestionarioId=' . (int)$selectedQuestionarioId . ';
+let lastScrollY=0;
 function syncBodyModalState(){
   const hasOpenModal=Array.from(document.querySelectorAll(".assign-modal-layer")).some((el)=>el.classList.contains("open"));
-  document.body.classList.toggle("modal-open", hasOpenModal);
+  if(hasOpenModal){
+    if(!document.body.classList.contains("modal-open")){
+      lastScrollY=window.scrollY || window.pageYOffset || 0;
+      document.body.style.top=`-${lastScrollY}px`;
+    }
+    document.body.classList.add("modal-open");
+    return;
+  }
+  if(document.body.classList.contains("modal-open")){
+    document.body.classList.remove("modal-open");
+    document.body.style.top="";
+    window.scrollTo(0, lastScrollY);
+  }
 }
 function toggleBuilderModal(open){ if(!builderModal) return; builderModal.classList.toggle("open", !!open); syncBodyModalState(); }
 closeBuilderBtn?.addEventListener("click", ()=>toggleBuilderModal(false));
