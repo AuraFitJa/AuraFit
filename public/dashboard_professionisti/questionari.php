@@ -106,7 +106,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   <section class="mobile-q-header" aria-label="Questionari mobile">
     <div class="mobile-q-header__top">
       <p class="mobile-q-header__eyebrow">Questionari</p>
-      <button class="mobile-toggle-btn" type="button" data-mobile-toggle="new-questionario" aria-expanded="false" aria-controls="mobile-new-questionario">+</button>
+      <button class="mobile-toggle-btn" type="button" data-mobile-toggle="mobile-new-questionario" aria-expanded="false" aria-controls="mobile-new-questionario">+</button>
     </div>
     <h3 class="mobile-q-header__title">Libreria mobile</h3>
     <p class="mobile-q-header__subtitle">Gestisci moduli, invii e risposte senza tabelle schiacciate.</p>
@@ -227,11 +227,25 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   </div>
   <?php endif; ?>
 
-  <section class="mobile-collapsible mobile-collapsible--compilazioni" data-mobile-collapsible id="mobile-compilazioni" hidden>
-    <div class="mobile-library__head"><h3 style="margin:0">Compilazioni ricevute</h3><span><?= count($compilazioni) ?></span></div>
+  <section class="mobile-submissions-shell">
+    <button class="mobile-submissions-toggle" type="button" data-mobile-toggle="mobile-compilazioni" aria-expanded="false" aria-controls="mobile-compilazioni">
+      <h3>Compilazioni ricevute</h3><span><?= count($compilazioni) ?></span>
+    </button>
+    <section class="mobile-collapsible mobile-collapsible--compilazioni" data-mobile-collapsible id="mobile-compilazioni" hidden>
+      <p class="muted" style="margin:0 0 8px">Tap su una scheda per aprire il dettaglio risposte.</p>
+      <?php foreach ($compilazioni as $c): ?>
+        <article class="mobile-sub-card compilazione-row" data-compilazione-row data-id-compilazione="<?= (int)$c['idCompilazione'] ?>" role="button" tabindex="0" aria-label="Apri risposte compilazione #<?= (int)$c['numeroCompilazione'] ?>">
+          <div><strong><?= h($c['titolo']) ?></strong><p><?= h(trim($c['nome'].' '.$c['cognome'])) ?></p></div>
+          <div><span>#<?= (int)$c['numeroCompilazione'] ?></span><small>Agg. <?= h(substr((string)$c['aggiornatoIl'],0,10)) ?></small></div>
+        </article>
+      <?php endforeach; ?>
+    </section>
+  </section>
+
+  <h3 style="margin-top:18px" class="desktop-only">Compilazioni ricevute</h3>
   <div style="overflow:auto" class="desktop-table"><table><thead><tr><th>Questionario</th><th>Cliente</th><th>#</th><th>Stato</th><th>Aggiornato</th><th>Inviato</th></tr></thead><tbody>
     <?php foreach ($compilazioni as $c): ?>
-      <tr class="compilazione-row" data-compilazione-row data-id-compilazione="<?= (int)$c['idCompilazione'] ?>" role="button" tabindex="0" aria-label="Apri risposte compilazione #<?= (int)$c['numeroCompilazione'] ?>">
+      <tr class="compilazione-row desktop-row" data-compilazione-row data-id-compilazione="<?= (int)$c['idCompilazione'] ?>" role="button" tabindex="0" aria-label="Apri risposte compilazione #<?= (int)$c['numeroCompilazione'] ?>">
         <td><strong><?= h($c['titolo']) ?></strong></td>
         <td><?= h(trim($c['nome'].' '.$c['cognome'])) ?></td>
         <td><?= (int)$c['numeroCompilazione'] ?></td>
@@ -431,10 +445,11 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     align-items: center;
   }
 
-  .mobile-q-header,.mobile-library,.mobile-collapsible,.mobile-toggle-btn--inline{display:none}
+  .mobile-q-header,.mobile-library,.mobile-collapsible,.mobile-toggle-btn--inline,.mobile-submissions-shell{display:none}
+  .desktop-only{display:block}
   @media (max-width:820px){
     .mobile-q-header,.mobile-library,.mobile-collapsible{display:block}
-    .mobile-q-header{padding:16px;border:1px solid rgba(130,160,255,.3);border-radius:18px;background:linear-gradient(165deg,#1a2b52,#111a35);margin-bottom:14px}
+    .mobile-q-header{padding:16px;border:1px solid rgba(92,126,198,.38);border-radius:18px;background:radial-gradient(120% 110% at 92% 2%, rgba(50,111,177,.35), transparent 42%), linear-gradient(180deg, rgba(18,35,74,.98), rgba(11,20,44,.98));margin-bottom:14px;box-shadow:0 18px 30px rgba(0,0,0,.32)}
     .mobile-q-header__top{display:flex;justify-content:space-between;align-items:center}.mobile-q-header__eyebrow{margin:0;text-transform:uppercase;font-size:11px;letter-spacing:.14em}.mobile-q-header__title{margin:8px 0 4px;font-size:34px}.mobile-q-header__subtitle{margin:0 0 12px;font-size:14px}
     .mobile-toggle-btn{width:42px;height:42px;border-radius:14px;border:2px solid #fff;background:#fff;color:#111;font-size:28px;line-height:1}
     .mobile-q-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mobile-q-stats article{border:1px solid rgba(143,175,255,.26);border-radius:12px;padding:10px}.mobile-q-stats span{font-size:11px;display:block}.mobile-q-stats strong{font-size:28px}
@@ -444,9 +459,18 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     .mobile-pill{padding:2px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.25);font-size:12px}.mobile-pill.is-active{color:#8af0ba;border-color:#42cc8f}.mobile-q-card p{margin:6px 0 8px;font-size:13px}
     .mobile-q-card__stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-q-card__stats>div{border:1px solid rgba(255,255,255,.11);border-radius:10px;padding:8px}
     .mobile-q-card__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.mobile-q-card__actions form .btn,.mobile-q-card__actions .btn{width:100%}
+    .mobile-submissions-shell{margin-top:12px}
+    .mobile-submissions-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:14px;border:1px solid rgba(92,126,198,.3);background:linear-gradient(180deg, rgba(18,35,74,.85), rgba(11,20,44,.85));color:#fff}
+    .mobile-submissions-toggle h3{margin:0;font-size:40px;font-size:clamp(24px,7vw,44px);line-height:1}
+    .mobile-submissions-toggle span{font-weight:800}
+    .mobile-sub-card{margin-top:8px;padding:10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;display:flex;justify-content:space-between;background:rgba(255,255,255,.03)}
+    .mobile-sub-card p{margin:4px 0 0;font-size:12px;color:rgba(255,255,255,.72)}
+    .mobile-sub-card small{display:block;color:rgba(255,255,255,.55)}
+    .desktop-only{display:none}
+
     .desktop-table{display:none}
     .mobile-form .field{width:100% !important;min-width:0 !important}
-    .mobile-toggle-btn--inline{display:block;margin:0 0 10px auto}
+    .mobile-toggle-btn--inline{display:none}
   }
 
 </style>
