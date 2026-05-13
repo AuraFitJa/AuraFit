@@ -103,14 +103,31 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   <?php foreach ($errors as $error): ?><div class="alert"><?= h($error) ?></div><?php endforeach; ?>
   <?php foreach ($success as $msg): ?><div class="okbox" style="display:block"><?= h($msg) ?></div><?php endforeach; ?>
 
-  <h3>Libreria Questionari</h3>
-  <form method="post" class="toolbar" style="gap:8px;align-items:flex-end">
+  <section class="mobile-q-header" aria-label="Questionari mobile">
+    <div class="mobile-q-header__top">
+      <p class="mobile-q-header__eyebrow">Questionari</p>
+      <button class="mobile-toggle-btn" type="button" data-mobile-toggle="mobile-new-questionario" aria-expanded="false" aria-controls="mobile-new-questionario">+</button>
+    </div>
+    <h3 class="mobile-q-header__title">Libreria mobile</h3>
+    <p class="mobile-q-header__subtitle">Gestisci moduli, invii e risposte senza tabelle schiacciate.</p>
+    <div class="mobile-q-stats">
+      <article><span>Totali</span><strong><?= count($questionari) ?></strong></article>
+      <article><span>Assegnati</span><strong><?= array_sum(array_map(static fn($item)=>(int)$item['assegnazioniAttive'], $questionari)) ?></strong></article>
+      <article><span>Ricevuti</span><strong><?= array_sum(array_map(static fn($item)=>(int)$item['compilazioniRicevute'], $questionari)) ?></strong></article>
+    </div>
+  </section>
+
+  <section class="mobile-collapsible" id="mobile-new-questionario" data-mobile-collapsible hidden>
+    <div class="mobile-create-head"><h4>Nuovo questionario</h4><span>rapido</span></div>
+  <h3 class="mobile-create-title">Libreria Questionari</h3>
+  <form method="post" class="toolbar mobile-form" style="gap:8px;align-items:flex-end">
     <input type="hidden" name="createQuestionario" value="1">
     <label class="field"><span>Titolo</span><input name="titolo" required></label>
     <label class="field" style="min-width:320px"><span>Descrizione</span><input name="descrizione"></label>
     <button class="btn primary" type="submit">Nuovo questionario</button>
   </form>
-  <div style="overflow:auto"><table><thead><tr><th>Titolo</th><th>Stato</th><th>Assegnazioni</th><th>Compilazioni</th><th>Azioni</th></tr></thead><tbody>
+  </section>
+  <div style="overflow:auto" class="desktop-table"><table><thead><tr><th>Titolo</th><th>Stato</th><th>Assegnazioni</th><th>Compilazioni</th><th>Azioni</th></tr></thead><tbody>
   <?php foreach ($questionari as $q): ?><tr>
     <td><strong><?= h($q['titolo']) ?></strong><div class="muted"><?= h($q['descrizione']) ?></div></td>
     <td><?= h($q['stato']) ?></td>
@@ -120,6 +137,21 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
       <form method="post" style="display:inline"><input type="hidden" name="duplicaQuestionario" value="1"><input type="hidden" name="idQuestionario" value="<?= (int)$q['idQuestionario'] ?>"><button class="btn" type="submit">Duplica</button></form>
     </td>
   </tr><?php endforeach; ?></tbody></table></div>
+  <section class="mobile-library">
+      <div class="mobile-library__head"><h3>Libreria</h3><span><?= count($questionari) ?> elementi</span></div>
+    <div class="mobile-search"><input type="text" placeholder="Cerca questionario"></div>
+    <?php foreach ($questionari as $q): ?>
+      <article class="mobile-q-card">
+        <div class="mobile-q-card__title"><strong><?= h($q['titolo']) ?></strong><span class="mobile-pill <?= h($q['stato'])==='attivo' ? 'is-active' : '' ?>"><?= h($q['stato']) ?></span></div>
+        <p><?= h($q['descrizione']) ?></p>
+        <div class="mobile-q-card__stats"><div><span>Assegnazioni</span><strong><?= (int)$q['assegnazioniAttive'] ?></strong></div><div><span>Compilazioni</span><strong><?= (int)$q['compilazioniRicevute'] ?></strong></div></div>
+        <div class="mobile-q-card__actions">
+          <a class="btn" href="?idQuestionario=<?= (int)$q['idQuestionario'] ?>">Modifica</a>
+          <form method="post"><input type="hidden" name="duplicaQuestionario" value="1"><input type="hidden" name="idQuestionario" value="<?= (int)$q['idQuestionario'] ?>"><button class="btn" type="submit">Duplica</button></form>
+        </div>
+      </article>
+    <?php endforeach; ?>
+  </section>
 
   <?php if ($selectedQuestionario): ?>
   <hr style="opacity:.2;margin:18px 0">
@@ -193,10 +225,25 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
   </div>
   <?php endif; ?>
 
-  <h3 style="margin-top:18px">Compilazioni ricevute</h3>
-  <div style="overflow:auto"><table><thead><tr><th>Questionario</th><th>Cliente</th><th>#</th><th>Stato</th><th>Aggiornato</th><th>Inviato</th></tr></thead><tbody>
+  <section class="mobile-submissions-shell">
+    <button class="mobile-submissions-toggle" type="button" data-mobile-toggle="mobile-compilazioni" aria-expanded="false" aria-controls="mobile-compilazioni">
+      <h3>Compilazioni ricevute</h3><span><?= count($compilazioni) ?></span>
+    </button>
+    <section class="mobile-collapsible mobile-collapsible--compilazioni" data-mobile-collapsible id="mobile-compilazioni" hidden>
+      <p class="muted" style="margin:0 0 8px">Tap su una scheda per aprire il dettaglio risposte.</p>
+      <?php foreach ($compilazioni as $c): ?>
+        <article class="mobile-sub-card compilazione-row" data-compilazione-row data-id-compilazione="<?= (int)$c['idCompilazione'] ?>" role="button" tabindex="0" aria-label="Apri risposte compilazione #<?= (int)$c['numeroCompilazione'] ?>">
+          <div><strong><?= h($c['titolo']) ?></strong><p><?= h(trim($c['nome'].' '.$c['cognome'])) ?></p></div>
+          <div><span>#<?= (int)$c['numeroCompilazione'] ?></span><small>Agg. <?= h(substr((string)$c['aggiornatoIl'],0,10)) ?></small></div>
+        </article>
+      <?php endforeach; ?>
+    </section>
+  </section>
+
+  <h3 style="margin-top:18px" class="desktop-only">Compilazioni ricevute</h3>
+  <div style="overflow:auto" class="desktop-table"><table><thead><tr><th>Questionario</th><th>Cliente</th><th>#</th><th>Stato</th><th>Aggiornato</th><th>Inviato</th></tr></thead><tbody>
     <?php foreach ($compilazioni as $c): ?>
-      <tr class="compilazione-row" data-compilazione-row data-id-compilazione="<?= (int)$c['idCompilazione'] ?>" role="button" tabindex="0" aria-label="Apri risposte compilazione #<?= (int)$c['numeroCompilazione'] ?>">
+      <tr class="compilazione-row desktop-row" data-compilazione-row data-id-compilazione="<?= (int)$c['idCompilazione'] ?>" role="button" tabindex="0" aria-label="Apri risposte compilazione #<?= (int)$c['numeroCompilazione'] ?>">
         <td><strong><?= h($c['titolo']) ?></strong></td>
         <td><?= h(trim($c['nome'].' '.$c['cognome'])) ?></td>
         <td><?= (int)$c['numeroCompilazione'] ?></td>
@@ -215,6 +262,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
       <span class="compilazione-panel__badge" data-compilazione-stato></span>
     </div>
     <div class="compilazione-panel__content" data-compilazione-content></div>
+  </section>
   </section>
 </section>
 <style>
@@ -388,14 +436,44 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     margin-bottom: 8px;
   }
   .builder-option-row {
+
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     align-items: center;
   }
+
+  .mobile-q-header,.mobile-library,.mobile-collapsible,.mobile-toggle-btn--inline,.mobile-submissions-shell{display:none}
+  .desktop-only{display:block}
+  @media (max-width:820px){
+    .desktop-only,.desktop-table{display:none}
+    .mobile-q-header,.mobile-library,.mobile-collapsible,.mobile-submissions-shell{display:block}
+    .mobile-q-header{padding:14px;border:1px solid rgba(95,127,192,.45);border-radius:22px;background:radial-gradient(120% 130% at 95% 0%,rgba(49,118,186,.30),transparent 45%),linear-gradient(180deg,#13244b 0%,#0b1737 100%);box-shadow:0 20px 40px rgba(0,0,0,.38)}
+    .mobile-q-header__top{display:flex;justify-content:space-between;align-items:flex-start}
+    .mobile-q-header__eyebrow{margin:0;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:#b7cffc}
+    .mobile-q-header__title{margin:8px 0 4px;font-size:48px;line-height:.92;font-weight:900}
+    .mobile-q-header__subtitle{margin:0 0 12px;font-size:15px;color:rgba(235,243,255,.9)}
+    .mobile-toggle-btn{width:44px;height:44px;border-radius:14px;border:0;background:#fff;color:#0a1228;font-size:30px;font-weight:500}
+    .mobile-q-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mobile-q-stats article{border:1px solid rgba(145,176,255,.3);border-radius:14px;background:rgba(5,13,31,.28);padding:10px}.mobile-q-stats span{font-size:11px;color:#b6c8ee}.mobile-q-stats strong{display:block;font-size:36px;line-height:1}
+    .mobile-collapsible{margin-top:10px;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:#101a37;padding:12px}
+    .mobile-create-head{display:flex;justify-content:space-between;align-items:center}.mobile-create-head span{font-size:11px;background:rgba(99,102,241,.22);padding:3px 10px;border-radius:999px}.mobile-create-title{margin:10px 0 8px;font-size:44px;line-height:.95}
+    .mobile-form{display:block !important}.mobile-form .field{display:block;width:100% !important;min-width:0 !important;margin-bottom:10px}.mobile-form input{width:100%}.mobile-form .btn.primary{width:100%;border-radius:14px;background:linear-gradient(90deg,#6c63ff,#4cc4f0)}
+    .mobile-library{margin-top:12px}.mobile-library__head{display:flex;justify-content:space-between;align-items:center}.mobile-library__head h3{font-size:40px}.mobile-search input{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:#08132f;color:#eaf1ff;padding:11px 12px}
+    .mobile-q-card{margin-top:10px;padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}.mobile-q-card__title{display:flex;justify-content:space-between}.mobile-q-card__title strong{font-size:32px;line-height:1}
+    .mobile-pill{padding:4px 10px;border-radius:999px;border:1px solid rgba(99,255,188,.4);color:#8af8cd}.mobile-q-card p{font-size:14px;color:rgba(239,247,255,.76)}
+    .mobile-q-card__stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mobile-q-card__stats>div{border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px}.mobile-q-card__actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.mobile-q-card__actions .btn{width:100%;border-radius:11px;background:rgba(255,255,255,.06)}
+    .mobile-submissions-shell{margin-top:12px}.mobile-submissions-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:16px;border:1px solid rgba(95,127,192,.45);background:linear-gradient(180deg,#13244b,#0c193c);color:#fff}.mobile-submissions-toggle h3{margin:0;font-size:46px;line-height:.92}
+    .mobile-sub-card{margin-top:8px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;background:rgba(255,255,255,.04)}
+  }
+
+
 </style>
 <?php renderEnd('<script>
 (function(){
+
+const mobileToggles=[...document.querySelectorAll("[data-mobile-toggle]")];
+mobileToggles.forEach((btn)=>{btn.addEventListener("click",()=>{const id=btn.getAttribute("data-mobile-toggle");const target=document.getElementById(id);if(!target) return;const open=target.hidden;target.hidden=!open;btn.textContent=open?"×":"+";btn.setAttribute("aria-expanded", String(open));});});
+
 const add=document.getElementById("addDomandaForm"); const fb=document.getElementById("builderFeedback");
 const tipoDomanda=add?.querySelector(\'select[name="tipoDomanda"]\');
 const optionsBox=add?.querySelector("[data-builder-options]");
