@@ -461,7 +461,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     .questionari-mobile-create{margin-top:12px;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:#101827;padding:14px}
     .questionari-mobile-create__head{display:flex;justify-content:space-between;align-items:center}.questionari-mobile-create__head h4{margin:0}.questionari-mobile-create__head span{font-size:11px;border-radius:999px;background:rgba(99,102,241,.2);padding:4px 10px}
     .mobile-form{display:block !important}.mobile-form .field{display:block;width:100% !important;min-width:0 !important;margin-bottom:10px}.mobile-form input{width:100%}.mobile-form .btn.primary{width:100%;border-radius:14px;background:linear-gradient(90deg,#6c63ff,#1bb5f3)}
-    .questionari-mobile-library{margin-top:14px}.questionari-mobile-library__head{display:flex;justify-content:space-between;align-items:center}.questionari-mobile-library__head h3{margin:0}
+    .questionari-mobile-library{margin-top:14px;padding:12px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:#101827}.questionari-mobile-library__head{display:flex;justify-content:space-between;align-items:center}.questionari-mobile-library__head h3{margin:0}
     .questionari-mobile-search input{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0B1220;color:#fff;padding:11px 12px}
     .questionari-mobile-library__list{display:grid;gap:10px;margin-top:10px}
     .questionari-mobile-card{padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#151B2B}
