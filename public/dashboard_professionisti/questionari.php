@@ -157,8 +157,10 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
 
   <?php if ($selectedQuestionario): ?>
   <hr style="opacity:.2;margin:18px 0">
-  <h3>Builder Questionario: <?= h($selectedQuestionario['titolo']) ?></h3>
-  <div class="grid cols-2 builder-layout">
+  <div class="assign-modal-layer builder-modal-layer" data-builder-questionario-modal>
+    <div class="assign-modal-card builder-modal-card" role="dialog" aria-modal="true" aria-labelledby="builder-questionario-modal-title">
+      <div class="builder-modal-head"><h3 id="builder-questionario-modal-title" style="margin:0">Builder Questionario: <?= h($selectedQuestionario['titolo']) ?></h3><button class="btn" type="button" data-close-builder-modal>Chiudi</button></div>
+      <div class="grid cols-2 builder-layout">
     <div class="card builder-card builder-card-questions" style="background:rgba(255,255,255,.03)">
       <h4>Domande</h4>
       <?php foreach ($domande as $d): ?>
@@ -199,6 +201,10 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
 
       <h4>Assegna questionario</h4>
       <button class="btn" type="button" data-open-assign-modal>Assegna questionario</button>
+    </div>
+  </div>
+
+      </div>
     </div>
   </div>
 
@@ -364,6 +370,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     border-color: rgba(99, 102, 241, 0.85);
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
   }
+  body.modal-open { overflow: hidden; position: fixed; inset: 0; width: 100%; }
   .assign-modal-layer {
     position: fixed;
     inset: 0;
@@ -375,6 +382,10 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     padding: 16px;
   }
   .assign-modal-layer.open { display: flex; }
+  .builder-modal-layer{z-index:1250}
+  .builder-modal-card{width:min(980px,100%);max-height:min(88vh,860px);overflow:auto !important;-webkit-overflow-scrolling:touch}
+  .builder-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+
   .assign-modal-card {
     width: min(680px, 100%);
     max-height: min(82vh, 720px);
@@ -461,7 +472,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     .questionari-mobile-create{margin-top:12px;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:#101827;padding:14px}
     .questionari-mobile-create__head{display:flex;justify-content:space-between;align-items:center}.questionari-mobile-create__head h4{margin:0}.questionari-mobile-create__head span{font-size:11px;border-radius:999px;background:rgba(99,102,241,.2);padding:4px 10px}
     .mobile-form{display:block !important}.mobile-form .field{display:block;width:100% !important;min-width:0 !important;margin-bottom:10px}.mobile-form input{width:100%}.mobile-form .btn.primary{width:100%;border-radius:14px;background:linear-gradient(90deg,#6c63ff,#1bb5f3)}
-    .questionari-mobile-library{margin-top:14px}.questionari-mobile-library__head{display:flex;justify-content:space-between;align-items:center}.questionari-mobile-library__head h3{margin:0}
+    .questionari-mobile-library{margin-top:14px;padding:12px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:#101827}.questionari-mobile-library__head{display:flex;justify-content:space-between;align-items:center}.questionari-mobile-library__head h3{margin:0}
     .questionari-mobile-search input{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0B1220;color:#fff;padding:11px 12px}
     .questionari-mobile-library__list{display:grid;gap:10px;margin-top:10px}
     .questionari-mobile-card{padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#151B2B}
@@ -579,6 +590,31 @@ add?.addEventListener("submit", async function(e){
   fb.textContent=d.ok?"Domanda aggiunta. Ricarico...":(d.error||"Errore");
   if(d.ok) location.reload();
 });
+const builderModal=document.querySelector("[data-builder-questionario-modal]");
+const closeBuilderBtn=document.querySelector("[data-close-builder-modal]");
+const selectedQuestionarioId=' . (int)$selectedQuestionarioId . ';
+let lastScrollY=0;
+function syncBodyModalState(){
+  const hasOpenModal=Array.from(document.querySelectorAll(".assign-modal-layer")).some((el)=>el.classList.contains("open"));
+  if(hasOpenModal){
+    if(!document.body.classList.contains("modal-open")){
+      lastScrollY=window.scrollY || window.pageYOffset || 0;
+      document.body.style.top=`-${lastScrollY}px`;
+    }
+    document.body.classList.add("modal-open");
+    return;
+  }
+  if(document.body.classList.contains("modal-open")){
+    document.body.classList.remove("modal-open");
+    document.body.style.top="";
+    window.scrollTo(0, lastScrollY);
+  }
+}
+function toggleBuilderModal(open){ if(!builderModal) return; builderModal.classList.toggle("open", !!open); syncBodyModalState(); }
+closeBuilderBtn?.addEventListener("click", ()=>toggleBuilderModal(false));
+builderModal?.addEventListener("click", (e)=>{ if(e.target===builderModal) toggleBuilderModal(false); });
+if(selectedQuestionarioId>0){ toggleBuilderModal(true); } else { syncBodyModalState(); }
+
 const modal=document.querySelector("[data-assign-questionario-modal]");
 const openBtn=document.querySelector("[data-open-assign-modal]");
 const closeBtn=document.querySelector("[data-close-assign-modal]");
@@ -594,7 +630,7 @@ function syncToggleAll(){
   if(checkboxes.length===0){ toggleAll.checked=false; return; }
   toggleAll.checked=checkboxes.every((el)=>el.checked);
 }
-function toggleModal(open){ if(!modal) return; modal.classList.toggle("open", !!open); if(open){ syncToggleAll(); } if(!open) setFeedback("", false); }
+function toggleModal(open){ if(!modal) return; modal.classList.toggle("open", !!open); if(open){ syncToggleAll(); } if(!open) setFeedback("", false); syncBodyModalState(); }
 function selectedClienti(){ return [...document.querySelectorAll("[data-assign-cliente]:checked")].map(i=>parseInt(i.value,10)).filter(Number.isFinite); }
 
 openBtn?.addEventListener("click", ()=>toggleModal(true));

@@ -104,7 +104,6 @@ try {
   }
 
   if ($action === 'add_diary_food') {
-    off_require_role($roles, 'cliente');
     $barcode = (string)($_POST['barcode'] ?? '');
     $mode = (string)($_POST['mode'] ?? 'grams');
     $amount = (float)($_POST['amount'] ?? 0);
