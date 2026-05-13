@@ -157,13 +157,9 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
 
   <?php if ($selectedQuestionario): ?>
   <hr style="opacity:.2;margin:18px 0">
-  <div class="builder-launch-row">
-    <h3 style="margin:0">Builder Questionario: <?= h($selectedQuestionario['titolo']) ?></h3>
-    <button class="btn primary" type="button" data-open-builder-modal>Apri builder</button>
-  </div>
   <div class="assign-modal-layer builder-modal-layer" data-builder-questionario-modal>
     <div class="assign-modal-card builder-modal-card" role="dialog" aria-modal="true" aria-labelledby="builder-questionario-modal-title">
-      <div class="builder-modal-head"><h3 id="builder-questionario-modal-title" style="margin:0">Builder Questionario</h3><button class="btn" type="button" data-close-builder-modal>Chiudi</button></div>
+      <div class="builder-modal-head"><h3 id="builder-questionario-modal-title" style="margin:0">Builder Questionario: <?= h($selectedQuestionario['titolo']) ?></h3><button class="btn" type="button" data-close-builder-modal>Chiudi</button></div>
       <div class="grid cols-2 builder-layout">
     <div class="card builder-card builder-card-questions" style="background:rgba(255,255,255,.03)">
       <h4>Domande</h4>
@@ -385,7 +381,6 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     padding: 16px;
   }
   .assign-modal-layer.open { display: flex; }
-  .builder-launch-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
   .builder-modal-layer{z-index:1250}
   .builder-modal-card{width:min(980px,100%);max-height:min(88vh,860px);overflow:auto}
   .builder-modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -595,12 +590,12 @@ add?.addEventListener("submit", async function(e){
   if(d.ok) location.reload();
 });
 const builderModal=document.querySelector("[data-builder-questionario-modal]");
-const openBuilderBtn=document.querySelector("[data-open-builder-modal]");
 const closeBuilderBtn=document.querySelector("[data-close-builder-modal]");
+const selectedQuestionarioId=' . (int)$selectedQuestionarioId . ';
 function toggleBuilderModal(open){ if(!builderModal) return; builderModal.classList.toggle("open", !!open); }
-openBuilderBtn?.addEventListener("click", ()=>toggleBuilderModal(true));
 closeBuilderBtn?.addEventListener("click", ()=>toggleBuilderModal(false));
 builderModal?.addEventListener("click", (e)=>{ if(e.target===builderModal) toggleBuilderModal(false); });
+if(selectedQuestionarioId>0){ toggleBuilderModal(true); }
 
 const modal=document.querySelector("[data-assign-questionario-modal]");
 const openBtn=document.querySelector("[data-open-assign-modal]");
