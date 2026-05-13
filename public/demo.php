@@ -172,39 +172,18 @@ $flows = [
       box-shadow: 0 14px 28px rgba(109, 94, 243, .32);
     }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 999px;
-      padding: 8px 12px;
-      color: var(--muted-strong);
-      background: rgba(255,255,255,.055);
-      font-size: .88rem;
-      white-space: nowrap;
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 14px;
+      display: block;
     }
 
-    .badge-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--brand-green);
-      box-shadow: 0 0 0 5px rgba(46,225,165,.12);
-    }
 
     .hero {
       max-width: 710px;
       margin-bottom: 30px;
-    }
-
-    .eyebrow {
-      margin: 0 0 12px;
-      color: var(--brand-green);
-      font-size: .86rem;
-      font-weight: 800;
-      letter-spacing: .14em;
-      text-transform: uppercase;
     }
 
     h1 {
@@ -351,20 +330,9 @@ $flows = [
       transform: translateX(3px);
     }
 
-    .footer-note {
-      margin: 22px 0 0;
-      color: rgba(234,240,255,.48);
-      font-size: .88rem;
-      text-align: center;
-    }
-
     @media (max-width: 720px) {
       .topbar {
         align-items: flex-start;
-      }
-
-      .badge {
-        display: none;
       }
 
       .actions {
@@ -393,18 +361,14 @@ $flows = [
       <div class="content">
         <header class="topbar">
           <div class="brand" aria-label="AuraFit">
-            <div class="brand-mark" aria-hidden="true">A</div>
+            <div class="brand-mark" aria-hidden="true">
+              <img src="/media/logo.png" alt="">
+            </div>
             <span>AuraFit</span>
-          </div>
-
-          <div class="badge">
-            <span class="badge-dot" aria-hidden="true"></span>
-            Demo test attiva
           </div>
         </header>
 
         <div class="hero">
-          <p class="eyebrow">Ambiente demo</p>
           <h1 id="page-title">
             Testa i flussi <span class="gradient-text">AuraFit</span>
           </h1>
@@ -442,9 +406,6 @@ $flows = [
           <?php endforeach; ?>
         </div>
 
-        <p class="footer-note">
-          Versione demo · Ottimizzata per mobile e installazione PWA
-        </p>
       </div>
     </section>
   </main>
