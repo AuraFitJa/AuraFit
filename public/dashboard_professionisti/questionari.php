@@ -11,6 +11,7 @@ $assegnazioni = [];
 $compilazioni = [];
 $selectedCompilazioneId = 0;
 $selectedQuestionario = null;
+$selectedQuestionarioId = 0;
 $assegnazioniAttiveByCliente = [];
 
 if (!$dbAvailable) {
@@ -63,6 +64,7 @@ if (!$dbAvailable) {
       if ($selectedId > 0) {
         $selectedQuestionario = Database::exec('SELECT * FROM Questionari WHERE idQuestionario = ? AND professionista = ? LIMIT 1', [$selectedId, $professionistaId])->fetch();
         if ($selectedQuestionario) {
+          $selectedQuestionarioId = (int)$selectedQuestionario['idQuestionario'];
           $domande = Database::exec('SELECT * FROM QuestionarioDomande WHERE questionario = ? ORDER BY ordine ASC', [$selectedId])->fetchAll();
           if ($domande) {
             $ids = array_map(static function ($d) { return (int)$d['idDomanda']; }, $domande);
@@ -576,7 +578,7 @@ const closeBtn=document.querySelector("[data-close-assign-modal]");
 const submitBtn=document.querySelector("[data-submit-assign]");
 const toggleAll=document.querySelector("[data-assign-toggle-all]");
 const feedback=document.querySelector("[data-assign-feedback]");
-const idQuestionario=' . (int)$selectedQuestionario['idQuestionario'] . ';
+const idQuestionario=' . (int)$selectedQuestionarioId . ';
 
 function setFeedback(message, ok){ if(!feedback) return; feedback.textContent=message||""; feedback.classList.toggle("ok",!!ok); }
 function syncToggleAll(){
