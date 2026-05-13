@@ -370,6 +370,7 @@ renderStart('Questionari', 'questionari', $email, $roleBadge, $isPt, $isNutrizio
     border-color: rgba(99, 102, 241, 0.85);
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
   }
+  body.modal-open { overflow: hidden; }
   .assign-modal-layer {
     position: fixed;
     inset: 0;
@@ -592,10 +593,14 @@ add?.addEventListener("submit", async function(e){
 const builderModal=document.querySelector("[data-builder-questionario-modal]");
 const closeBuilderBtn=document.querySelector("[data-close-builder-modal]");
 const selectedQuestionarioId=' . (int)$selectedQuestionarioId . ';
-function toggleBuilderModal(open){ if(!builderModal) return; builderModal.classList.toggle("open", !!open); }
+function syncBodyModalState(){
+  const hasOpenModal=Array.from(document.querySelectorAll(".assign-modal-layer")).some((el)=>el.classList.contains("open"));
+  document.body.classList.toggle("modal-open", hasOpenModal);
+}
+function toggleBuilderModal(open){ if(!builderModal) return; builderModal.classList.toggle("open", !!open); syncBodyModalState(); }
 closeBuilderBtn?.addEventListener("click", ()=>toggleBuilderModal(false));
 builderModal?.addEventListener("click", (e)=>{ if(e.target===builderModal) toggleBuilderModal(false); });
-if(selectedQuestionarioId>0){ toggleBuilderModal(true); }
+if(selectedQuestionarioId>0){ toggleBuilderModal(true); } else { syncBodyModalState(); }
 
 const modal=document.querySelector("[data-assign-questionario-modal]");
 const openBtn=document.querySelector("[data-open-assign-modal]");
@@ -612,7 +617,7 @@ function syncToggleAll(){
   if(checkboxes.length===0){ toggleAll.checked=false; return; }
   toggleAll.checked=checkboxes.every((el)=>el.checked);
 }
-function toggleModal(open){ if(!modal) return; modal.classList.toggle("open", !!open); if(open){ syncToggleAll(); } if(!open) setFeedback("", false); }
+function toggleModal(open){ if(!modal) return; modal.classList.toggle("open", !!open); if(open){ syncToggleAll(); } if(!open) setFeedback("", false); syncBodyModalState(); }
 function selectedClienti(){ return [...document.querySelectorAll("[data-assign-cliente]:checked")].map(i=>parseInt(i.value,10)).filter(Number.isFinite); }
 
 openBtn?.addEventListener("click", ()=>toggleModal(true));
