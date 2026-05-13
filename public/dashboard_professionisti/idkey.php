@@ -426,7 +426,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     id="toggleIdKeyEliminate"
     class="btn"
     type="button"
-    aria-expanded="true"
+    aria-expanded="false"
     aria-controls="storicoIdKeyEliminate"
     style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;"
   >
@@ -434,7 +434,7 @@ renderStart('Gestione ID-Key', 'idkey', $email, $roleBadge, $isPt, $isNutrizioni
     <span>Storico ID-Key terminate</span>
   </button>
 
-  <div id="storicoIdKeyEliminate">
+  <div id="storicoIdKeyEliminate" hidden>
     <table>
       <thead><tr><th>ID-Key</th><th>Tipo</th><th>Cliente collegato</th><th>Stato</th><th>Azioni</th></tr></thead>
       <tbody>
