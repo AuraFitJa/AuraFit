@@ -24,6 +24,9 @@ if (!$dbAvailable) {
       }
 
       if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'terminate_association') {
+        if (!empty($_SESSION['demo_mode'])) {
+          $errors[] = 'Modalità demo: le modifiche non vengono salvate.';
+        } else {
         $idAssociazione = (int)($_POST['idAssociazione'] ?? 0);
         if ($idAssociazione > 0) {
           $pdo = Database::pdo();
@@ -82,6 +85,7 @@ if (!$dbAvailable) {
             }
             throw $e;
           }
+        }
         }
       }
 
