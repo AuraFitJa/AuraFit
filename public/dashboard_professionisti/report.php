@@ -125,7 +125,7 @@ if ($dbAvailable) {
   }
 }
 
-renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNutrizionista);
+renderStart('Report peso', 'report', $email, $roleBadge, $isPt, $isNutrizionista);
 ?>
 
 <style>
@@ -135,48 +135,26 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
   }
 
   .report-hero {
-    position: relative;
-    overflow: hidden;
-    padding: clamp(20px, 4vw, 34px);
+    padding: clamp(22px, 4vw, 34px);
     border-radius: 28px;
     background:
-      radial-gradient(circle at 18% 10%, rgba(76, 201, 240, .28), transparent 28rem),
-      radial-gradient(circle at 86% 8%, rgba(46, 225, 165, .16), transparent 24rem),
-      linear-gradient(145deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
-    border: 1px solid rgba(255,255,255,.1);
-    box-shadow: 0 18px 50px rgba(0,0,0,.28);
-  }
-
-  .report-hero::after {
-    content: "";
-    position: absolute;
-    right: -120px;
-    bottom: -150px;
-    width: 340px;
-    height: 340px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, rgba(109,94,243,.22), rgba(76,201,240,.18));
-    filter: blur(18px);
-    pointer-events: none;
-  }
-
-  .report-hero-content {
-    position: relative;
-    z-index: 1;
-    max-width: 760px;
+      linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.035)),
+      rgba(10, 16, 28, .84);
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 18px 50px rgba(0,0,0,.25);
   }
 
   .report-eyebrow {
-    width: fit-content;
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    width: fit-content;
     margin-bottom: 14px;
     padding: 8px 11px;
     border-radius: 999px;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.12);
-    color: rgba(234,240,255,.82);
+    background: rgba(76,201,240,.10);
+    border: 1px solid rgba(76,201,240,.18);
+    color: rgba(234,240,255,.84);
     font-size: 12px;
     font-weight: 800;
   }
@@ -187,49 +165,58 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     height: 8px;
     border-radius: 999px;
     background: #4CC9F0;
-    box-shadow: 0 0 0 6px rgba(76,201,240,.13);
+    box-shadow: 0 0 0 6px rgba(76,201,240,.12);
   }
 
   .report-hero h1 {
     margin: 0;
-    max-width: 12ch;
-    font-size: clamp(34px, 5vw, 58px);
-    line-height: .92;
+    font-size: clamp(34px, 5vw, 56px);
+    line-height: .95;
     letter-spacing: -.06em;
   }
 
   .report-hero p {
-    max-width: 62ch;
-    margin: 16px 0 0;
+    max-width: 56ch;
+    margin: 14px 0 0;
     color: rgba(234,240,255,.72);
     font-size: 15px;
-    line-height: 1.65;
+    line-height: 1.6;
   }
 
-  .report-grid {
+  .clients-list {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 14px;
+    gap: 12px;
   }
 
   .weight-card {
-    grid-column: span 12;
-    position: relative;
     overflow: hidden;
-    padding: 18px;
-    border-radius: 26px;
+    border-radius: 24px;
     background:
-      linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.035));
+      linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
     border: 1px solid rgba(255,255,255,.09);
-    box-shadow: 0 16px 44px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.025);
+    box-shadow: 0 16px 44px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,255,255,.025);
   }
 
-  .weight-card-header {
+  .weight-card[open] {
+    border-color: rgba(76,201,240,.22);
+    box-shadow: 0 20px 56px rgba(0,0,0,.30), 0 0 0 1px rgba(76,201,240,.08) inset;
+  }
+
+  .weight-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px 18px;
+  }
+
+  .weight-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .summary-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 16px;
-    align-items: start;
-    margin-bottom: 18px;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    gap: 14px;
+    align-items: center;
   }
 
   .client-title {
@@ -240,34 +227,116 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
   }
 
   .client-avatar {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     display: grid;
     place-items: center;
     flex: 0 0 auto;
-    border-radius: 16px;
+    border-radius: 15px;
     background: linear-gradient(135deg, rgba(76,201,240,.95), rgba(46,225,165,.82));
     color: #061018;
     font-weight: 900;
-    box-shadow: 0 14px 30px rgba(76,201,240,.18);
   }
 
   .client-title h3 {
     margin: 0;
-    font-size: 22px;
-    line-height: 1.08;
+    overflow: hidden;
+    color: #fff;
+    font-size: 18px;
+    line-height: 1.1;
     letter-spacing: -.035em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .client-title p {
     margin: 5px 0 0;
-    color: rgba(234,240,255,.62);
-    font-size: 13px;
+    color: rgba(234,240,255,.58);
+    font-size: 12px;
+  }
+
+  .summary-stat {
+    min-width: 118px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.045);
+    border: 1px solid rgba(255,255,255,.075);
+  }
+
+  .summary-stat span {
+    display: block;
+    margin-bottom: 5px;
+    color: rgba(234,240,255,.56);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .summary-stat strong {
+    display: block;
+    color: #fff;
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .trend-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 170px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.055);
+    color: rgba(234,240,255,.76);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .trend-pill.down {
+    color: #C7FFE8;
+    background: rgba(46,225,165,.12);
+    border-color: rgba(46,225,165,.28);
+  }
+
+  .trend-pill.up {
+    color: #FFE7AE;
+    background: rgba(255,209,102,.12);
+    border-color: rgba(255,209,102,.28);
+  }
+
+  .toggle-icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(255,255,255,.055);
+    border: 1px solid rgba(255,255,255,.10);
+    color: rgba(234,240,255,.78);
+    font-size: 18px;
+    transition: transform .18s ease, background .18s ease;
+  }
+
+  .weight-card[open] .toggle-icon {
+    transform: rotate(180deg);
+    background: rgba(76,201,240,.12);
+    color: #fff;
+  }
+
+  .weight-detail {
+    padding: 0 18px 18px;
+  }
+
+  .detail-divider {
+    height: 1px;
+    margin-bottom: 16px;
+    background: rgba(255,255,255,.08);
   }
 
   .weight-stats {
     display: grid;
-    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 16px;
   }
@@ -295,40 +364,13 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     letter-spacing: -.04em;
   }
 
-  .trend-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    width: fit-content;
-    padding: 8px 11px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.12);
-    background: rgba(255,255,255,.055);
-    color: rgba(234,240,255,.76);
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-  }
-
-  .trend-pill.down {
-    color: #C7FFE8;
-    background: rgba(46,225,165,.12);
-    border-color: rgba(46,225,165,.28);
-  }
-
-  .trend-pill.up {
-    color: #FFE7AE;
-    background: rgba(255,209,102,.12);
-    border-color: rgba(255,209,102,.28);
-  }
-
   .chart-panel {
     position: relative;
     height: clamp(280px, 42vw, 430px);
     padding: 14px 14px 8px;
     border-radius: 22px;
     background:
-      radial-gradient(circle at 18% 0%, rgba(76,201,240,.12), transparent 16rem),
+      radial-gradient(circle at 18% 0%, rgba(76,201,240,.10), transparent 16rem),
       rgba(4, 8, 16, .24);
     border: 1px solid rgba(255,255,255,.075);
   }
@@ -339,8 +381,8 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
   }
 
   .empty-weight {
-    padding: 18px;
-    border-radius: 22px;
+    padding: 16px;
+    border-radius: 18px;
     background: rgba(255,255,255,.04);
     border: 1px dashed rgba(255,255,255,.14);
     color: rgba(234,240,255,.68);
@@ -355,16 +397,17 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     color: #FFDCE4;
   }
 
-  @media (min-width: 1180px) {
-    .weight-card.compact-card {
-      grid-column: span 6;
+  @media (max-width: 980px) {
+    .summary-grid {
+      grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .weight-card.compact-card .chart-panel {
-      height: 340px;
+    .summary-stat,
+    .trend-pill {
+      display: none;
     }
 
-    .weight-card.compact-card .weight-stats {
+    .weight-stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
@@ -380,8 +423,7 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     }
 
     .report-hero h1 {
-      max-width: 10ch;
-      font-size: clamp(32px, 11vw, 46px);
+      font-size: clamp(32px, 11vw, 44px);
     }
 
     .report-hero p {
@@ -389,35 +431,35 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
       line-height: 1.55;
     }
 
-    .report-grid {
-      gap: 10px;
-    }
-
     .weight-card {
-      padding: 14px;
-      border-radius: 22px;
+      border-radius: 20px;
     }
 
-    .weight-card-header {
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-bottom: 14px;
+    .weight-summary {
+      padding: 14px;
     }
 
     .client-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 14px;
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
     }
 
     .client-title h3 {
-      font-size: 19px;
+      font-size: 16px;
+    }
+
+    .client-title p {
+      font-size: 11px;
+    }
+
+    .weight-detail {
+      padding: 0 14px 14px;
     }
 
     .weight-stats {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 12px;
     }
 
     .weight-stat {
@@ -430,15 +472,9 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     }
 
     .chart-panel {
-      height: 330px;
+      height: 320px;
       padding: 10px 6px 6px;
       border-radius: 18px;
-      margin-left: -2px;
-      margin-right: -2px;
-    }
-
-    .trend-pill {
-      white-space: normal;
     }
   }
 
@@ -455,14 +491,9 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
 
 <div class="report-page">
   <section class="report-hero">
-    <div class="report-hero-content">
-      <div class="report-eyebrow">Monitoraggio clienti</div>
-      <h1>Report peso più leggibili.</h1>
-      <p>
-        Visualizza l’andamento del peso dei clienti associati usando solo misurazioni reali
-        registrate nel database. Il grafico si adatta a desktop e mobile.
-      </p>
-    </div>
+    <div class="report-eyebrow">Monitoraggio clienti</div>
+    <h1>Report peso</h1>
+    <p>Visualizza l’andamento del peso dei clienti associati</p>
   </section>
 
   <?php if (!$dbAvailable): ?>
@@ -471,11 +502,11 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
     <section class="report-alert"><?= h($clientiError) ?></section>
   <?php elseif (!$clientiPeso): ?>
     <section class="card">
-      <h2 class="section-title">Monitoraggio peso clienti</h2>
+      <h2 class="section-title">Report peso</h2>
       <p class="muted">Nessun cliente associato trovato.</p>
     </section>
   <?php else: ?>
-    <section class="report-grid" aria-label="Grafici peso clienti">
+    <section class="clients-list" aria-label="Report peso clienti">
       <?php foreach ($clientiPeso as $idCliente => $item): ?>
         <?php
           $count = count($item['data']);
@@ -483,79 +514,91 @@ renderStart('Monitoraggio e Report', 'report', $email, $roleBadge, $isPt, $isNut
           $trendClass = '';
           $trendLabel = 'Una sola misurazione';
 
-          if ($delta !== null) {
+          if ($count === 0) {
+            $trendLabel = 'Nessun dato';
+          } elseif ($delta !== null) {
             if ($delta < 0) {
               $trendClass = 'down';
-              $trendLabel = '↓ ' . report_num(abs($delta), 1) . ' kg dall’ultima rilevazione';
+              $trendLabel = '↓ ' . report_num(abs($delta), 1) . ' kg';
             } elseif ($delta > 0) {
               $trendClass = 'up';
-              $trendLabel = '↑ ' . report_num($delta, 1) . ' kg dall’ultima rilevazione';
+              $trendLabel = '↑ ' . report_num($delta, 1) . ' kg';
             } else {
-              $trendLabel = 'Stabile dall’ultima rilevazione';
+              $trendLabel = 'Stabile';
             }
           }
 
           $initial = mb_strtoupper(mb_substr((string)$item['nome'], 0, 1, 'UTF-8'), 'UTF-8');
-          $cardClass = $count > 0 && count($clientiPeso) > 1 ? 'compact-card' : '';
         ?>
 
-        <article class="weight-card <?= h($cardClass) ?>">
-          <header class="weight-card-header">
-            <div class="client-title">
-              <div class="client-avatar" aria-hidden="true"><?= h($initial) ?></div>
-              <div>
-                <h3><?= h($item['nome']) ?></h3>
-                <p>
-                  <?php if ($count > 0): ?>
-                    Dal <?= h(report_format_date($item['firstDate'])) ?> al <?= h(report_format_date($item['lastDate'])) ?>
-                  <?php else: ?>
-                    Nessun dato peso disponibile
-                  <?php endif; ?>
-                </p>
+        <details class="weight-card" data-chart-details>
+          <summary class="weight-summary">
+            <div class="summary-grid">
+              <div class="client-title">
+                <div class="client-avatar" aria-hidden="true"><?= h($initial) ?></div>
+                <div>
+                  <h3><?= h($item['nome']) ?></h3>
+                  <p>
+                    <?php if ($count > 0): ?>
+                      Dal <?= h(report_format_date($item['firstDate'])) ?> al <?= h(report_format_date($item['lastDate'])) ?>
+                    <?php else: ?>
+                      Nessuna misurazione disponibile
+                    <?php endif; ?>
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <?php if ($count > 0): ?>
-              <span class="trend-pill <?= h($trendClass) ?>"><?= h($trendLabel) ?></span>
-            <?php endif; ?>
-          </header>
-
-          <?php if (!$item['data']): ?>
-            <div class="empty-weight">
-              Nessuna misurazione peso disponibile per questo cliente.
-            </div>
-          <?php else: ?>
-            <div class="weight-stats">
-              <div class="weight-stat">
+              <div class="summary-stat">
                 <span>Ultimo peso</span>
-                <strong><?= h(report_num($item['latest'], 1)) ?> kg</strong>
+                <strong><?= $count > 0 ? h(report_num($item['latest'], 1)) . ' kg' : '—' ?></strong>
               </div>
 
-              <div class="weight-stat">
-                <span>Minimo</span>
-                <strong><?= h(report_num($item['min'], 1)) ?> kg</strong>
-              </div>
+              <span class="trend-pill <?= h($trendClass) ?>"><?= h($trendLabel) ?></span>
 
-              <div class="weight-stat">
-                <span>Massimo</span>
-                <strong><?= h(report_num($item['max'], 1)) ?> kg</strong>
-              </div>
-
-              <div class="weight-stat">
-                <span>Misurazioni</span>
-                <strong><?= h((string)$count) ?></strong>
-              </div>
+              <span class="toggle-icon" aria-hidden="true">⌄</span>
             </div>
+          </summary>
 
-            <div class="chart-panel">
-              <canvas
-                id="pesoChartCliente<?= (int)$idCliente ?>"
-                aria-label="Grafico peso cliente <?= h($item['nome']) ?>"
-                role="img"
-              ></canvas>
-            </div>
-          <?php endif; ?>
-        </article>
+          <div class="weight-detail">
+            <div class="detail-divider"></div>
+
+            <?php if (!$item['data']): ?>
+              <div class="empty-weight">
+                Nessuna misurazione peso disponibile per questo cliente.
+              </div>
+            <?php else: ?>
+              <div class="weight-stats">
+                <div class="weight-stat">
+                  <span>Ultimo peso</span>
+                  <strong><?= h(report_num($item['latest'], 1)) ?> kg</strong>
+                </div>
+
+                <div class="weight-stat">
+                  <span>Minimo</span>
+                  <strong><?= h(report_num($item['min'], 1)) ?> kg</strong>
+                </div>
+
+                <div class="weight-stat">
+                  <span>Massimo</span>
+                  <strong><?= h(report_num($item['max'], 1)) ?> kg</strong>
+                </div>
+
+                <div class="weight-stat">
+                  <span>Misurazioni</span>
+                  <strong><?= h((string)$count) ?></strong>
+                </div>
+              </div>
+
+              <div class="chart-panel">
+                <canvas
+                  id="pesoChartCliente<?= (int)$idCliente ?>"
+                  aria-label="Grafico peso cliente <?= h($item['nome']) ?>"
+                  role="img"
+                ></canvas>
+              </div>
+            <?php endif; ?>
+          </div>
+        </details>
       <?php endforeach; ?>
     </section>
   <?php endif; ?>
@@ -590,13 +633,7 @@ $scripts = '';
 if ($chartsPayload) {
   $scripts = '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script>
     const chartsPayload = ' . json_encode($chartsPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ';
-
-    const css = getComputedStyle(document.documentElement);
-    const axisColor = "rgba(234,240,255,.68)";
-    const axisColorSoft = "rgba(234,240,255,.46)";
-    const gridColor = "rgba(234,240,255,.10)";
-    const borderColor = "#4CC9F0";
-    const pointColor = "#2EE1A5";
+    const chartInstances = new Map();
 
     function isMobileChart() {
       return window.matchMedia("(max-width: 820px)").matches;
@@ -604,8 +641,8 @@ if ($chartsPayload) {
 
     function makeGradient(ctx, chartArea) {
       const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-      gradient.addColorStop(0, "rgba(76,201,240,.36)");
-      gradient.addColorStop(.55, "rgba(76,201,240,.13)");
+      gradient.addColorStop(0, "rgba(76,201,240,.34)");
+      gradient.addColorStop(.55, "rgba(76,201,240,.12)");
       gradient.addColorStop(1, "rgba(76,201,240,0)");
       return gradient;
     }
@@ -618,7 +655,12 @@ if ($chartsPayload) {
       return dataLength <= 14 ? 4.5 : 3;
     }
 
-    chartsPayload.forEach((item) => {
+    function renderWeightChart(item) {
+      if (chartInstances.has(item.id)) {
+        chartInstances.get(item.id).resize();
+        return;
+      }
+
       const el = document.getElementById(item.id);
 
       if (!el) {
@@ -627,14 +669,14 @@ if ($chartsPayload) {
 
       const ctx = el.getContext("2d");
 
-      new Chart(ctx, {
+      const chart = new Chart(ctx, {
         type: "line",
         data: {
           labels: item.labels,
           datasets: [{
             label: "Peso",
             data: item.data,
-            borderColor: borderColor,
+            borderColor: "#4CC9F0",
             backgroundColor: (context) => {
               const chart = context.chart;
               const chartArea = chart.chartArea;
@@ -645,7 +687,7 @@ if ($chartsPayload) {
 
               return makeGradient(chart.ctx, chartArea);
             },
-            pointBackgroundColor: pointColor,
+            pointBackgroundColor: "#2EE1A5",
             pointBorderColor: "#071018",
             pointBorderWidth: 2,
             pointRadius: getPointRadius(item.data.length),
@@ -734,7 +776,7 @@ if ($chartsPayload) {
                 display: false
               },
               ticks: {
-                color: axisColorSoft,
+                color: "rgba(234,240,255,.50)",
                 maxRotation: 0,
                 autoSkip: true,
                 maxTicksLimit: isMobileChart() ? 4 : 8,
@@ -751,11 +793,11 @@ if ($chartsPayload) {
                 color: "rgba(234,240,255,.16)"
               },
               grid: {
-                color: gridColor,
+                color: "rgba(234,240,255,.10)",
                 drawTicks: false
               },
               ticks: {
-                color: axisColor,
+                color: "rgba(234,240,255,.68)",
                 padding: 8,
                 maxTicksLimit: isMobileChart() ? 5 : 7,
                 font: {
@@ -771,6 +813,34 @@ if ($chartsPayload) {
           }
         }
       });
+
+      chartInstances.set(item.id, chart);
+    }
+
+    document.querySelectorAll("[data-chart-details]").forEach((details) => {
+      details.addEventListener("toggle", () => {
+        if (!details.open) {
+          return;
+        }
+
+        const canvas = details.querySelector("canvas[id]");
+
+        if (!canvas) {
+          return;
+        }
+
+        const item = chartsPayload.find((entry) => entry.id === canvas.id);
+
+        if (!item) {
+          return;
+        }
+
+        requestAnimationFrame(() => renderWeightChart(item));
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      chartInstances.forEach((chart) => chart.resize());
     });
   </script>';
 }
