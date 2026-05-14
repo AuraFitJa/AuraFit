@@ -36,6 +36,7 @@ assert_true(strpos($loginCode, "\$_SESSION['demo_mode']") !== false, 'Il login d
 assert_true(strpos($dbSampleCode, 'blockDemoWriteIfNeeded') !== false, 'Database::exec deve invocare il blocco scritture in demo mode.');
 assert_true(strpos($dbSampleCode, "'UPDATE'") !== false, 'Le query UPDATE devono essere riconosciute come scritture.');
 assert_true(strpos($dbSampleCode, "'SELECT'") === false, 'Le query SELECT non devono essere marcate come scritture bloccate.');
+assert_true(strpos($dbSampleCode, "!empty(\$_SESSION['user'])") !== false, 'Demo mode DB guard deve attivarsi solo con utente autenticato in sessione.');
 assert_true(strpos($professionistaClientiCode, "Modalità demo: le modifiche non vengono salvate.") !== false, 'Terminazione associazione deve essere bloccata in demo mode.');
 
 echo "All security regression checks passed.\n";

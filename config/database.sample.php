@@ -39,7 +39,11 @@ class Database
         if (session_status() !== PHP_SESSION_ACTIVE) {
             return false;
         }
-        return !empty($_SESSION['demo_mode']);
+        if (empty($_SESSION['demo_mode'])) {
+            return false;
+        }
+        // Evita blocchi durante login/logout o su sessioni incomplete.
+        return !empty($_SESSION['user']) && is_array($_SESSION['user']);
     }
 
     private static function isWriteQuery(string $sql): bool
