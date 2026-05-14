@@ -150,6 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               'cognome' => (string)$user['cognome'],
               'roles' => $roles,
             ];
+            $demoEmails = ['cliente@test.it', 'pt@test.it'];
+            $_SESSION['demo_mode'] = in_array(normalize_email((string)$user['email']), $demoEmails, true);
 
             // Backward compatibility per pagine che leggono ancora chiavi flat in sessione
             $_SESSION['idUtente'] = $idUtente;
