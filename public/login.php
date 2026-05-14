@@ -46,6 +46,9 @@ function decide_redirect(array $roles): string {
 $csrfToken = aurafit_get_csrf_token();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Evita che una precedente sessione demo blocchi le scritture necessarie al login.
+  $_SESSION['demo_mode'] = false;
+
   if (!aurafit_validate_csrf_token(aurafit_request_csrf_token())) {
     $errors[] = "Sessione non valida. Ricarica la pagina e riprova.";
   }

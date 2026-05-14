@@ -33,6 +33,7 @@ assert_true(strpos($logoutCode, 'aurafit_validate_csrf_token') !== false, 'Logou
 assert_true(strpos($clienteCommonCode, 'emailNormalizzata') !== false, 'Profilo cliente deve aggiornare emailNormalizzata.');
 assert_true(strpos($professionistaCommonCode, 'emailNormalizzata') !== false, 'Profilo professionista deve aggiornare emailNormalizzata.');
 assert_true(strpos($loginCode, "\$_SESSION['demo_mode']") !== false, 'Il login deve impostare la flag demo_mode in sessione.');
+assert_true(strpos($loginCode, "\$_SESSION['demo_mode'] = false;") !== false, 'Il login deve azzerare demo_mode a inizio POST per non bloccare gli update di autenticazione.');
 assert_true(strpos($dbSampleCode, 'blockDemoWriteIfNeeded') !== false, 'Database::exec deve invocare il blocco scritture in demo mode.');
 assert_true(strpos($dbSampleCode, "'UPDATE'") !== false, 'Le query UPDATE devono essere riconosciute come scritture.');
 assert_true(strpos($dbSampleCode, "'SELECT'") === false, 'Le query SELECT non devono essere marcate come scritture bloccate.');
